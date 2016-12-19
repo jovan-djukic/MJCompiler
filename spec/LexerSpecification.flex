@@ -39,19 +39,17 @@ import java_cup.runtime.*;
 	return newSymbol(sym.EOF);
 %eofval}
 
-newLine = \r\n
-whiteSpaces = " "|\t|newLine|\b|\f
+newLine = \r\n|\n
+whiteSpaces = " "|\t|{newLine}|\b|\f
 digit = [0-9]
-leter = [a-zA-Z]
+letter = [a-zA-Z]
 
-identifier = letter(letter|digit|_)
-numericalConstant = digit*
-booleanConstant = ("true"|"false")
+identifier = {letter}({letter}|{digit}|_)*
+numericalConstant = {digit}+
+booleanConstant = true|false
+characterConstant = '.'
 
-
-%xstate COMMENT, CHAR_CONSTANT
-
-%debug
+%xstate COMMENT
 
 %%
 
@@ -71,22 +69,6 @@ booleanConstant = ("true"|"false")
 "for"		{ return newSymbol(sym.FOR, yytext()); }
 "extends"	{ return newSymbol(sym.EXTENDS, yytext()); }
 "static"	{ return newSymbol(sym.STATIC, yytext()); }
-
-{identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
-{numericalConstant}	{ return newSymbol(sym.NUMERICAL_CONSTANT, new Integer(yytext())); }
-{booleanConstant}	{ return newSymbol(sym.BOOLEAN_CONSTANT, new Boolean(yytext())); }
-
-\" 	{ 
-		currentString.setLength(0);
-		yybegin(CHAR_CONSTANT);
-	}
-
-<CHAR_CONSTANT> {
-	.\"	{
-			yybegin(YYINITIAL);
-			return newSymbol(sym.CHARACTER_CONSTANT, Character.toString(yytext().charAt(0)));
-		}
-}
 
 "+"		{ return newSymbol(sym.PLUS, yytext()); }
 "-"		{ return newSymbol(sym.MINUS, yytext()); }
@@ -125,7 +107,12 @@ booleanConstant = ("true"|"false")
 	.*{newLine} { yybegin(YYINITIAL); }
 }
 
-.	{ throw new LexerException("Error. Unkown token: " + yytext() + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); }
+{numericalConstant}	{ return newSymbol(sym.NUMERICAL_CONSTANT, new Integer(yytext())); }
+{booleanConstant}	{ return newSymbol(sym.BOOLEAN_CONSTANT, new Boolean(yytext())); }
+{characterConstant}	{ return newSymbol(sym.CHARACTER_CONSTANT, Character.toString(yytext().charAt(2))); }
+{identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
+
+.	{ throw new LexerException("Error. Unknown token: " + yytext() + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); }
 
 
 
