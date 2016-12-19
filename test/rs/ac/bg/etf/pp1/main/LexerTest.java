@@ -43,12 +43,18 @@ public class LexerTest {
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
 				Lexer lexer = new Lexer(in);
-				try {
-					while ((symbol = lexer.next_token()).sym != sym.EOF) {
-						out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
+				
+				while (true) {
+					try {
+						symbol = lexer.next_token();
+						if (symbol.sym == sym.EOF) {
+							break;
+						} else {
+							out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
+						}
+					} catch (LexerException le) {
+						out.println(le);
 					}
-				} catch (LexerException le) {
-					out.println(le);
 				}
 			} catch (FileNotFoundException fnfe) {
 				// TODO: handle exception

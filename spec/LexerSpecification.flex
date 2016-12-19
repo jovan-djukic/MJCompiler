@@ -49,7 +49,7 @@ numericalConstant = {digit}+
 booleanConstant = true|false
 characterConstant = '.'
 
-%xstate COMMENT
+%xstate COMMENT, ERROR
 
 %%
 
@@ -112,7 +112,14 @@ characterConstant = '.'
 {characterConstant}	{ return newSymbol(sym.CHARACTER_CONSTANT, Character.toString(yytext().charAt(2))); }
 {identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
 
-.	{ throw new LexerException("Error. Unknown token: " + yytext() + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); }
+.	{ yybegin(ERROR); }
+
+<ERROR> {
+	.*{whiteSpaces} 	{ 
+							yybegin(YYINITIAL);
+							throw new LexerException("Error. Unknown token: " + yytext().substring(0, yytext().length() - 1) + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); 
+						}
+}
 
 
 

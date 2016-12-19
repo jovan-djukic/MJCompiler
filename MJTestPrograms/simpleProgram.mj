@@ -1,5 +1,5 @@
 program MJProgram
-	int x, y;
+	int x, y; """""
 {
 	void main() {
 		+=
