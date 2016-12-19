@@ -1,7 +1,8 @@
 /* User code section of lexer specification, copied verbatim */
 
-// import java_cup.runtime because we are using the symbol calss from CUP
+// import java_cup.runtime because we are using the symbol class from CUP
 
+package rs.ac.bg.etf.pp1.dj130047d;
 import java_cup.runtime.*;
 
 %%
@@ -23,8 +24,8 @@ import java_cup.runtime.*;
 %init}
 
 %{
-	private Symbol newSymbol(in type) {
-		return new Symbol(tipe, yyline, yycolumn);
+	private Symbol newSymbol(int type) {
+		return new Symbol(type, yyline, yycolumn);
 	}
 	
 	private Symbol newSymbol(int type, Object value) {
@@ -32,12 +33,14 @@ import java_cup.runtime.*;
 	}
 %}
 
+%yylexthrow LexerException
+
 %eofval{
 	return newSymbol(sym.EOF);
 %eofval}
 
 newLine = \r\n
-whiteSpace = " "|\t|newLine|\b|\f
+whiteSpaces = " "|\t|newLine|\b|\f
 digit = [0-9]
 leter = [a-zA-Z]
 
@@ -70,7 +73,7 @@ booleanConstant = ("true"|"false")
 "static"	{ return newSymbol(sym.STATIC, yytext()); }
 
 {identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
-{numericalConstant}	{ return newSymbol(sym.NUMBERICAL_CONSTANT, new Integer(yytext())); }
+{numericalConstant}	{ return newSymbol(sym.NUMERICAL_CONSTANT, new Integer(yytext())); }
 {booleanConstant}	{ return newSymbol(sym.BOOLEAN_CONSTANT, new Boolean(yytext())); }
 
 \" 	{ 
@@ -81,7 +84,7 @@ booleanConstant = ("true"|"false")
 <CHAR_CONSTANT> {
 	.\"	{
 			yybegin(YYINITIAL);
-			return newSymbol(sym.CHAR_CONSTANT, new Character(yytext.charAt(0)));
+			return newSymbol(sym.CHARACTER_CONSTANT, Character.toString(yytext().charAt(0)));
 		}
 }
 
