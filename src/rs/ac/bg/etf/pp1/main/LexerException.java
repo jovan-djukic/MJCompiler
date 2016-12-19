@@ -1,4 +1,4 @@
-package rs.ac.bg.etf.pp1.dj130047d;
+package rs.ac.bg.etf.pp1.main;
 
 public class LexerException extends Exception {
 	private String message = null;

@@ -2,7 +2,7 @@
 
 // import java_cup.runtime because we are using the symbol class from CUP
 
-package rs.ac.bg.etf.pp1.dj130047d;
+package rs.ac.bg.etf.pp1.main;
 import java_cup.runtime.*;
 
 %%
