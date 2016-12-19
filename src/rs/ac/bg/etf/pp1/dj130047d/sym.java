@@ -1,4 +1,4 @@
-package rs.ac.bg.etf.pp1.dj130047;
+package rs.ac.bg.etf.pp1.dj130047d;
 
 /*
  * Names are taken from https://en.wikipedia.org/wiki/List_of_symbols
