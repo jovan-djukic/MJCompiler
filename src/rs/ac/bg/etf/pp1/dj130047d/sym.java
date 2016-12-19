@@ -5,18 +5,6 @@ package rs.ac.bg.etf.pp1.dj130047d;
  */
 
 public class sym {
-	
-	public static class LexerException extends Exception {
-		private String message = null;
-		
-		public LexerException(String message) {
-			this.message = message;
-		}
-		
-		public String toString() {
-			return message;
-		}
-	}
 
 	//Keywords
 	public static int PROGRAM = 1;	// program
@@ -40,7 +28,7 @@ public class sym {
 	
 	//Constants
 	public static int NUMERICAL_CONSTANT = 17;		// numerical constants like 1235
-	public static int CHARARACTER_CONSTANT = 18;	// character constants like "a"
+	public static int CHARACTER_CONSTANT = 18;	// character constants like "a"
 	public static int BOOLEAN_CONSTANT = 19;		// boolean constants, true or false
 	
 	//Operators
