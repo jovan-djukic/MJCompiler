@@ -5,6 +5,18 @@ package rs.ac.bg.etf.pp1.dj130047;
  */
 
 public class sym {
+	
+	public static class LexerException extends Exception {
+		private String message = null;
+		
+		public LexerException(String message) {
+			this.message = message;
+		}
+		
+		public String toString() {
+			return message;
+		}
+	}
 
 	//Keywords
 	public static int PROGRAM = 1;	// program
