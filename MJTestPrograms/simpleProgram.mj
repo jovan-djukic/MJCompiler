@@ -1,8 +1,12 @@
 program MJProgram
 	int x, y; """""
+	char c;//this is a comment it will be ignored
 {
 	void main() {
-		+=
-		+ = 
+		x += y;
+		c = 'a';
+		c = ' ';
+		c = '\r\n';
+		a_b;		
 	}
 }

@@ -9,36 +9,43 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import org.apache.logging.log4j.Logger;
+
 import java_cup.runtime.Symbol;
+import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 public class LexerTest {
 	
 	private static String testProgramsDirectoryPath = "MJTestPrograms";
+	private static Logger logger = MyLoggerFactory.getLogger(LexerTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
 		if (args.length == 2 && "-f".equals(args[0])) {
 			File outputFile = new File("output/" + args[1]);
 			try {
-				if (!outputFile.exists() && !outputFile.createNewFile()) {
-					out = new PrintWriter(System.out);
-				} else {
+				if (outputFile.exists() || outputFile.createNewFile()) {
 					out = new PrintWriter(new FileOutputStream(outputFile));
 				}
 			} catch (IOException e) {
-				out = new PrintWriter(System.out);
+		
 			} 
-		} else {
-			out = new PrintWriter(System.out);
-		}
+		} 
+		
 		File file = new File(testProgramsDirectoryPath);
 		File[] testFiles = file.listFiles();
 		
 		for (int i = 0; i < testFiles.length; i++) {
 			
-			out.println("======================================================================");
-			out.println("FILE: " + testFiles[i].getPath());
-			out.println("======================================================================");
+			if (out != null) {
+				out.println("======================================================================");
+				out.println("FILE: " + testFiles[i].getPath());
+				out.println("======================================================================");
+			}
+			
+			logger.info("======================================================================");
+			logger.info("FILE: " + testFiles[i].getPath());
+			logger.info("======================================================================");
 			
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
@@ -50,10 +57,16 @@ public class LexerTest {
 						if (symbol.sym == sym.EOF) {
 							break;
 						} else {
-							out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
+							if (out != null) {
+								out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
+							}
+							logger.info("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
 						}
 					} catch (LexerException le) {
-						out.println(le);
+						if (out != null) {
+							out.println(le);
+						}
+						logger.info(le);
 					}
 				}
 			} catch (FileNotFoundException fnfe) {

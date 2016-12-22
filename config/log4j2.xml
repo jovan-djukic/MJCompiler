@@ -8,7 +8,7 @@
             <PatternLayout pattern="%M %msg%n"/>
         </Console>
         <File name="MyFile" fileName="${sys:logFilename}" immediateFlush="false" append="false">
-            <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} %p %M [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} %p %M %-5level %logger{36} - %msg%n"/>
         </File>
     </Appenders>
     <Loggers>

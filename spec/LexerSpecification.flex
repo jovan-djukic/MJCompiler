@@ -16,14 +16,6 @@ import java_cup.runtime.*;
 %column
 
 %{
-	StringBuilder currentString = null;
-%}
-
-%init{
-	this.currentString = new StringBuilder();
-%init}
-
-%{
 	private Symbol newSymbol(int type) {
 		return new Symbol(type, yyline, yycolumn);
 	}
@@ -40,14 +32,18 @@ import java_cup.runtime.*;
 %eofval}
 
 newLine = \r\n|\n
-whiteSpaces = " "|\t|{newLine}|\b|\f
+whiteSpaces = \040|\t|{newLine}|\b|\f
+safeCharacters = {whiteSpaces}|";"
 digit = [0-9]
 letter = [a-zA-Z]
 
 identifier = {letter}({letter}|{digit}|_)*
 numericalConstant = {digit}+
 booleanConstant = true|false
-characterConstant = '.'
+printableCharacter = [\040-\176]
+specialCharacter = \134(r\134n|n|t|b|f)
+characterConstant = '({printableCharacter}|{specialCharacter})'
+
 
 %xstate COMMENT, ERROR
 
@@ -109,13 +105,13 @@ characterConstant = '.'
 
 {numericalConstant}	{ return newSymbol(sym.NUMERICAL_CONSTANT, new Integer(yytext())); }
 {booleanConstant}	{ return newSymbol(sym.BOOLEAN_CONSTANT, new Boolean(yytext())); }
-{characterConstant}	{ return newSymbol(sym.CHARACTER_CONSTANT, Character.toString(yytext().charAt(2))); }
+{characterConstant} { return newSymbol(sym.CHARACTER_CONSTANT, yytext().substring(1, yytext().length() - 1) ); }
 {identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
 
 .	{ yybegin(ERROR); }
 
 <ERROR> {
-	.*{whiteSpaces} 	{ 
+	.*{safeCharacters} 	{ 
 							yybegin(YYINITIAL);
 							throw new LexerException("Error. Unknown token: " + yytext().substring(0, yytext().length() - 1) + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); 
 						}
