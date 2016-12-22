@@ -1,0 +1,141 @@
+package rs.ac.bg.etf.pp1.main
+
+import java_cup.runtime.*;
+
+import org.apache.logging.log4j.Logger;
+import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
+
+
+terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET
+		 CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID;
+
+terminal String IDENTIFIER, CHARACTER_CONSTANT;
+
+terminal Integer NUMERICAL_CONSTANT;
+
+terminal Boolean CHARACTER_CONSTANT;
+
+
+nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
+
+nonterminal NonMethodDeclaration, ConstantDeclaration, VariableDeclaration, ClassDeclaration;
+
+nonterminal Type, ConstantList, Constant, Value, VariableList, Variable, Brackets;
+
+nonterminal ParentClassDeclaration, ClassVariableList, ClassMethodList;
+
+nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList,
+			FormalParameter, ComaSeparetedFormalParameterList;
+
+nonterminal StatementList;
+
+
+Program ::= PROGRAM IDENTIFIER 
+			NonMethodDeclarationList 
+			LEFT_BRACE 	
+				MethodDeclarationList 
+			RIGHT_BRACE;
+			
+NonMethodDeclarationList ::= NonMethodDeclaration NonMethodDeclarationList
+							 |
+							 /* epsilon */
+							 ;
+
+NonMethodDeclaration ::= ConstantDeclaration
+						 |
+						 VariableDeclaration
+						 |
+						 ClassDeclaration
+						 ;
+			
+ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
+
+ConstantList ::= Constant COMA ConstantList
+				 |
+				 Constant
+				 ;	
+
+Constant ::= IDENTIFIER EQUALS Value;
+
+Value ::= NUMERICAL_CONSTANT
+		  |
+		  CHARACTER_CONSTANT
+		  |
+		  BOOLEAN_CONSTANT
+		  ;
+
+VariableDeclaration ::= Type VariableList SEMICOLON;  
+		  
+VariableList ::= Variable COMA VariableList
+				 |
+				 Variable
+				 ;
+				 
+Variable ::= IDENTIFIER Brackets;
+
+Brackets ::= LEFT_BRACKET RIGHT_BRACKET
+			 |
+			 /* epsilon */
+			 ;
+			 
+ClassDeclaration ::= CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
+						ClassVariableList
+						ClassMethodList
+					 RIGHT_BRACE;
+					 
+ClassVariableList ::= VariableDeclaration ClassVariableList
+					  |
+					  /* epsilon */
+					  ;
+
+ClassMethodList ::= LEFT_BRACE
+						MethodDeclarationList
+					RIGHT_BRACE
+					|
+					/* epsilon */
+					;
+
+MethodDeclarationList ::= MethodDeclaration MethodDeclarationList
+						  |
+						  /* epsilon */
+						  ;
+						  
+MethodDeclaration ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+						MethodVariableDeclarationList
+					  LEFT_BRACE
+					  	StatementList
+					  RIGHT_BRACE;
+					  
+StaticModifier ::= STATIC
+				   |
+				   /* epsilon */
+				   ;
+				   
+ReturnType ::= Type
+			   |
+			   VOID
+			   ;
+
+FormalParameterList ::= FormalParameter ComaSeparetedFormalParameterList
+						|
+						/* epsilon */
+						;
+
+ComaSeparetedFormalParameterList ::= COMA FormalParameter
+									 |
+									 /* epsilon */
+									 ;						
+						
+FormalParameter ::= Type IDENTIFIER Brackets
+
+Type ::= IDENTIFIER
+
+
+
+
+		  
+		  
+		  
+		  
+				 
+				 
