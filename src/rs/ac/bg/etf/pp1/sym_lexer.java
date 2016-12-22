@@ -1,10 +1,10 @@
-package rs.ac.bg.etf.pp1.main;
+package rs.ac.bg.etf.pp1;
 
 /*
  * Names are taken from https://en.wikipedia.org/wiki/List_of_symbols
  */
 
-public class sym {
+public class sym_lexer {
 
 	//Keywords
 	public static int PROGRAM = 1;	// program

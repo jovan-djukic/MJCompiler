@@ -1,20 +1,21 @@
-package rs.ac.bg.etf.pp1.main
+package rs.ac.bg.etf.pp1.main;
 
 import java_cup.runtime.*;
-
 import org.apache.logging.log4j.Logger;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 
-terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET
-		 CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID;
+terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
+terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
+terminal DECREMENT, OR, AND, NEW, DOT, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_OR_EQUAL_THAN, LESS_THAN;
+terminal LESS_OR_EQUAL_THAN, PLUS, MINUS, PLUS_EQUALS, MINUS_EQUALS, TIMES, SOLIDUS, PERCENT, TIMES_EQUALS;
+terminal SOLIDUS_EQUALS, PERCENT_EQUALS, READ, PRINT;
 
 terminal String IDENTIFIER, CHARACTER_CONSTANT;
 
 terminal Integer NUMERICAL_CONSTANT;
 
-terminal Boolean CHARACTER_CONSTANT;
-
+terminal Boolean BOOLEAN_CONSTANT;
 
 nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
 
@@ -27,8 +28,23 @@ nonterminal ParentClassDeclaration, ClassVariableList, ClassMethodList;
 nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList,
 			FormalParameter, ComaSeparetedFormalParameterList;
 
-nonterminal StatementList;
+nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
 
+nonterminal ForInitialStatement, ForCondition, ForPostStatement;
+
+nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList, ComaSeparatedExpressionList;
+
+nonterminal Condition, OrSeparatedConditionTerms, ConditionTerm, AndSeparatedConditionFacts, ConditionFact, RestOfTheConditionFact, RelationalOperator;
+
+nonterminal Expression, ExpressionPrefix, AdditionOperatorSeparatedTermList, Term, MultiplicationOperatorSeparatedFactorList, Factor;
+
+nonterminal OptionalParameters, ArraySize, ArrayIndexer;
+
+nonterminal Designator, AccessList, AccessListElement, AssignOperation;
+
+nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
+
+nonterminal MultiplicationOperator, MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 Program ::= PROGRAM IDENTIFIER 
 			NonMethodDeclarationList 
@@ -121,21 +137,239 @@ FormalParameterList ::= FormalParameter ComaSeparetedFormalParameterList
 						/* epsilon */
 						;
 
-ComaSeparetedFormalParameterList ::= COMA FormalParameter
+ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalParameterList
 									 |
 									 /* epsilon */
 									 ;						
 						
-FormalParameter ::= Type IDENTIFIER Brackets
+FormalParameter ::= Type IDENTIFIER Brackets;
 
-Type ::= IDENTIFIER
+Type ::= IDENTIFIER;
 
+StatementList ::= Statement StatementList
+				  |
+				  /* epsilon */
+				  ;
 
+Statement ::= MatchedStatement
+			  |
+			  UnmatchedStatement
+			  ;
+			  
+UnmatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
+							Statement
+					   |
+					   IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+					   		MatchedStatement
+					   ELSE
+					   		UnmatchedStatement
+					   ;
+					 
+MatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
+						MatchedStatement
+					 ELSE
+					 	MatchedStatement
+					 |
+					 DesignatorStatement SEMICOLON
+					 |
+					 BREAK SEMICOLON
+					 |
+					 CONTINUE SEMICOLON
+					 |
+					 RETURN ReturnValue SEMICOLON
+					 |
+					 READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
+					 |
+					 PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
+					 |
+					 LEFT_BRACE
+					 	StatementList
+					 RIGHT_BRACE
+					 |
+					 FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+					 	Statement
+					 ;
 
+ReturnValue ::= Expression
+				|
+				/* epsilon */
+				;
+				
+PrintParameters ::= Expression
+					|
+					Expression COMA NUMERICAL_CONSTANT
+					;
 
-		  
-		  
-		  
-		  
-				 
-				 
+ForInitialStatement ::= DesignatorStatement
+						 |
+						 /* epsilon */
+						 ;
+						 
+ForCondition ::= Condition
+				 |
+				 /* epsilon */
+		  		 ;
+		  		 
+ForPostStatement ::= DesignatorStatement
+					 |
+					 /* epsilon */
+					 ;
+
+DesignatorStatement ::= Designator RestOfTheDesignatorStatement;
+
+RestOfTheDesignatorStatement ::= AssignOperation Expression
+								 |
+								 LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+								 |
+								 INCREMENT
+								 |
+								 DECREMENT
+								 ;
+								 
+ActualParameters ::= ExpressionList;
+
+ExpressionList ::= Expression ComaSeparatedExpressionList;
+
+ComaSeparatedExpressionList ::= COMA Expression ComaSeparatedExpressionList
+								|
+								/* epsilon */
+				 				;
+				 				
+Condition ::= ConditionTerm OrSeparatedConditionTerms;
+
+OrSeparatedConditionTerms ::= OR ConditionTerm OrSeparatedConditionTerms
+							  |
+							  /* epsilon */
+							  ;		 				
+				 				
+ConditionTerm ::= ConditionFact AndSeparatedConditionFacts;
+
+AndSeparatedConditionFacts ::= AND ConditionFact AndSeparatedConditionFacts
+							   |
+							   /* epsilon */
+							   ;
+
+ConditionFact ::= Expression RestOfTheConditionFact;
+
+RestOfTheConditionFact ::= RelationalOperator Expression
+						   |
+						   /* epsilon */
+						   ;
+						   
+Expression ::= ExpressionPrefix Term AdditionOperatorSeparatedTermList;
+
+ExpressionPrefix ::= MINUS
+					 |
+					 /* epsilon */
+					 ;
+
+AdditionOperatorSeparatedTermList ::= AdditionOperator Term
+									  |
+									  /* epsilon */
+									  ;
+
+Term ::= Factor MultiplicationOperatorSeparatedFactorList;
+
+MultiplicationOperatorSeparatedFactorList ::= MultiplicationOperator Factor
+											  |
+											  /* epsilon */
+											  ;
+
+Factor ::= Designator OptionalParameters
+		   |
+		   NUMERICAL_CONSTANT
+		   |
+		   CHARACTER_CONSTANT
+		   |
+		   BOOLEAN_CONSTANT
+		   |
+		   NEW Type ArraySize
+		   |
+		   LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+		   ;
+		   
+OptionalParameters ::= LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+					   |
+					   /* epsilon */
+					   ;		   
+		   						  
+ArraySize ::= ArrayIndexer
+			  |
+			  /* epsilon */
+			  ;
+	   
+ArrayIndexer ::= LEFT_BRACKET Expression RIGHT_BRACKET;
+					
+					
+Designator ::= IDENTIFIER AccessList;
+
+AccessList ::= AccessListElement AccessList
+			   |
+			   /* epsilon */
+			   ;
+			   
+AccessListElement ::= DOT IDENTIFIER
+					  |
+					  ArrayIndexer
+					  ;
+
+AssignOperation ::= EQUALS
+					|
+					AdditionOperatorRight
+					|
+					MultiplicationOperatorRight
+					;
+
+RelationalOperator ::= EQUAL
+					   |
+					   NOT_EQUAL
+					   |
+					   GREATER_THAN
+					   |
+					   GREATER_OR_EQUAL_THAN
+					   |
+					   LESS_THAN
+					   |
+					   LESS_OR_EQUAL_THAN
+					   ;
+					   
+AdditionOperator ::= AdditionOperatorLeft
+					  |
+					  AdditionOperatorRight
+					  ;					   
+					 
+AdditionOperatorLeft ::= PLUS
+						   |
+						   MINUS
+						   ;					  
+					   
+AdditionOperatorRight ::= PLUS_EQUALS
+						   |
+						   MINUS_EQUALS
+						   ;
+						   
+MultiplicationOperator ::= MultiplicationOperatorLeft
+							|
+							MultiplicationOperatorRight
+							;
+						
+MultiplicationOperatorLeft ::= TIMES
+								|
+								SOLIDUS
+								|													   
+								PERCENT
+								;
+								
+MultiplicationOperatorRight ::= TIMES_EQUALS
+								 |
+								 SOLIDUS_EQUALS
+								 |
+								 PERCENT_EQUALS
+								 ;
+						   
+				 				
+				 				
+				 				
+				 				
+				 				
+				 				

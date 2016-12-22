@@ -1,4 +1,4 @@
-package rs.ac.bg.etf.pp1.main;
+package rs.ac.bg.etf.pp1;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +12,9 @@ import java.io.PrintWriter;
 import org.apache.logging.log4j.Logger;
 
 import java_cup.runtime.Symbol;
+import rs.ac.bg.etf.pp1.Lexer;
+import rs.ac.bg.etf.pp1.LexerException;
+import rs.ac.bg.etf.pp1.sym_lexer;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 public class LexerTest {
@@ -54,7 +57,7 @@ public class LexerTest {
 				while (true) {
 					try {
 						symbol = lexer.next_token();
-						if (symbol.sym == sym.EOF) {
+						if (symbol.sym == sym_lexer.EOF) {
 							break;
 						} else {
 							if (out != null) {

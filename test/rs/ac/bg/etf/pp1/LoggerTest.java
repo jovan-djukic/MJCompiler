@@ -1,4 +1,4 @@
-package rs.ac.bg.etf.pp1.main;
+package rs.ac.bg.etf.pp1;
 
 import org.apache.logging.log4j.Logger;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
