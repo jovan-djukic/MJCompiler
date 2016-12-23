@@ -1,4 +1,4 @@
-package rs.ac.bg.etf.pp1.main;
+package rs.ac.bg.etf.pp1;
 
 import java_cup.runtime.*;
 import org.apache.logging.log4j.Logger;
@@ -9,7 +9,7 @@ terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_
 terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
 terminal DECREMENT, OR, AND, NEW, DOT, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_OR_EQUAL_THAN, LESS_THAN;
 terminal LESS_OR_EQUAL_THAN, PLUS, MINUS, PLUS_EQUALS, MINUS_EQUALS, TIMES, SOLIDUS, PERCENT, TIMES_EQUALS;
-terminal SOLIDUS_EQUALS, PERCENT_EQUALS, READ, PRINT;
+terminal SOLIDUS_EQUALS, PERCENT_EQUALS, READ, PRINT, EXTENDS;
 
 terminal String IDENTIFIER, CHARACTER_CONSTANT;
 
@@ -99,6 +99,11 @@ ClassDeclaration ::= CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 						ClassMethodList
 					 RIGHT_BRACE;
 					 
+ParentClassDeclaration ::= EXTENDS Type
+						   |
+						   /* epsilon */
+						   ;
+					 
 ClassVariableList ::= VariableDeclaration ClassVariableList
 					  |
 					  /* epsilon */
@@ -163,11 +168,17 @@ UnmatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 					   		MatchedStatement
 					   ELSE
 					   		UnmatchedStatement
+					   | /* umatched for */
+					   FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+					 		UnmatchedStatement
 					   ;
 					 
 MatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
 						MatchedStatement
 					 ELSE
+					 	MatchedStatement
+					 | /* matched for */
+					 FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
 					 	MatchedStatement
 					 |
 					 DesignatorStatement SEMICOLON
@@ -184,10 +195,7 @@ MatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 					 |
 					 LEFT_BRACE
 					 	StatementList
-					 RIGHT_BRACE
-					 |
-					 FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
-					 	Statement
+					 RIGHT_BRACE			
 					 ;
 
 ReturnValue ::= Expression

@@ -57,7 +57,7 @@ public class LexerTest {
 				while (true) {
 					try {
 						symbol = lexer.next_token();
-						if (symbol.sym == sym_lexer.EOF) {
+						if (symbol.sym == sym.EOF) {
 							break;
 						} else {
 							if (out != null) {

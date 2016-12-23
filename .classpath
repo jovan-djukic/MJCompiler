@@ -8,7 +8,6 @@
 	<classpathentry kind="lib" path="lib/jflex-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-api-2.7.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-core-2.7.jar"/>
-	<classpathentry kind="lib" path="lib/java-cup-11b-runtime.jar"/>
-	<classpathentry kind="lib" path="lib/java-cup-11b.jar"/>
+	<classpathentry kind="lib" path="lib/java-cup-11a.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
