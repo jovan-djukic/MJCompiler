@@ -6,6 +6,7 @@ program Prilepi
 	int a, b; 
 	int manji, veci, step, pom, novi;
 	const int x = 10;
+	int i;
 
 {
 	void main() {
@@ -22,7 +23,7 @@ program Prilepi
 			veci = a;
 		}
 		pom = manji;
-		while(pom > 0){
+		for (i = 0; i < veci; i++) {
 			pom = pom/x;
 			step = step*x;
 		}

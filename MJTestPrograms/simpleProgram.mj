@@ -1,12 +1,54 @@
 program MJProgram
-	int x, y; """""
-	char c;//this is a comment it will be ignored
+	const int a = 2, b = 3;
+	const char c = '\n', z = 'a', q = '\040';
+	const boolean w = true;
+	int x, y;
+	char r, t;
+	class MyClass extends ParentClass {
+		int a[], b, c;
+	
+		{
+			static void m() {
+				for (i = 0; i < 3; i++) 
+					if ( x > y) 
+						for ( i = 2; i < 4; i++) 
+							read(a);
+							
+				print(c);
+				print(c, 4);
+				
+				fcall1(a, b, c, a + b);
+				
+				if ( a >= b || a <= b && c == d) {
+					a = - 5;
+				}
+				
+				break;
+				continue;
+				return;
+			}
+			
+			void g() {
+				if (c > b) b++;
+				if (c > b) if ( c > b ) {
+				
+				} else {
+				
+				}
+				
+				b += c;
+				
+				a = new int[5];
+			}
+		}
+	}
 {
-	void main() {
-		x += y;
-		c = 'a';
-		c = ' ';
-		c = '\r\n';
-		a_b;		
+	void main()
+		int a, b;
+		MyClass instance;
+	{
+		instance = new MyClass;
+		instance.g();
+		instance.a[5] = 2;
 	}
 }
