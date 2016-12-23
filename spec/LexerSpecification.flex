@@ -42,7 +42,8 @@ numericalConstant = {digit}+
 booleanConstant = true|false
 printableCharacter = [\040-\176]
 specialCharacter = \134(r\134n|n|t|b|f)
-characterConstant = '({printableCharacter}|{specialCharacter})'
+numericCharacter = \\[0-9]{0, 3}
+characterConstant = '({printableCharacter}|{specialCharacter}|{numericCharacter})'
 
 
 %xstate COMMENT, ERROR
@@ -60,10 +61,11 @@ characterConstant = '({printableCharacter}|{specialCharacter})'
 "new"		{ return newSymbol(sym.NEW, yytext()); }
 "print"		{ return newSymbol(sym.PRINT, yytext()); }
 "read"		{ return newSymbol(sym.READ, yytext()); }
-"return"	{ return newSymbol(sym.READ, yytext()); }
+"return"	{ return newSymbol(sym.RETURN, yytext()); }
 "void" 		{ return newSymbol(sym.VOID, yytext()); }
 "for"		{ return newSymbol(sym.FOR, yytext()); }
 "extends"	{ return newSymbol(sym.EXTENDS, yytext()); }
+"continue"	{ return newSymbol(sym.CONTINUE, yytext()); }
 "static"	{ return newSymbol(sym.STATIC, yytext()); }
 
 "+"		{ return newSymbol(sym.PLUS, yytext()); }

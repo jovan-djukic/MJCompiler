@@ -4,6 +4,42 @@ import java_cup.runtime.*;
 import org.apache.logging.log4j.Logger;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
+parser code {:
+	
+	private Logger logger = MyLoggerFactory.getLogger(getClass());
+
+	public Logger getLogger() {
+		return logger;	
+	}    
+
+   	//redefined error messages  
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSyntax erorr: ", cur_token.toString());
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token.toString());
+    }
+
+    public void report_error(String message, Object info) {
+    	StringBuilder messsage = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            messsage.append (" on line ").append(((Symbol)info).left);
+        logger.info(message.toString());
+    }
+:}
+
+scan with {:
+	Symbol symbol = this.getScanner().next_token();
+	if (symbol != null && symbol.value != null) 
+		logger.info(symbol.toString() + " " + symbol.value.toString());
+	return symbol;
+:}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
 terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
@@ -127,7 +163,7 @@ MethodDeclaration ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS Form
 					  	StatementList
 					  RIGHT_BRACE;
 					  
-StaticModifier ::= STATIC
+StaticModifier ::= STATIC 
 				   |
 				   /* epsilon */
 				   ;
@@ -148,6 +184,11 @@ ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalPar
 									 ;						
 						
 FormalParameter ::= Type IDENTIFIER Brackets;
+
+MethodVariableDeclarationList ::= VariableDeclaration MethodVariableDeclarationList
+								  |
+								  /* epsilon */
+								  ;
 
 Type ::= IDENTIFIER;
 
@@ -234,7 +275,10 @@ RestOfTheDesignatorStatement ::= AssignOperation Expression
 								 DECREMENT
 								 ;
 								 
-ActualParameters ::= ExpressionList;
+ActualParameters ::= ExpressionList
+					 |
+					 /* epsilon */
+					 ;
 
 ExpressionList ::= Expression ComaSeparatedExpressionList;
 
