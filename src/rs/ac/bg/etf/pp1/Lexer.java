@@ -332,6 +332,8 @@ class Lexer implements java_cup.runtime.Scanner {
   private int zzFinalHighSurrogate = 0;
 
   /* user code: */
+	StringBuilder errorToken = null;
+	
 	private Symbol newSymbol(int type) {
 		return new Symbol(type, yyline, yycolumn);
 	}
@@ -347,6 +349,7 @@ class Lexer implements java_cup.runtime.Scanner {
    * @param   in  the java.io.Reader to read input from.
    */
   Lexer(java.io.Reader in) {
+  	errorToken = new StringBuilder();
     this.zzReader = in;
   }
 
@@ -728,7 +731,9 @@ class Lexer implements java_cup.runtime.Scanner {
       else {
         switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
           case 1: 
-            { yybegin(ERROR);
+            { errorToken.setLength(0);
+		errorToken.append(yytext());
+		yybegin(ERROR);
             }
           case 55: break;
           case 2: 
@@ -816,8 +821,9 @@ class Lexer implements java_cup.runtime.Scanner {
             }
           case 76: break;
           case 23: 
-            { yybegin(YYINITIAL);
-							throw new LexerException("Error. Unknown token: " + yytext().substring(0, yytext().length() - 1) + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1));
+            { errorToken.append(yytext());
+							yybegin(YYINITIAL);
+							throw new LexerException("Error. Unknown token: " + errorToken.toString() + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1));
             }
           case 77: break;
           case 24: 

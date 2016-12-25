@@ -12,32 +12,103 @@ parser code {:
 		return logger;	
 	}    
 
-   	//redefined error messages  
+	//functions defined for counts
+	private int globalVariableCount = 0;
+
+	public int getGlobalVariableCount() {
+		return globalVariableCount;
+	}
+
+	private int currentVariableCount = 0;
+
+	public void incrementCurrentVariableCount() {
+		currentVariableCount++;
+	}
+
+	public void invalidateCurrentVariableCount() {
+		currentVariableCount = 0;
+	}
+	
+	public void incrementGlobalVariableCount() {
+		globalVariableCount += currentVariableCount;
+		currentVariableCount = 0;
+	}
+
+	private int mainVariableCount = 0;
+
+	public int getMainVariableCount() {
+		return mainVariableCount;
+	}
+
+	public void incrementMainVariableCount() {
+		mainVariableCount += currentVariableCount;
+		currentVariableCount = 0;
+	}
+
+	private static String main = "main";
+	
+	public boolean isMain(String identifier) {
+		return main.equals(identifier);
+	}
+
+	private int constantCount = 0;
+
+	public int getConstantCount() {
+		return constantCount;
+	}
+
+	public void incrementConstantCount() {
+		constantCount++;
+	}
+
+	private int globalArrayCount = 0;
+	private int currentArrayCount = 0;
+
+	public int getGlobalArrayCount() {
+		return globalArrayCount;
+	}
+
+	public void incrementGlobalArrayCount() {
+		globalArrayCount += currentArrayCount;
+		currentArrayCount = 0;	
+	}
+
+	public void incrementCurrentArrayCount() {
+		currentArrayCount++;
+	}
+
+	public void invalidateCurrentArrayCount() {
+		currentArrayCount = 0;	
+	}
+
+
+   	//redefined error functions  
     public void report_fatal_error(String message, Object info) throws java.lang.Exception {
-      done_parsing();
       report_error(message, info);
+      done_parsing();
     }
   
     public void syntax_error(Symbol cur_token) {
-        report_error("\nSyntax erorr: ", cur_token.toString());
+        report_error("Syntax erorr: ", cur_token);
     }
   
     public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
-        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token.toString());
+        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token);
     }
 
     public void report_error(String message, Object info) {
-    	StringBuilder messsage = new StringBuilder(message); 
-    	if (info instanceof Symbol)
-            messsage.append (" on line ").append(((Symbol)info).left);
-        logger.info(message.toString());
+        if (info instanceof Symbol) {
+			Symbol currentSymbol = (Symbol) info;
+			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
+		}
+		logger.info(message + ", current symbol: " + info.toString());
     }
 :}
 
 scan with {:
 	Symbol symbol = this.getScanner().next_token();
 	if (symbol != null && symbol.value != null) 
-		logger.info(symbol.toString() + " " + symbol.value.toString());
+		logger.debug(symbol.toString() + " " + symbol.value.toString());
 	return symbol;
 :}
 
@@ -93,12 +164,16 @@ NonMethodDeclarationList ::= NonMethodDeclaration NonMethodDeclarationList
 							 /* epsilon */
 							 ;
 
-NonMethodDeclaration ::= ConstantDeclaration
-						 |
-						 VariableDeclaration
-						 |
-						 ClassDeclaration
-						 ;
+NonMethodDeclaration ::= 	ConstantDeclaration
+						 	|
+						 	VariableDeclaration
+							{:
+								parser.incrementGlobalVariableCount();
+								parser.incrementGlobalArrayCount();
+						 	:}
+						 	|
+						 	ClassDeclaration
+						 	;
 			
 ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
 
@@ -107,7 +182,10 @@ ConstantList ::= Constant COMA ConstantList
 				 Constant
 				 ;	
 
-Constant ::= IDENTIFIER EQUALS Value;
+Constant ::=	IDENTIFIER EQUALS Value
+				{:
+					parser.incrementConstantCount();
+				:};
 
 Value ::= NUMERICAL_CONSTANT
 		  |
@@ -123,12 +201,19 @@ VariableList ::= Variable COMA VariableList
 				 Variable
 				 ;
 				 
-Variable ::= IDENTIFIER Brackets;
+Variable ::=	IDENTIFIER Brackets
+				{: 
+			 		parser.incrementCurrentVariableCount();
+			 	:}
+			 	;
 
-Brackets ::= LEFT_BRACKET RIGHT_BRACKET
-			 |
-			 /* epsilon */
-			 ;
+Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
+			 	{:
+					parser.incrementCurrentArrayCount();
+				:}
+			 	|
+			 	/* epsilon */
+			 	;
 			 
 ClassDeclaration ::= CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 						ClassVariableList
@@ -157,11 +242,19 @@ MethodDeclarationList ::= MethodDeclaration MethodDeclarationList
 						  /* epsilon */
 						  ;
 						  
-MethodDeclaration ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
-						MethodVariableDeclarationList
-					  LEFT_BRACE
-					  	StatementList
-					  RIGHT_BRACE;
+MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+							MethodVariableDeclarationList
+					  	LEFT_BRACE
+					  		StatementList
+					  	RIGHT_BRACE
+					  	{:
+							if (parser.isMain(identifier)) {
+								parser.incrementMainVariableCount();
+							} else {
+								parser.invalidateCurrentVariableCount();
+								parser.invalidateCurrentArrayCount();
+							}
+						:};
 					  
 StaticModifier ::= STATIC 
 				   |
@@ -386,38 +479,38 @@ RelationalOperator ::= EQUAL
 					   ;
 					   
 AdditionOperator ::= AdditionOperatorLeft
-					  |
-					  AdditionOperatorRight
-					  ;					   
+					 |
+					 AdditionOperatorRight
+					 ;					   
 					 
 AdditionOperatorLeft ::= PLUS
-						   |
-						   MINUS
-						   ;					  
+						 |
+						 MINUS
+						 ;					  
 					   
 AdditionOperatorRight ::= PLUS_EQUALS
-						   |
-						   MINUS_EQUALS
-						   ;
+						  |
+						  MINUS_EQUALS
+						  ;
 						   
 MultiplicationOperator ::= MultiplicationOperatorLeft
-							|
-							MultiplicationOperatorRight
-							;
+						   |
+						   MultiplicationOperatorRight
+						   ;
 						
 MultiplicationOperatorLeft ::= TIMES
-								|
-								SOLIDUS
-								|													   
-								PERCENT
-								;
+							   |
+							   SOLIDUS
+							   |													   
+							   PERCENT
+							   ;
 								
 MultiplicationOperatorRight ::= TIMES_EQUALS
-								 |
-								 SOLIDUS_EQUALS
-								 |
-								 PERCENT_EQUALS
-								 ;
+							    |
+							    SOLIDUS_EQUALS
+							    |
+							    PERCENT_EQUALS
+							    ;
 						   
 				 				
 				 				

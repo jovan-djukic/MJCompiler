@@ -16,6 +16,8 @@ import java_cup.runtime.*;
 %column
 
 %{
+	StringBuilder errorToken = null;
+	
 	private Symbol newSymbol(int type) {
 		return new Symbol(type, yyline, yycolumn);
 	}
@@ -24,6 +26,10 @@ import java_cup.runtime.*;
 		return new Symbol(type, yyline, yycolumn, value);
 	}
 %}
+
+%init{
+	errorToken = new StringBuilder();
+%init}
 
 %yylexthrow LexerException
 
@@ -110,12 +116,17 @@ characterConstant = '({printableCharacter}|{specialCharacter}|{numericCharacter}
 {characterConstant} { return newSymbol(sym.CHARACTER_CONSTANT, yytext().substring(1, yytext().length() - 1) ); }
 {identifier}		{ return newSymbol(sym.IDENTIFIER, yytext()); }
 
-.	{ yybegin(ERROR); }
+.	{ 
+		errorToken.setLength(0);
+		errorToken.append(yytext());
+		yybegin(ERROR); 
+	}
 
 <ERROR> {
 	.*{safeCharacters} 	{ 
+							errorToken.append(yytext());
 							yybegin(YYINITIAL);
-							throw new LexerException("Error. Unknown token: " + yytext().substring(0, yytext().length() - 1) + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); 
+							throw new LexerException("Error. Unknown token: " + errorToken.toString() + " at line: " + (yyline + 1) + ", at column: " + (yycolumn + 1)); 
 						}
 }
 

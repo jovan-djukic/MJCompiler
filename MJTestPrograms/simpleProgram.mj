@@ -4,18 +4,47 @@ program MJProgram
 	const boolean w = true;
 	int x, y;
 	char r, t;
+	int array1[], array2[];
+	
+	class ParentClass {
+		char t, f, g;
+		
+		{
+			int m() { return 1; }
+		
+			void foo()
+				char message[];
+			{
+				message = new char[5];
+				message[0] = 'H';
+				message[1] = 'e';
+				message[2] = 'l';
+				message[3] = 'l';
+				message[4] = 'o';
+				print(message, 5);
+			}
+		}
+	}
+	
 	class MyClass extends ParentClass {
 		int a[], b, c;
 	
 		{
-			static void m() {
+			static void m() 
+				char a;
+			{
+				a = '=';
 				for (i = 0; i < 3; i++) 
-					if ( x > y) 
-						for ( i = 2; i < 4; i++) 
-							read(a);
+					if ( x > y) {
+						for ( i = 2; i < 4; i++) {
+							print(a);
+							continue;
+						}
+						break;
+					}
+						
 							
 				print(c);
-				print(c, 4);
 				
 				fcall1(a, b, c, a + b);
 				
@@ -42,13 +71,20 @@ program MJProgram
 			}
 		}
 	}
+	
+	
+	
 {
 	void main()
 		int a, b;
 		MyClass instance;
+		ParentClass parent;
 	{
 		instance = new MyClass;
+		parent = new MyClass;
 		instance.g();
+		intsance.t = 'a';
 		instance.a[5] = 2;
+		parent.m();
 	}
 }

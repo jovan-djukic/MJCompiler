@@ -54,6 +54,10 @@ public class SimpleParserTest {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
 					logger.info("SYMBOL IS: " + symbol.sym);
+					logger.info("GLOBAL VARIABLE COUNT: " + parser.getGlobalVariableCount());
+					logger.info("MAIN VARIABLE COUNT: " + parser.getMainVariableCount());
+					logger.info("CONSTANT COUNT: " + parser.getConstantCount());
+					logger.info("GLOBAL ARRAY DECLARTION: " + parser.getGlobalArrayCount());
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);
