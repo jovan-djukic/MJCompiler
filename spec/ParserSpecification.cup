@@ -94,6 +94,10 @@ parser code {:
 		return nonStaticMethodCount;
 	}
 
+	public int getGlobalMethodCount() {
+		return currentNonStaticMethodCount;
+	}
+
 	public void incrementCurrentStaticMethodCount() {
 		currentStaticMethodCount++;
 	}
@@ -150,6 +154,27 @@ parser code {:
 
 	public void incrementFormalArgumentsCount() {
 		formalArgumentsCount++;
+	}
+
+	private int classDefinitionCount = 0;
+
+	public int getClassDefinitionCount() {
+		return classDefinitionCount;
+	}
+
+	public void incrementClassDefinitionCount() {
+		classDefinitionCount++;
+	}
+
+	private int classVariableCount = 0;
+
+	public int getClassVariableCount() {
+		return classVariableCount;
+	}
+
+	public void incrementClassVariableCount() {
+		classVariableCount += currentVariableCount;
+		currentVariableCount = 0;
 	}
 
    	//redefined error functions  
@@ -287,11 +312,15 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 
 ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 							ClassVariableList
+							{:
+								parser.incrementClassVariableCount();
+							:}
 							ClassMethodList
 						 RIGHT_BRACE
 						 {:
 						 	parser.incrementStaticMethodCount();
 						 	parser.incrementNonStaticMethodCount();
+						 	parser.incrementClassDefinitionCount();
 						 :};
 					 
 ParentClassDeclaration ::= EXTENDS Type

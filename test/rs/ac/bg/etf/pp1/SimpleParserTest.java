@@ -58,11 +58,14 @@ public class SimpleParserTest {
 					logger.info("MAIN VARIABLE COUNT: " + parser.getMainVariableCount());
 					logger.info("CONSTANT COUNT: " + parser.getConstantCount());
 					logger.info("GLOBAL ARRAY DECLARTION: " + parser.getGlobalArrayCount());
-					logger.info("STATIC METHOD COUNT: " + parser.getStaticMethodCount());
-					logger.info("NON STATIC METHOD COUNT: " + parser.getNonStaticMethodCount());
+					logger.info("CLASS STATIC METHOD COUNT: " + parser.getStaticMethodCount());
+					logger.info("GLOBAL METHOD COUNT: " + parser.getGlobalMethodCount());
 					logger.info("CODE BLOCK COUNT: " + parser.getCodeBlockCount());
 					logger.info("MAIN METHOD CALL COUNT: " + parser.getMainMethodCalls());
-					logger.info("FORMAL ARGUMENTS: " + parser.getFormalArgumentsCount());
+					logger.info("FORMAL ARGUMENTS COUNT: " + parser.getFormalArgumentsCount());
+					logger.info("CLASS DEFINITION COUNT: " + parser.getClassDefinitionCount());
+					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.getNonStaticMethodCount());
+					logger.info("CLASS VARIABLE COUNT: " + parser.getClassVariableCount());
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);

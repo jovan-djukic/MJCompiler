@@ -27,7 +27,7 @@ program MJProgram
 	}
 	
 	class MyClass extends ParentClass {
-		int a[], b, c;
+		int a[], b, c, d;
 	
 		{
 			static void m(int p1, char p2) 
@@ -75,9 +75,11 @@ program MJProgram
 		}
 	}
 	
-	
-	
 {
+	void global1(int p1, int p2, int p3) {
+
+	}
+	
 	void main()
 		int a, b;
 		char c, d;
