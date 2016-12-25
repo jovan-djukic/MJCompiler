@@ -10,7 +10,7 @@ program MJProgram
 		char t, f, g;
 		
 		{
-			int m() { return 1; }
+			int m(int p1, char p2) { return 1; }
 		
 			void foo()
 				char message[];
@@ -30,7 +30,7 @@ program MJProgram
 		int a[], b, c;
 	
 		{
-			static void m() 
+			static void m(int p1, char p2) 
 				char a;
 			{
 				a = '=';
@@ -57,7 +57,10 @@ program MJProgram
 				return;
 			}
 			
-			void g() {
+			void g(int p1)
+				char c1, c2;
+			{
+				a = a + m(c1, c2);
 				if (c > b) b++;
 				if (c > b) if ( c > b ) {
 				
@@ -77,6 +80,7 @@ program MJProgram
 {
 	void main()
 		int a, b;
+		char c, d;
 		MyClass instance;
 		ParentClass parent;
 	{
@@ -85,6 +89,8 @@ program MJProgram
 		instance.g();
 		intsance.t = 'a';
 		instance.a[5] = 2;
-		parent.m();
+		parent.m(c, d);
+		parent.m(c, d);
+		{}
 	}
 }

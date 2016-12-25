@@ -81,6 +81,76 @@ parser code {:
 		currentArrayCount = 0;	
 	}
 
+	private int staticMethodCount = 0;
+	private int nonStaticMethodCount = 0;
+	private int currentStaticMethodCount = 0;
+	private int currentNonStaticMethodCount = 0;
+
+	public int getStaticMethodCount() { 
+		return staticMethodCount;
+	}
+
+	public int getNonStaticMethodCount() { 
+		return nonStaticMethodCount;
+	}
+
+	public void incrementCurrentStaticMethodCount() {
+		currentStaticMethodCount++;
+	}
+
+	public void incrementCurrentNonStaticMethodCount() {
+		currentNonStaticMethodCount++;
+	}
+
+	public void incrementStaticMethodCount() {
+		staticMethodCount += currentStaticMethodCount;
+		currentStaticMethodCount = 0;
+	}
+
+	public void incrementNonStaticMethodCount() {
+		nonStaticMethodCount += currentNonStaticMethodCount;
+		currentNonStaticMethodCount = 0;
+	}
+
+	private int codeBlockCount = 0;
+
+	public int getCodeBlockCount() {
+		return codeBlockCount;
+	}
+
+	public void incrementCodeBlockCount() {
+		codeBlockCount++;
+	}
+
+	private int mainMethodCallCount = 0;
+	private int currentMethodCallCount = 0;
+
+	public int getMainMethodCalls() {
+		return mainMethodCallCount;
+	}
+
+	public void incrementCurrentMethodCallCount() {
+		currentMethodCallCount++;
+	}
+
+	public void invalidateCurrentMethodCallCount() {
+		currentMethodCallCount = 0;
+	}
+
+	public void incrementMainMethodCallCount() {
+		mainMethodCallCount += currentMethodCallCount;
+		currentMethodCallCount = 0;
+	}
+
+	private int formalArgumentsCount = 0;
+
+	public int getFormalArgumentsCount() {
+		return formalArgumentsCount;
+	}
+
+	public void incrementFormalArgumentsCount() {
+		formalArgumentsCount++;
+	}
 
    	//redefined error functions  
     public void report_fatal_error(String message, Object info) throws java.lang.Exception {
@@ -215,10 +285,14 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	/* epsilon */
 			 	;
 			 
-ClassDeclaration ::= CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
-						ClassVariableList
-						ClassMethodList
-					 RIGHT_BRACE;
+ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
+							ClassVariableList
+							ClassMethodList
+						 RIGHT_BRACE
+						 {:
+						 	parser.incrementStaticMethodCount();
+						 	parser.incrementNonStaticMethodCount();
+						 :};
 					 
 ParentClassDeclaration ::= EXTENDS Type
 						   |
@@ -250,17 +324,26 @@ MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PAREN
 					  	{:
 							if (parser.isMain(identifier)) {
 								parser.incrementMainVariableCount();
+								parser.incrementMainMethodCallCount();
 							} else {
 								parser.invalidateCurrentVariableCount();
 								parser.invalidateCurrentArrayCount();
+								parser.invalidateCurrentMethodCallCount();
 							}
+							parser.incrementCodeBlockCount();
 						:};
 					  
-StaticModifier ::= STATIC 
-				   |
-				   /* epsilon */
-				   ;
-				   
+StaticModifier ::= 	STATIC
+					{:
+						parser.incrementCurrentStaticMethodCount();
+					:} 
+				   	|
+				   	/* epsilon */
+				   	{:
+				   		parser.incrementCurrentNonStaticMethodCount();
+				   	:}
+				   	;
+				   	
 ReturnType ::= Type
 			   |
 			   VOID
@@ -276,7 +359,11 @@ ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalPar
 									 /* epsilon */
 									 ;						
 						
-FormalParameter ::= Type IDENTIFIER Brackets;
+FormalParameter ::= Type IDENTIFIER Brackets
+					{:
+						parser.incrementFormalArgumentsCount();
+					:}
+					;
 
 MethodVariableDeclarationList ::= VariableDeclaration MethodVariableDeclarationList
 								  |
@@ -307,30 +394,33 @@ UnmatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 					 		UnmatchedStatement
 					   ;
 					 
-MatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
-						MatchedStatement
-					 ELSE
-					 	MatchedStatement
-					 | /* matched for */
-					 FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
-					 	MatchedStatement
-					 |
-					 DesignatorStatement SEMICOLON
-					 |
-					 BREAK SEMICOLON
-					 |
-					 CONTINUE SEMICOLON
-					 |
-					 RETURN ReturnValue SEMICOLON
-					 |
-					 READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
-					 |
-					 PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
-					 |
-					 LEFT_BRACE
-					 	StatementList
-					 RIGHT_BRACE			
-					 ;
+MatchedStatement ::= 	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
+								MatchedStatement
+						ELSE
+							MatchedStatement
+						| /* matched for */
+						FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+							MatchedStatement
+						|
+						DesignatorStatement SEMICOLON
+						|
+						BREAK SEMICOLON
+						|
+						CONTINUE SEMICOLON
+					 	|
+					 	RETURN ReturnValue SEMICOLON
+					 	|
+					 	READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
+					 	|
+					 	PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
+					 	|
+					 	LEFT_BRACE
+					 		StatementList
+					 	RIGHT_BRACE
+					 	{:
+					 		parser.incrementCodeBlockCount();
+					 	:}			
+					 	;
 
 ReturnValue ::= Expression
 				|
@@ -359,14 +449,17 @@ ForPostStatement ::= DesignatorStatement
 
 DesignatorStatement ::= Designator RestOfTheDesignatorStatement;
 
-RestOfTheDesignatorStatement ::= AssignOperation Expression
-								 |
-								 LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
-								 |
-								 INCREMENT
-								 |
-								 DECREMENT
-								 ;
+RestOfTheDesignatorStatement ::= 	AssignOperation Expression
+								 	|
+								 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+								 	{:
+								 		parser.incrementCurrentMethodCallCount();
+								 	:}
+								 	|
+								 	INCREMENT
+								 	|
+								 	DECREMENT
+								 	;
 								 
 ActualParameters ::= ExpressionList
 					 |
@@ -433,10 +526,13 @@ Factor ::= Designator OptionalParameters
 		   LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 		   ;
 		   
-OptionalParameters ::= LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
-					   |
-					   /* epsilon */
-					   ;		   
+OptionalParameters ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+					   	{:
+					   		parser.invalidateCurrentMethodCallCount();
+					   	:}
+					   	|
+					   	/* epsilon */
+					   	;		   
 		   						  
 ArraySize ::= ArrayIndexer
 			  |
