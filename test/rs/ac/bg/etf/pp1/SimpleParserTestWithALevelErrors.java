@@ -12,15 +12,11 @@ import java.io.PrintWriter;
 import org.apache.logging.log4j.Logger;
 
 import java_cup.runtime.Symbol;
-import rs.ac.bg.etf.pp1.Lexer;
-import rs.ac.bg.etf.pp1.LexerException;
-import rs.ac.bg.etf.pp1.sym_lexer;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
-public class LexerTest {
-	
-	private static String testProgramsDirectoryPath = "MJTestPrograms/LexicalAnalysis";
-	private static Logger logger = MyLoggerFactory.getLogger(LexerTest.class);
+public class SimpleParserTestWithALevelErrors {
+	private static String testProgramsDirectoryPath = "MJTestPrograms/SemanticAnalysisWithErrors";
+	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserTestWithALevelErrors.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
@@ -54,23 +50,29 @@ public class LexerTest {
 				Symbol symbol = null;
 				Lexer lexer = new Lexer(in);
 				
-				while (true) {
-					try {
-						symbol = lexer.next_token();
-						if (symbol.sym == sym.EOF) {
-							break;
-						} else {
-							if (out != null) {
-								out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
-							}
-							logger.info("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
-						}
-					} catch (LexerException le) {
-						if (out != null) {
-							out.println(le);
-						}
-						logger.info(le);
+				try {
+					Parser parser = new Parser(new Lexer(in));
+					symbol = parser.parse();
+					logger.info("SYMBOL IS: " + symbol.sym);
+					logger.info("GLOBAL VARIABLE COUNT: " + parser.getGlobalVariableCount());
+					logger.info("MAIN VARIABLE COUNT: " + parser.getMainVariableCount());
+					logger.info("CONSTANT COUNT: " + parser.getConstantCount());
+					logger.info("GLOBAL ARRAY DECLARTION: " + parser.getGlobalArrayCount());
+					logger.info("CLASS STATIC METHOD COUNT: " + parser.getStaticMethodCount());
+					logger.info("GLOBAL METHOD COUNT: " + parser.getGlobalMethodCount());
+					logger.info("CODE BLOCK COUNT: " + parser.getCodeBlockCount());
+					logger.info("MAIN METHOD CALL COUNT: " + parser.getMainMethodCalls());
+					logger.info("FORMAL ARGUMENTS COUNT: " + parser.getFormalArgumentsCount());
+					logger.info("CLASS DEFINITION COUNT: " + parser.getClassDefinitionCount());
+					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.getNonStaticMethodCount());
+					logger.info("CLASS VARIABLE COUNT: " + parser.getClassVariableCount());
+				} catch (LexerException le) {
+					if (out != null) {
+						out.println(le);
 					}
+					logger.info(le);
+				} catch (Exception e) {
+					logger.info(e);
 				}
 			} catch (FileNotFoundException fnfe) {
 				// TODO: handle exception
@@ -81,5 +83,4 @@ public class LexerTest {
 		
 		out.close();
 	}
-
 }

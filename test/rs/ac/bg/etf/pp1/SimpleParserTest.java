@@ -15,7 +15,7 @@ import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 public class SimpleParserTest {
-	private static String testProgramsDirectoryPath = "MJTestPrograms";
+	private static String testProgramsDirectoryPath = "MJTestPrograms/SemanticAnalysis";
 	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserTest.class);
 	
 	public static void main(String[] args) {
@@ -34,7 +34,7 @@ public class SimpleParserTest {
 		File file = new File(testProgramsDirectoryPath);
 		File[] testFiles = file.listFiles();
 		
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < testFiles.length; i++) {
 			
 			if (out != null) {
 				out.println("======================================================================");
