@@ -294,12 +294,15 @@ VariableDeclaration ::= Type VariableList SEMICOLON;
 VariableList ::= Variable COMA VariableList
 				 |
 				 Variable
+				 |
 				 ;
 				 
 Variable ::=	IDENTIFIER Brackets
 				{: 
 			 		parser.incrementCurrentVariableCount();
 			 	:}
+			 	|
+			 	error
 			 	;
 
 Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
@@ -557,7 +560,7 @@ Factor ::= Designator OptionalParameters
 		   
 OptionalParameters ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 					   	{:
-					   		parser.invalidateCurrentMethodCallCount();
+					   		parser.incrementCurrentMethodCallCount();
 					   	:}
 					   	|
 					   	/* epsilon */
