@@ -221,13 +221,13 @@ terminal Boolean BOOLEAN_CONSTANT;
 
 nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
 
-nonterminal NonMethodDeclaration, ConstantDeclaration, VariableDeclaration, ClassDeclaration;
+nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, GlobalVariableList, ClassDeclaration;
 
-nonterminal Type, ConstantList, Constant, Value, VariableList, Variable, Brackets;
+nonterminal Type, ConstantList, Constant, Value, Variable, Brackets;
 
-nonterminal ParentClassDeclaration, ClassVariableList, ClassMethodList;
+nonterminal ParentClassDeclaration, ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
 
-nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList,
+nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration, MethodVariableList,
 			FormalParameter, ComaSeparetedFormalParameterList;
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
@@ -261,7 +261,7 @@ NonMethodDeclarationList ::= NonMethodDeclaration NonMethodDeclarationList
 
 NonMethodDeclaration ::= 	ConstantDeclaration
 						 	|
-						 	VariableDeclaration
+						 	GlobalVariableDeclaration
 							{:
 								parser.incrementGlobalVariableCount();
 								parser.incrementGlobalArrayCount();
@@ -289,20 +289,18 @@ Value ::= NUMERICAL_CONSTANT
 		  BOOLEAN_CONSTANT
 		  ;
 
-VariableDeclaration ::= Type VariableList SEMICOLON;  
+GlobalVariableDeclaration ::= Type GlobalVariableList SEMICOLON;  
 		  
-VariableList ::= Variable COMA VariableList
-				 |
-				 Variable
-				 |
-				 ;
+GlobalVariableList ::=	Variable COMA GlobalVariableList
+				 		|
+				 		Variable
+				 		|
+				 		;
 				 
 Variable ::=	IDENTIFIER Brackets
 				{: 
 			 		parser.incrementCurrentVariableCount();
 			 	:}
-			 	|
-			 	error
 			 	;
 
 Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
@@ -314,7 +312,7 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	;
 			 
 ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
-							ClassVariableList
+							ClassVariableDeclarationList
 							{:
 								parser.incrementClassVariableCount();
 							:}
@@ -331,10 +329,17 @@ ParentClassDeclaration ::= EXTENDS Type
 						   /* epsilon */
 						   ;
 					 
-ClassVariableList ::= VariableDeclaration ClassVariableList
-					  |
-					  /* epsilon */
-					  ;
+ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
+					  				|
+					  				/* epsilon */
+					  				;
+
+ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON;
+
+ClassVariableList ::= 	Variable COMA ClassVariableList
+						|
+						Variable
+						;
 
 ClassMethodList ::= LEFT_BRACE
 						MethodDeclarationList
@@ -397,10 +402,17 @@ FormalParameter ::= Type IDENTIFIER Brackets
 					:}
 					;
 
-MethodVariableDeclarationList ::= VariableDeclaration MethodVariableDeclarationList
+MethodVariableDeclarationList ::= MethodVariableDeclaration MethodVariableDeclarationList
 								  |
 								  /* epsilon */
 								  ;
+
+MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON;
+
+MethodVariableList ::=	Variable COMA MethodVariableList
+						|
+						Variable
+						;
 
 Type ::= IDENTIFIER;
 
