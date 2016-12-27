@@ -289,12 +289,15 @@ Value ::= NUMERICAL_CONSTANT
 		  BOOLEAN_CONSTANT
 		  ;
 
-GlobalVariableDeclaration ::= Type GlobalVariableList SEMICOLON;  
+GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON;
 		  
 GlobalVariableList ::=	Variable COMA GlobalVariableList
 				 		|
 				 		Variable
 				 		|
+				 		Variable error COMA GlobalVariableList
+				 		|
+				 		error
 				 		;
 				 
 Variable ::=	IDENTIFIER Brackets
@@ -404,10 +407,15 @@ FormalParameter ::= Type IDENTIFIER Brackets
 
 MethodVariableDeclarationList ::= MethodVariableDeclaration MethodVariableDeclarationList
 								  |
+								  error
+								  |
 								  /* epsilon */
 								  ;
 
-MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON;
+MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
+								|
+								Type error SEMICOLON
+								;
 
 MethodVariableList ::=	Variable COMA MethodVariableList
 						|
@@ -491,7 +499,10 @@ ForPostStatement ::= DesignatorStatement
 					 /* epsilon */
 					 ;
 
-DesignatorStatement ::= Designator RestOfTheDesignatorStatement;
+DesignatorStatement ::= Designator RestOfTheDesignatorStatement
+						|
+						error
+						;
 
 RestOfTheDesignatorStatement ::= 	AssignOperation Expression
 								 	|

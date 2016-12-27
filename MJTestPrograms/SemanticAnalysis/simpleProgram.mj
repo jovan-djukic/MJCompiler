@@ -3,8 +3,8 @@ program MJProgram
 	const char c = '\n', z = 'a', q = '\040';
 	const boolean w = true;
 	int x, y;
-	char r, t;
-	int array1[], array2[];
+	int r, t;
+	int array1[], array2[], array3[];
 	
 	class ParentClass {
 		char t, f, g;

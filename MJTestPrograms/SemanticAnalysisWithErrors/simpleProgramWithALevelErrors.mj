@@ -4,7 +4,8 @@ program MJProgram
 	const boolean w = true;
 	int x, y;
 	char r, t;
-	int array1[] array2[];
+	int array1[] array2[], array3[];
+	int array4[];
 	
 	class ParentClass {
 		char t, f, g;
@@ -13,7 +14,10 @@ program MJProgram
 			int m(int p1, char p2) { return 1; }
 		
 			void foo()
+				int l1, l2
+				int l3, l4;
 				char message[];
+				int l5
 			{
 				message = new char[5];
 				message[0] = 'H';
@@ -49,7 +53,7 @@ program MJProgram
 				fcall1(a, b, c, a + b);
 				
 				if ( a >= b || a <= b && c == d) {
-					a = - 5;
+					a =;
 				}
 				
 				break;
