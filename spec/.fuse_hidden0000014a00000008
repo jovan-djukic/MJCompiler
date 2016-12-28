@@ -1,0 +1,688 @@
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.logging.log4j.Logger;
+import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
+
+parser code {:
+	
+	private Logger logger = MyLoggerFactory.getLogger(getClass());
+
+	public Logger getLogger() {
+		return logger;	
+	}    
+
+	//functions defined for counts
+	private int globalVariableCount = 0;
+
+	public int getGlobalVariableCount() {
+		return globalVariableCount;
+	}
+
+	private int currentVariableCount = 0;
+
+	public void incrementCurrentVariableCount() {
+		currentVariableCount++;
+	}
+
+	public void invalidateCurrentVariableCount() {
+		currentVariableCount = 0;
+	}
+	
+	public void incrementGlobalVariableCount() {
+		globalVariableCount += currentVariableCount;
+		currentVariableCount = 0;
+	}
+
+	private int mainVariableCount = 0;
+
+	public int getMainVariableCount() {
+		return mainVariableCount;
+	}
+
+	public void incrementMainVariableCount() {
+		mainVariableCount += currentVariableCount;
+		currentVariableCount = 0;
+	}
+
+	private static String main = "main";
+	
+	public boolean isMain(String identifier) {
+		return main.equals(identifier);
+	}
+
+	private int constantCount = 0;
+
+	public int getConstantCount() {
+		return constantCount;
+	}
+
+	public void incrementConstantCount() {
+		constantCount++;
+	}
+
+	private int globalArrayCount = 0;
+	private int currentArrayCount = 0;
+
+	public int getGlobalArrayCount() {
+		return globalArrayCount;
+	}
+
+	public void incrementGlobalArrayCount() {
+		globalArrayCount += currentArrayCount;
+		currentArrayCount = 0;	
+	}
+
+	public void incrementCurrentArrayCount() {
+		currentArrayCount++;
+	}
+
+	public void invalidateCurrentArrayCount() {
+		currentArrayCount = 0;	
+	}
+
+	private int staticMethodCount = 0;
+	private int nonStaticMethodCount = 0;
+	private int currentStaticMethodCount = 0;
+	private int currentNonStaticMethodCount = 0;
+
+	public int getStaticMethodCount() { 
+		return staticMethodCount;
+	}
+
+	public int getNonStaticMethodCount() { 
+		return nonStaticMethodCount;
+	}
+
+	public int getGlobalMethodCount() {
+		return currentNonStaticMethodCount;
+	}
+
+	public void incrementCurrentStaticMethodCount() {
+		currentStaticMethodCount++;
+	}
+
+	public void incrementCurrentNonStaticMethodCount() {
+		currentNonStaticMethodCount++;
+	}
+
+	public void incrementStaticMethodCount() {
+		staticMethodCount += currentStaticMethodCount;
+		currentStaticMethodCount = 0;
+	}
+
+	public void incrementNonStaticMethodCount() {
+		nonStaticMethodCount += currentNonStaticMethodCount;
+		currentNonStaticMethodCount = 0;
+	}
+
+	private int codeBlockCount = 0;
+
+	public int getCodeBlockCount() {
+		return codeBlockCount;
+	}
+
+	public void incrementCodeBlockCount() {
+		codeBlockCount++;
+	}
+
+	private int mainMethodCallCount = 0;
+	private int currentMethodCallCount = 0;
+
+	public int getMainMethodCalls() {
+		return mainMethodCallCount;
+	}
+
+	public void incrementCurrentMethodCallCount() {
+		currentMethodCallCount++;
+	}
+
+	public void invalidateCurrentMethodCallCount() {
+		currentMethodCallCount = 0;
+	}
+
+	public void incrementMainMethodCallCount() {
+		mainMethodCallCount += currentMethodCallCount;
+		currentMethodCallCount = 0;
+	}
+
+	private int formalArgumentsCount = 0;
+
+	public int getFormalArgumentsCount() {
+		return formalArgumentsCount;
+	}
+
+	public void incrementFormalArgumentsCount() {
+		formalArgumentsCount++;
+	}
+
+	private int classDefinitionCount = 0;
+
+	public int getClassDefinitionCount() {
+		return classDefinitionCount;
+	}
+
+	public void incrementClassDefinitionCount() {
+		classDefinitionCount++;
+	}
+
+	private int classVariableCount = 0;
+
+	public int getClassVariableCount() {
+		return classVariableCount;
+	}
+
+	public void incrementClassVariableCount() {
+		classVariableCount += currentVariableCount;
+		currentVariableCount = 0;
+	}
+
+   	//redefined error functions  
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      report_error(message, info);
+      done_parsing();
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("Syntax erorr: ", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+        if (info instanceof Symbol) {
+			Symbol currentSymbol = (Symbol) info;
+			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
+		}
+		logger.info(message + ", current symbol: " + info.toString());
+    }
+:}
+
+scan with {:
+	Symbol symbol = this.getScanner().next_token();
+	if (symbol != null && symbol.value != null) 
+		logger.debug(symbol.toString() + " " + symbol.value.toString());
+	return symbol;
+:}
+
+terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
+terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
+terminal DECREMENT, OR, AND, NEW, DOT, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_OR_EQUAL_THAN, LESS_THAN;
+terminal LESS_OR_EQUAL_THAN, PLUS, MINUS, PLUS_EQUALS, MINUS_EQUALS, TIMES, SOLIDUS, PERCENT, TIMES_EQUALS;
+terminal SOLIDUS_EQUALS, PERCENT_EQUALS, READ, PRINT, EXTENDS;
+
+terminal String IDENTIFIER, CHARACTER_CONSTANT;
+
+terminal Integer NUMERICAL_CONSTANT;
+
+terminal Boolean BOOLEAN_CONSTANT;
+
+nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
+
+nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, GlobalVariableList, ClassDeclaration;
+
+nonterminal Type, ConstantList, Constant, Value, Variable, Brackets;
+
+nonterminal ParentClassDeclaration, ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
+
+nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration, MethodVariableList,
+			FormalParameter, ComaSeparetedFormalParameterList;
+
+nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
+
+nonterminal IfHeader, ForHeader;
+
+nonterminal ForInitialStatement, ForCondition, ForPostStatement;
+
+nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList, ComaSeparatedExpressionList;
+
+nonterminal Condition, OrSeparatedConditionTerms, ConditionTerm, AndSeparatedConditionFacts, ConditionFact, RestOfTheConditionFact, RelationalOperator;
+
+nonterminal Expression, ExpressionPrefix, AdditionOperatorSeparatedTermList, Term, MultiplicationOperatorSeparatedFactorList, Factor;
+
+nonterminal OptionalParameters, ArraySize, ArrayIndexer;
+
+nonterminal Designator, AccessList, AccessListElement, AssignOperation, AssignOperator;
+
+nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
+
+nonterminal MultiplicationOperator, MultiplicationOperatorLeft, MultiplicationOperatorRight;
+
+Program ::= PROGRAM IDENTIFIER 
+			NonMethodDeclarationList 
+			LEFT_BRACE 	
+				MethodDeclarationList 
+			RIGHT_BRACE;
+			
+NonMethodDeclarationList ::= NonMethodDeclaration NonMethodDeclarationList
+							 |
+							 /* epsilon */
+							 ;
+
+NonMethodDeclaration ::= 	ConstantDeclaration
+						 	|
+						 	GlobalVariableDeclaration
+							{:
+								parser.incrementGlobalVariableCount();
+								parser.incrementGlobalArrayCount();
+						 	:}
+						 	|
+						 	ClassDeclaration
+						 	;
+			
+ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
+
+ConstantList ::= Constant COMA ConstantList
+				 |
+				 Constant
+				 ;	
+
+Constant ::=	IDENTIFIER EQUALS Value
+				{:
+					parser.incrementConstantCount();
+				:};
+
+Value ::= NUMERICAL_CONSTANT
+		  |
+		  CHARACTER_CONSTANT
+		  |
+		  BOOLEAN_CONSTANT
+		  ;
+
+GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON;
+		  
+GlobalVariableList ::=	Variable COMA GlobalVariableList
+				 		|
+				 		Variable
+				 		|
+				 		Variable error COMA GlobalVariableList
+				 		|
+				 		error
+				 		;
+				 
+Variable ::=	IDENTIFIER Brackets
+				{: 
+			 		parser.incrementCurrentVariableCount();
+			 	:}
+			 	;
+
+Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
+			 	{:
+					parser.incrementCurrentArrayCount();
+				:}
+			 	|
+			 	/* epsilon */
+			 	;
+			 
+ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
+							ClassVariableDeclarationList
+							{:
+								parser.incrementClassVariableCount();
+							:}
+							ClassMethodList
+						 RIGHT_BRACE
+						 {:
+						 	parser.incrementStaticMethodCount();
+						 	parser.incrementNonStaticMethodCount();
+						 	parser.incrementClassDefinitionCount();
+						 :};
+					 
+ParentClassDeclaration ::= EXTENDS Type
+						   |
+						   /* epsilon */
+						   ;
+					 
+ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
+					  				|
+					  				/* epsilon */
+					  				;
+
+ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON;
+
+ClassVariableList ::= 	Variable COMA ClassVariableList
+						|
+						Variable
+						;
+
+ClassMethodList ::= LEFT_BRACE
+						MethodDeclarationList
+					RIGHT_BRACE
+					|
+					/* epsilon */
+					;
+
+MethodDeclarationList ::= MethodDeclaration MethodDeclarationList
+						  |
+						  /* epsilon */
+						  ;
+						  
+MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+							MethodVariableDeclarationList
+					  	LEFT_BRACE
+					  		StatementList
+					  	RIGHT_BRACE
+					  	{:
+							if (parser.isMain(identifier)) {
+								parser.incrementMainVariableCount();
+								parser.incrementMainMethodCallCount();
+							} else {
+								parser.invalidateCurrentVariableCount();
+								parser.invalidateCurrentArrayCount();
+								parser.invalidateCurrentMethodCallCount();
+							}
+							parser.incrementCodeBlockCount();
+						:};
+					  
+StaticModifier ::= 	STATIC
+					{:
+						parser.incrementCurrentStaticMethodCount();
+					:} 
+				   	|
+				   	/* epsilon */
+				   	{:
+				   		parser.incrementCurrentNonStaticMethodCount();
+				   	:}
+				   	;
+				   	
+ReturnType ::= Type
+			   |
+			   VOID
+			   ;
+
+FormalParameterList ::= FormalParameter ComaSeparetedFormalParameterList
+						|
+						error
+						|
+						/* epsilon */
+						;
+
+ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalParameterList
+									 |
+									 COMA error ComaSeparetedFormalParameterList
+									 |
+									 /* epsilon */
+									 ;						
+						
+FormalParameter ::= Type IDENTIFIER Brackets
+					{:
+						parser.incrementFormalArgumentsCount();
+					:}
+					;
+
+MethodVariableDeclarationList ::= MethodVariableDeclaration MethodVariableDeclarationList
+								  |
+								  error
+								  |
+								  /* epsilon */
+								  ;
+
+MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
+								|
+								Type error SEMICOLON
+								;
+
+MethodVariableList ::=	Variable COMA MethodVariableList
+						|
+						Variable
+						;
+
+Type ::= IDENTIFIER;
+
+StatementList ::= Statement StatementList
+				  |
+				  /* epsilon */
+				  ;
+
+Statement ::= MatchedStatement
+			  |
+			  UnmatchedStatement
+			  ;
+			  
+IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+				|
+				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS
+				;
+
+ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS;
+
+UnmatchedStatement ::=	IfHeader 
+							Statement
+					   	|
+					   	IfHeader
+					   		MatchedStatement
+					   	ELSE
+					   		UnmatchedStatement
+					   	| 
+					   	/* umatched for */
+					   	ForHeader
+					   		UnmatchedStatement
+					   	;
+					 
+MatchedStatement ::= 	IfHeader 
+							MatchedStatement
+						ELSE
+							MatchedStatement
+						| 
+						/* matched for */
+						ForHeader
+							MatchedStatement
+						|
+						DesignatorStatement SEMICOLON
+						|
+						BREAK SEMICOLON
+						|
+						CONTINUE SEMICOLON
+					 	|
+					 	RETURN ReturnValue SEMICOLON
+					 	|
+					 	READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
+					 	|
+					 	PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
+					 	|
+					 	LEFT_BRACE
+					 		StatementList
+					 	RIGHT_BRACE
+					 	{:
+					 		parser.incrementCodeBlockCount();
+					 	:}			
+					 	;
+
+ReturnValue ::= Expression
+				|
+				/* epsilon */
+				;
+				
+PrintParameters ::= Expression
+					|
+					Expression COMA NUMERICAL_CONSTANT
+					;
+
+ForInitialStatement ::=	DesignatorStatement
+						|
+						/* epsilon */
+						;
+						 
+ForCondition ::= Condition
+				 |
+				 /* epsilon */
+		  		 ;
+		  		 
+ForPostStatement ::= DesignatorStatement
+					 |
+					 /* epsilon */
+					 ;
+
+DesignatorStatement ::=	Designator RestOfTheDesignatorStatement;
+
+RestOfTheDesignatorStatement ::= 	AssignOperation
+									|
+									LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+								 	{:
+								 		parser.incrementCurrentMethodCallCount();
+								 	:}
+								 	|
+								 	INCREMENT
+								 	|
+								 	DECREMENT
+								 	;
+
+AssignOperation ::= 	AssignOperator Expression
+						|
+						error
+						;
+								 
+ActualParameters ::= ExpressionList
+					 |
+					 /* epsilon */
+					 ;
+
+ExpressionList ::= Expression ComaSeparatedExpressionList;
+
+ComaSeparatedExpressionList ::= COMA Expression ComaSeparatedExpressionList
+								|
+								/* epsilon */
+				 				;
+				 				
+Condition ::= ConditionTerm OrSeparatedConditionTerms;
+
+OrSeparatedConditionTerms ::= OR ConditionTerm OrSeparatedConditionTerms
+							  |
+							  /* epsilon */
+							  ;		 				
+				 				
+ConditionTerm ::= ConditionFact AndSeparatedConditionFacts;
+
+AndSeparatedConditionFacts ::= AND ConditionFact AndSeparatedConditionFacts
+							   |
+							   /* epsilon */
+							   ;
+
+ConditionFact ::= Expression RestOfTheConditionFact;
+
+RestOfTheConditionFact ::= RelationalOperator Expression
+						   |
+						   /* epsilon */
+						   ;
+						   
+Expression ::= ExpressionPrefix Term AdditionOperatorSeparatedTermList;
+
+ExpressionPrefix ::= MINUS
+					 |
+					 /* epsilon */
+					 ;
+
+AdditionOperatorSeparatedTermList ::= AdditionOperator Term
+									  |
+									  /* epsilon */
+									  ;
+
+Term ::= Factor MultiplicationOperatorSeparatedFactorList;
+
+MultiplicationOperatorSeparatedFactorList ::= MultiplicationOperator Factor
+											  |
+											  /* epsilon */
+											  ;
+
+Factor ::= Designator OptionalParameters
+		   |
+		   NUMERICAL_CONSTANT
+		   |
+		   CHARACTER_CONSTANT
+		   |
+		   BOOLEAN_CONSTANT
+		   |
+		   NEW Type ArraySize
+		   |
+		   LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+		   ;
+		   
+OptionalParameters ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+					   	{:
+					   		parser.incrementCurrentMethodCallCount();
+					   	:}
+					   	|
+					   	/* epsilon */
+					   	;		   
+		   						  
+ArraySize ::= ArrayIndexer
+			  |
+			  /* epsilon */
+			  ;
+	   
+ArrayIndexer ::= LEFT_BRACKET Expression RIGHT_BRACKET;
+					
+					
+Designator ::= IDENTIFIER AccessList;
+
+AccessList ::= AccessListElement AccessList
+			   |
+			   /* epsilon */
+			   ;
+			   
+AccessListElement ::= DOT IDENTIFIER
+					  |
+					  ArrayIndexer
+					  ;
+
+AssignOperator ::= EQUALS
+					|
+					AdditionOperatorRight
+					|
+					MultiplicationOperatorRight
+					;
+
+RelationalOperator ::= EQUAL
+					   |
+					   NOT_EQUAL
+					   |
+					   GREATER_THAN
+					   |
+					   GREATER_OR_EQUAL_THAN
+					   |
+					   LESS_THAN
+					   |
+					   LESS_OR_EQUAL_THAN
+					   ;
+					   
+AdditionOperator ::= AdditionOperatorLeft
+					 |
+					 AdditionOperatorRight
+					 ;					   
+					 
+AdditionOperatorLeft ::= PLUS
+						 |
+						 MINUS
+						 ;					  
+					   
+AdditionOperatorRight ::= PLUS_EQUALS
+						  |
+						  MINUS_EQUALS
+						  ;
+						   
+MultiplicationOperator ::= MultiplicationOperatorLeft
+						   |
+						   MultiplicationOperatorRight
+						   ;
+						
+MultiplicationOperatorLeft ::= TIMES
+							   |
+							   SOLIDUS
+							   |													   
+							   PERCENT
+							   ;
+								
+MultiplicationOperatorRight ::= TIMES_EQUALS
+							    |
+							    SOLIDUS_EQUALS
+							    |
+							    PERCENT_EQUALS
+							    ;
+						   
+				 				
+				 				
+				 				
+				 				
+				 				
+				 				

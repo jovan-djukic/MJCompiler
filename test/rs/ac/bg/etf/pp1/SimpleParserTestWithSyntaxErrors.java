@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
-public class SimpleParserTestWithALevelErrors {
+public class SimpleParserTestWithSyntaxErrors {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/SemanticAnalysisWithErrors";
-	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserTestWithALevelErrors.class);
+	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserTestWithSyntaxErrors.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;

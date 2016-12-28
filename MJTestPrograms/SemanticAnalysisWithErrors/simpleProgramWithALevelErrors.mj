@@ -37,7 +37,7 @@ program MJProgram
 			static void m(int p1, char p2) 
 				char a;
 			{
-				a = '=';
+				a =;
 				for (i = 0; i < 3; i++) 
 					if ( x > y) {
 						for ( i = 2; i < 4; i++) {
