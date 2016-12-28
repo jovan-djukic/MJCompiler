@@ -232,6 +232,8 @@ nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, 
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
 
+nonterminal IfHeader;
+
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
 nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList, ComaSeparatedExpressionList;
@@ -391,10 +393,14 @@ ReturnType ::= Type
 
 FormalParameterList ::= FormalParameter ComaSeparetedFormalParameterList
 						|
+						error //{: parser.getLogger().debug("Whole formal parameter error"); :}
+						|
 						/* epsilon */
 						;
 
 ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalParameterList
+									 |
+									 COMA error ComaSeparetedFormalParameterList //{: parser.getLogger().debug("Partial formal parameter error"); :}
 									 |
 									 /* epsilon */
 									 ;						
@@ -433,11 +439,16 @@ Statement ::= MatchedStatement
 			  |
 			  UnmatchedStatement
 			  ;
+
+IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+				|
+				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS //{: parser.getLogger().debug("If condition error recovery"); :}
+				;
 			  
-UnmatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
+UnmatchedStatement ::= IfHeader 
 							Statement
 					   |
-					   IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+					   IfHeader
 					   		MatchedStatement
 					   ELSE
 					   		UnmatchedStatement
@@ -446,8 +457,8 @@ UnmatchedStatement ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 					 		UnmatchedStatement
 					   ;
 					 
-MatchedStatement ::= 	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS 
-								MatchedStatement
+MatchedStatement ::= 	IfHeader 
+							MatchedStatement
 						ELSE
 							MatchedStatement
 						| /* matched for */
