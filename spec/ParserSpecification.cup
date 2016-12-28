@@ -504,7 +504,9 @@ DesignatorStatement ::=	Designator RestOfTheDesignatorStatement
 						AssignOperation
 						;
 
-RestOfTheDesignatorStatement ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+RestOfTheDesignatorStatement ::= 	AssignOperation
+									|
+									LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 								 	{:
 								 		parser.incrementCurrentMethodCallCount();
 								 	:}
@@ -514,7 +516,7 @@ RestOfTheDesignatorStatement ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENT
 								 	DECREMENT
 								 	;
 
-AssignOperation ::= 	Designator AssignOperator Expression
+AssignOperation ::= 	AssignOperator Expression
 						|
 						error
 						;
@@ -612,7 +614,7 @@ AccessListElement ::= DOT IDENTIFIER
 					  ArrayIndexer
 					  ;
 
-AssignOperator ::= EQUALS
+AssignOperator ::= 	EQUALS
 					|
 					AdditionOperatorRight
 					|
