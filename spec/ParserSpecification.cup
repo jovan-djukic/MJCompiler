@@ -545,9 +545,14 @@ ActualParameters ::= ExpressionList
 					 /* epsilon */
 					 ;
 
-ExpressionList ::= Expression ComaSeparatedExpressionList;
+ExpressionList ::=	Expression ComaSeparatedExpressionList
+					|
+					error //{: parser.getLogger().debug("Whole ActualParameters recovery"); :}
+					;
 
 ComaSeparatedExpressionList ::= COMA Expression ComaSeparatedExpressionList
+								|
+								COMA error //{: parser.getLogger().debug("Partial ActualParameters recovery"); :}
 								|
 								/* epsilon */
 				 				;
