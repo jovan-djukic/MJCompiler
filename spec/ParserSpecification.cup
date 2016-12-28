@@ -242,7 +242,7 @@ nonterminal Expression, ExpressionPrefix, AdditionOperatorSeparatedTermList, Ter
 
 nonterminal OptionalParameters, ArraySize, ArrayIndexer;
 
-nonterminal Designator, AccessList, AccessListElement, AssignOperation;
+nonterminal Designator, AccessList, AccessListElement, AssignOperation, AssignOperator;
 
 nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
 
@@ -499,14 +499,12 @@ ForPostStatement ::= DesignatorStatement
 					 /* epsilon */
 					 ;
 
-DesignatorStatement ::= Designator RestOfTheDesignatorStatement
+DesignatorStatement ::=	Designator RestOfTheDesignatorStatement
 						|
-						error
+						AssignOperation
 						;
 
-RestOfTheDesignatorStatement ::= 	AssignOperation Expression
-								 	|
-								 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+RestOfTheDesignatorStatement ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 								 	{:
 								 		parser.incrementCurrentMethodCallCount();
 								 	:}
@@ -515,6 +513,11 @@ RestOfTheDesignatorStatement ::= 	AssignOperation Expression
 								 	|
 								 	DECREMENT
 								 	;
+
+AssignOperation ::= 	Designator AssignOperator Expression
+						|
+						error
+						;
 								 
 ActualParameters ::= ExpressionList
 					 |
@@ -609,7 +612,7 @@ AccessListElement ::= DOT IDENTIFIER
 					  ArrayIndexer
 					  ;
 
-AssignOperation ::= EQUALS
+AssignOperator ::= EQUALS
 					|
 					AdditionOperatorRight
 					|
