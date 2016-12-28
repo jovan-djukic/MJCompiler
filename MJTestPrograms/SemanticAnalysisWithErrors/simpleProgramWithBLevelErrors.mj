@@ -93,6 +93,11 @@ program MJProgram
 		instance.a[5] = 2;
 		parent.m(c, d);
 		parent.m(c, d);
+		for () {} 
+		for ( new ; a < 5; a++) {}
+		for ( a = 0 ; new; a++) {}
+		for ( a = 0 ; a < 5; new) {}
+		for ( a = 0 ; a < 5; a++) {}
 		{}
 	}
 }

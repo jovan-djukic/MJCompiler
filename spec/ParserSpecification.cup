@@ -232,7 +232,7 @@ nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, 
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
 
-nonterminal IfHeader;
+nonterminal IfHeader, ForHeader;
 
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
@@ -445,6 +445,11 @@ IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS //{: parser.getLogger().debug("If condition error recovery"); :}
 				;
 			  
+ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+				|
+				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS //{: parser.getLogger().debug("Whole ForInnerStatement recovery");:}
+				;
+
 UnmatchedStatement ::= IfHeader 
 							Statement
 					   |
@@ -453,7 +458,7 @@ UnmatchedStatement ::= IfHeader
 					   ELSE
 					   		UnmatchedStatement
 					   | /* umatched for */
-					   FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+					   ForHeader
 					 		UnmatchedStatement
 					   ;
 					 
@@ -462,7 +467,7 @@ MatchedStatement ::= 	IfHeader
 						ELSE
 							MatchedStatement
 						| /* matched for */
-						FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+						ForHeader
 							MatchedStatement
 						|
 						DesignatorStatement SEMICOLON
@@ -496,24 +501,27 @@ PrintParameters ::= Expression
 					;
 
 ForInitialStatement ::= DesignatorStatement
-						 |
-						 /* epsilon */
-						 ;
+						|
+						error //{: parser.getLogger().debug("ForInitialStatement recovery"); :}
+						|
+						/* epsilon */
+						;
 						 
-ForCondition ::= Condition
-				 |
-				 /* epsilon */
-		  		 ;
+ForCondition ::=	Condition
+				 	|
+				 	error //{: parser.getLogger().debug("ForCondition recovery"); :}
+				 	|
+				 	/* epsilon */
+		  		 	;
 		  		 
 ForPostStatement ::= DesignatorStatement
+					 |
+					 error //{: parser.getLogger().debug("ForPostStatement recovery"); :}
 					 |
 					 /* epsilon */
 					 ;
 
-DesignatorStatement ::=	Designator RestOfTheDesignatorStatement
-						|
-						AssignOperation
-						;
+DesignatorStatement ::=	Designator RestOfTheDesignatorStatement;
 
 RestOfTheDesignatorStatement ::= 	AssignOperation
 									|
@@ -529,7 +537,7 @@ RestOfTheDesignatorStatement ::= 	AssignOperation
 
 AssignOperation ::= 	AssignOperator Expression
 						|
-						error
+						error //{: parser.getLogger().debug("Assign operation recovery"); :}
 						;
 								 
 ActualParameters ::= ExpressionList
