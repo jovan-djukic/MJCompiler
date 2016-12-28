@@ -618,7 +618,10 @@ ArraySize ::= ArrayIndexer
 			  /* epsilon */
 			  ;
 	   
-ArrayIndexer ::= LEFT_BRACKET Expression RIGHT_BRACKET;
+ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
+					|
+					LEFT_BRACKET error RIGHT_BRACKET //{: parser.getLogger().debug("ArrayIndexer error recovery"); :}
+					;
 					
 					
 Designator ::= IDENTIFIER AccessList;

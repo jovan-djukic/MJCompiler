@@ -98,6 +98,7 @@ program MJProgram
 		for ( a = 0 ; new; a++) {}
 		for ( a = 0 ; a < 5; new) {}
 		for ( a = 0 ; a < 5; a++) {}
-		{}
+		array1[ return ] = 5;
+		for ( new ; a < 5; a++) {}
 	}
 }
