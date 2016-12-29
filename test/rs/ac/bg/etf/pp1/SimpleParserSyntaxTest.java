@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
-public class SimpleParserTest {
-	private static String testProgramsDirectoryPath = "MJTestPrograms/SemanticAnalysis";
-	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserTest.class);
+public class SimpleParserSyntaxTest {
+	private static String testProgramsDirectoryPath = "MJTestPrograms/SyntaxAnalysis";
+	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserSyntaxTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
@@ -48,24 +48,23 @@ public class SimpleParserTest {
 			
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
-				Lexer lexer = new Lexer(in);
 				
 				try {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
 					logger.info("SYMBOL IS: " + symbol.sym);
-					logger.info("GLOBAL VARIABLE COUNT: " + parser.getGlobalVariableCount());
-					logger.info("MAIN VARIABLE COUNT: " + parser.getMainVariableCount());
-					logger.info("CONSTANT COUNT: " + parser.getConstantCount());
-					logger.info("GLOBAL ARRAY DECLARTION: " + parser.getGlobalArrayCount());
-					logger.info("CLASS STATIC METHOD COUNT: " + parser.getStaticMethodCount());
-					logger.info("GLOBAL METHOD COUNT: " + parser.getGlobalMethodCount());
-					logger.info("CODE BLOCK COUNT: " + parser.getCodeBlockCount());
-					logger.info("MAIN METHOD CALL COUNT: " + parser.getMainMethodCalls());
-					logger.info("FORMAL ARGUMENTS COUNT: " + parser.getFormalArgumentsCount());
-					logger.info("CLASS DEFINITION COUNT: " + parser.getClassDefinitionCount());
-					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.getNonStaticMethodCount());
-					logger.info("CLASS VARIABLE COUNT: " + parser.getClassVariableCount());
+					logger.info("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
+					logger.info("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
+					logger.info("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
+					logger.info("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
+					logger.info("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
+					logger.info("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
+					logger.info("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
+					logger.info("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
+					logger.info("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
+					logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
+					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
+					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);

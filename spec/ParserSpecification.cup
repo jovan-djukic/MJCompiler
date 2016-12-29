@@ -12,6 +12,40 @@ parser code {:
 		return logger;	
 	}    
 
+	
+   	//redefined error functions  
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      report_error(message, info);
+      done_parsing();
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("Syntax erorr: ", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+        if (info instanceof Symbol) {
+			Symbol currentSymbol = (Symbol) info;
+			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
+		}
+		logger.info(message + ", current symbol: " + info.toString());
+    }
+
+:}
+
+
+scan with {:
+	Symbol symbol = this.getScanner().next_token();
+	if (symbol != null && symbol.value != null) 
+		logger.debug(symbol.toString() + " " + symbol.value.toString());
+	return symbol;
+:}
+
+action code {:
 	//functions defined for counts
 	private int globalVariableCount = 0;
 
@@ -177,36 +211,6 @@ parser code {:
 		currentVariableCount = 0;
 	}
 
-   	//redefined error functions  
-    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
-      report_error(message, info);
-      done_parsing();
-    }
-  
-    public void syntax_error(Symbol cur_token) {
-        report_error("Syntax erorr: ", cur_token);
-    }
-  
-    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
-        report_fatal_error("Fatal error, cannot continue parsing, symbol: ", cur_token);
-    }
-
-    public void report_error(String message, Object info) {
-        if (info instanceof Symbol) {
-			Symbol currentSymbol = (Symbol) info;
-			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
-		}
-		logger.info(message + ", current symbol: " + info.toString());
-    }
-
-:}
-
-
-scan with {:
-	Symbol symbol = this.getScanner().next_token();
-	if (symbol != null && symbol.value != null) 
-		logger.debug(symbol.toString() + " " + symbol.value.toString());
-	return symbol;
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -267,8 +271,8 @@ NonMethodDeclaration ::= 	ConstantDeclaration
 						 	|
 						 	GlobalVariableDeclaration
 							{:
-								parser.incrementGlobalVariableCount();
-								parser.incrementGlobalArrayCount();
+								incrementGlobalVariableCount();
+								incrementGlobalArrayCount();
 						 	:}
 						 	|
 						 	ClassDeclaration
@@ -283,7 +287,7 @@ ConstantList ::= Constant COMA ConstantList
 
 Constant ::=	IDENTIFIER EQUALS Value
 				{:
-					parser.incrementConstantCount();
+					incrementConstantCount();
 				:};
 
 Value ::= NUMERICAL_CONSTANT
@@ -306,13 +310,13 @@ GlobalVariableList ::=	Variable COMA GlobalVariableList
 				 
 Variable ::=	IDENTIFIER Brackets
 				{: 
-			 		parser.incrementCurrentVariableCount();
+			 		incrementCurrentVariableCount();
 			 	:}
 			 	;
 
 Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	{:
-					parser.incrementCurrentArrayCount();
+					incrementCurrentArrayCount();
 				:}
 			 	|
 			 	/* epsilon */
@@ -321,28 +325,28 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 							ClassVariableDeclarationList
 							{:
-								parser.incrementClassVariableCount();
+								incrementClassVariableCount();
 							:}
 							ClassMethodList
 						 RIGHT_BRACE
 						 {:
-						 	parser.incrementStaticMethodCount();
-						 	parser.incrementNonStaticMethodCount();
-						 	parser.incrementClassDefinitionCount();
+						 	incrementStaticMethodCount();
+						 	incrementNonStaticMethodCount();
+						 	incrementClassDefinitionCount();
 						 :};
 					 
 ParentClassDeclaration ::= EXTENDS Type
 						   |
 						   /* epsilon */
 						   |
-						   error //{: parser.getLogger().debug("LEFT_BRACE ParentClassDeclaration recovery"); :}
+						   error //{: getLogger().debug("LEFT_BRACE ParentClassDeclaration recovery"); :}
 						   ;
 					 
 ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
 					  				|
 					  				/* epsilon */
 					  				|
-									error //{: parser.getLogger().debug("LEFT_BRACE ClassVariableList recovery"); :}
+									error //{: getLogger().debug("LEFT_BRACE ClassVariableList recovery"); :}
 					  				;
 
 ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON 
@@ -373,25 +377,25 @@ MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PAREN
 					  		StatementList
 					  	RIGHT_BRACE
 					  	{:
-							if (parser.isMain(identifier)) {
-								parser.incrementMainVariableCount();
-								parser.incrementMainMethodCallCount();
+							if (isMain(identifier)) {
+								incrementMainVariableCount();
+								incrementMainMethodCallCount();
 							} else {
-								parser.invalidateCurrentVariableCount();
-								parser.invalidateCurrentArrayCount();
-								parser.invalidateCurrentMethodCallCount();
+								invalidateCurrentVariableCount();
+								invalidateCurrentArrayCount();
+								invalidateCurrentMethodCallCount();
 							}
-							parser.incrementCodeBlockCount();
+							incrementCodeBlockCount();
 						:};
 					  
 StaticModifier ::= 	STATIC
 					{:
-						parser.incrementCurrentStaticMethodCount();
+						incrementCurrentStaticMethodCount();
 					:} 
 				   	|
 				   	/* epsilon */
 				   	{:
-				   		parser.incrementCurrentNonStaticMethodCount();
+				   		incrementCurrentNonStaticMethodCount();
 				   	:}
 				   	;
 				   	
@@ -416,7 +420,7 @@ ComaSeparetedFormalParameterList ::= COMA FormalParameter ComaSeparetedFormalPar
 						
 FormalParameter ::= Type IDENTIFIER Brackets
 					{:
-						parser.incrementFormalArgumentsCount();
+						incrementFormalArgumentsCount();
 					:}
 					;
 
@@ -495,7 +499,7 @@ MatchedStatement ::= 	IfHeader
 					 		StatementList
 					 	RIGHT_BRACE
 					 	{:
-					 		parser.incrementCodeBlockCount();
+					 		incrementCodeBlockCount();
 					 	:}			
 					 	;
 
@@ -536,7 +540,7 @@ RestOfTheDesignatorStatement ::= 	AssignOperation
 									|
 									LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 								 	{:
-								 		parser.incrementCurrentMethodCallCount();
+								 		incrementCurrentMethodCallCount();
 								 	:}
 								 	|
 								 	INCREMENT
@@ -621,7 +625,7 @@ Factor ::= Designator OptionalParameters
 		   
 OptionalParameters ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 					   	{:
-					   		parser.incrementCurrentMethodCallCount();
+					   		incrementCurrentMethodCallCount();
 					   	:}
 					   	|
 					   	/* epsilon */
