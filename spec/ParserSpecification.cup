@@ -303,18 +303,18 @@ Value ::= NUMERICAL_CONSTANT
 
 GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON
 								|
-								error SEMICOLON {: printSyntaxErrorDescription("Invalid global variable list declaration"); :}
+								error SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable list declaration"); :}
 								|
-								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
+								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 								;
 								
 GlobalVariableList ::=	GlobalVariableList COMA Variable
 				 		|
 				 		Variable
 				 		|
-				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
+				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		|
-				 		error {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
+				 		error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		;
 				 
 Variable ::=	IDENTIFIER Brackets
@@ -348,22 +348,22 @@ ParentClassDeclaration ::= EXTENDS Type
 						   |
 						   /* epsilon */
 						   |
-						   error //{: getLogger().debug("LEFT_BRACE ParentClassDeclaration recovery"); :}
+						   error {: printSyntaxErrorDescription("Incorrect declaration of parent class"); :}
 						   ;
 					 
 ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
 					  				|
 					  				/* epsilon */
 					  				|
-									error //{: getLogger().debug("LEFT_BRACE ClassVariableList recovery"); :}
+									error {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 					  				;
 
 ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON 
 								|
-								error SEMICOLON //{: parser.getLogger().debug("SEMICOLON ClassVariableList recovery"); :}
+								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 								;
 
-ClassVariableList ::= 	Variable COMA ClassVariableList
+ClassVariableList ::= 	ClassVariableList COMA Variable
 						|
 						Variable
 						;
@@ -375,7 +375,7 @@ ClassMethodList ::= LEFT_BRACE
 					/* epsilon */
 					;
 
-MethodDeclarationList ::= MethodDeclaration MethodDeclarationList
+MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
 						  |
 						  /* epsilon */
 						  ;
