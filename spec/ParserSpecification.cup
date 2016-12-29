@@ -430,7 +430,7 @@ FormalParameter ::= Type IDENTIFIER Brackets
 					:}
 					;
 
-MethodVariableDeclarationList ::= MethodVariableDeclaration MethodVariableDeclarationList
+MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDeclaration
 								  |
 								  error
 								  |
@@ -442,7 +442,7 @@ MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
 								Type error SEMICOLON
 								;
 
-MethodVariableList ::=	Variable COMA MethodVariableList
+MethodVariableList ::=	MethodVariableList COMA Variable
 						|
 						Variable
 						;
