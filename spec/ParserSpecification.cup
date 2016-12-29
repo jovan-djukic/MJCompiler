@@ -211,6 +211,10 @@ action code {:
 		currentVariableCount = 0;
 	}
 
+	void printSyntaxErrorDescription(String message) {
+		parser.getLogger().info("Description: " + message);
+	}
+
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -280,7 +284,7 @@ NonMethodDeclaration ::= 	ConstantDeclaration
 			
 ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
 
-ConstantList ::= Constant COMA ConstantList
+ConstantList ::= ConstantList COMA Constant
 				 |
 				 Constant
 				 ;	
@@ -297,15 +301,20 @@ Value ::= NUMERICAL_CONSTANT
 		  BOOLEAN_CONSTANT
 		  ;
 
-GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON;
-		  
-GlobalVariableList ::=	Variable COMA GlobalVariableList
+GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON
+								|
+								error SEMICOLON {: printSyntaxErrorDescription("Invalid global variable list declaration"); :}
+								|
+								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
+								;
+								
+GlobalVariableList ::=	GlobalVariableList COMA Variable
 				 		|
 				 		Variable
 				 		|
-				 		Variable error COMA GlobalVariableList
+				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
 				 		|
-				 		error
+				 		error {: printSyntaxErrorDescription("Invalid global variable declaration"); :}
 				 		;
 				 
 Variable ::=	IDENTIFIER Brackets
