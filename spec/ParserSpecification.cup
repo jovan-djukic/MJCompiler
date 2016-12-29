@@ -246,7 +246,7 @@ nonterminal IfHeader, ForHeader;
 
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
-nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList, ComaSeparatedExpressionList;
+nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList;
 
 nonterminal Condition, OrSeparatedConditionTerms, ConditionTerm, AndSeparatedConditionFacts, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
@@ -558,25 +558,20 @@ RestOfTheDesignatorStatement ::= 	AssignOperation
 
 AssignOperation ::= 	AssignOperator Expression
 						|
-						error //{: parser.getLogger().debug("Assign operation recovery"); :}
+						error {: printSyntaxErrorDescription("Incorrect asign operation syntax"); :}
 						;
 								 
 ActualParameters ::= ExpressionList
 					 |
 					 /* epsilon */
+					 |
+					 error {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
 					 ;
 
-ExpressionList ::=	Expression ComaSeparatedExpressionList
+ExpressionList ::=	ExpressionList COMA Expression
 					|
-					error //{: parser.getLogger().debug("Whole ActualParameters recovery"); :}
+					Expression
 					;
-
-ComaSeparatedExpressionList ::= COMA Expression ComaSeparatedExpressionList
-								|
-								COMA error //{: parser.getLogger().debug("Partial ActualParameters recovery"); :}
-								|
-								/* epsilon */
-				 				;
 				 				
 Condition ::= ConditionTerm OrSeparatedConditionTerms;
 
