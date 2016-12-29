@@ -1,5 +1,9 @@
 program SemanticAnalysis
 const int const1 = 1, const2 = 2, const3 = 'a', const1 = 2;
+const char const4 = 1, const5 = 'a';
+const bool const6 = true, const7 = 1;
+int a, b, c[];
+int a;
 {
 	void main() {
 	

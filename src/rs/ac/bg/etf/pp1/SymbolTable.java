@@ -5,10 +5,11 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SymbolTable extends Tab{
-	public static final Struct boolType = new Struct(Struct.Bool);
+	public static Struct boolType = null;
 	
 	public static void init() {
 		Tab.init();
+		boolType = new Struct(Struct.Bool);
 		currentScope.addToLocals(new Obj(Obj.Type, "bool", boolType));
 	}
 	

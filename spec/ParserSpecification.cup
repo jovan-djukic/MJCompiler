@@ -241,9 +241,7 @@ terminal Boolean BOOLEAN_CONSTANT;
 
 nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
 
-nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, GlobalVariableList, ClassDeclaration;
-
-nonterminal Variable, Brackets;
+nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, ClassDeclaration;
 
 nonterminal ParentClassDeclaration, ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
 
@@ -275,11 +273,15 @@ nonterminal Obj ProgramName;
 
 nonterminal Struct Type;
 
+//constants
 nonterminal Value Value;
-
 nonterminal Constant Constant;
-
 nonterminal List<Constant> ConstantList;
+
+//varaibles
+nonterminal Variable Variable;
+nonterminal Boolean Brackets;
+nonterminal List<Variable> GlobalVariableList;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -316,7 +318,7 @@ ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
 								if (!typeNode.equals(constant.getValue().getType())) {
 									parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode.getKind()), typeNodeleft);
 								} else if (SymbolTable.find(constant.getName()) != SymbolTable.noObj) {
-											parser.report_semantic_error("Name " + constant.getName() + " already exists", typeNodeleft);		
+											parser.report_semantic_error("Redefinition of name " + constant.getName(), typeNodeleft);		
 								} else {
 									SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
 								}
@@ -365,30 +367,66 @@ Value ::=	NUMERICAL_CONSTANT:value
 		  	:}
 		  	;
 
-GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON
+GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables SEMICOLON
+								{:
+									//Semantic analysis
+									for(Variable variable : globalVariables) {
+										if(SymbolTable.find(variable.getName()) != SymbolTable.noObj) {
+											parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
+										} else {
+											if (variable.isArray()) {
+												SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode));
+												parser.getLogger().debug("TYPE ID " + typeNode.getKind());
+											} else {
+												SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
+											}
+										}
+									}
+								:}
 								|
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable list declaration"); :}
 								|
 								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 								;
 								
-GlobalVariableList ::=	GlobalVariableList COMA Variable {: incrementGlobalVariableCount(); :}
+GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
+						{: 
+							incrementGlobalVariableCount(); 
+
+							//Semantic analysis
+							globalVariables.add(variable);
+							RESULT = globalVariables;
+						:}
 				 		|
-				 		Variable {: incrementGlobalVariableCount(); :}
+				 		Variable:variable
+				 		{: 
+				 			incrementGlobalVariableCount(); 
+
+				 			//Semantic analysis
+				 			RESULT = new ArrayList<Variable>();
+				 			RESULT.add(variable);
+				 		:}
 				 		|
 				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		|
 				 		error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		;
 				 
-Variable ::=	IDENTIFIER Brackets;
+Variable ::=	IDENTIFIER:name Brackets:isArray
+				{:
+					RESULT = new Variable(name, isArray);
+				:};
 
 Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	{:
 					incrementCurrentArrayCount();
+					RESULT = true;
 				:}
 			 	|
 			 	/* epsilon */
+			 	{:
+			 		RESULT = false;
+			 	:}
 			 	;
 			 
 ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
