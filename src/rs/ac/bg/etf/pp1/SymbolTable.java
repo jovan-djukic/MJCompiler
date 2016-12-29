@@ -13,6 +13,23 @@ public class SymbolTable extends Tab{
 		currentScope.addToLocals(new Obj(Obj.Type, "bool", boolType));
 	}
 	
+	private static int currentLevel = -1;
+	
+	public static int getCurrentLevel() {
+		return currentLevel;
+	}
+	
+
+	public static void openScope() {
+		Tab.openScope();
+		currentLevel++;
+	}
+	
+	public static void closeScope() {
+		Tab.closeScope();
+		currentLevel--;
+	}
+	
 	public static String getBasicTypeName(int basicType) {
 		switch (basicType) {
 			case Struct.Int: {

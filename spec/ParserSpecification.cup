@@ -225,6 +225,8 @@ action code {:
 		parser.getLogger().info("Description: " + message);
 	}
 
+	//Semantic analysis 
+	private globalVariablePosition = 0;
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -375,11 +377,11 @@ GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables S
 											parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
 										} else {
 											if (variable.isArray()) {
-												SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode));
-												parser.getLogger().debug("TYPE ID " + typeNode.getKind());
+												SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode), globalVariablePosition, SymbolTable.getCurrentLevel());
 											} else {
-												SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
+												SymbolTable.insert(Obj.Var, variable.getName(), typeNode, globalVariablePosition, SymbolTable.getCurrentLevel());
 											}
+											globalVariablePosition++;
 										}
 									}
 								:}
