@@ -248,9 +248,9 @@ nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
 nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList;
 
-nonterminal Condition, OrSeparatedConditionTerms, ConditionTerm, AndSeparatedConditionFacts, ConditionFact, RestOfTheConditionFact, RelationalOperator;
+nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal Expression, ExpressionPrefix, AdditionOperatorSeparatedTermList, Term, MultiplicationOperatorSeparatedFactorList, Factor;
+nonterminal Expression, ExpressionPrefix, TermList, Term, FactorList, Factor;
 
 nonterminal OptionalParameters, ArraySize, ArrayIndexer;
 
@@ -432,14 +432,14 @@ FormalParameter ::= Type IDENTIFIER Brackets
 
 MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDeclaration
 								  |
-								  error
+								  error {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
 								  |
 								  /* epsilon */
 								  ;
 
 MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
 								|
-								Type error SEMICOLON
+								Type error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
 								;
 
 MethodVariableList ::=	MethodVariableList COMA Variable
@@ -573,19 +573,15 @@ ExpressionList ::=	ExpressionList COMA Expression
 					Expression
 					;
 				 				
-Condition ::= ConditionTerm OrSeparatedConditionTerms;
-
-OrSeparatedConditionTerms ::= OR ConditionTerm OrSeparatedConditionTerms
-							  |
-							  /* epsilon */
-							  ;		 				
+Condition ::= Condition OR ConditionTerm
+			  |
+			  ConditionTerm
+			  ;	
 				 				
-ConditionTerm ::= ConditionFact AndSeparatedConditionFacts;
-
-AndSeparatedConditionFacts ::= AND ConditionFact AndSeparatedConditionFacts
-							   |
-							   /* epsilon */
-							   ;
+ConditionTerm ::=	ConditionTerm AND ConditionFact
+				 	|
+				 	ConditionFact
+				 	;
 
 ConditionFact ::= Expression RestOfTheConditionFact;
 
@@ -594,24 +590,24 @@ RestOfTheConditionFact ::= RelationalOperator Expression
 						   /* epsilon */
 						   ;
 						   
-Expression ::= ExpressionPrefix Term AdditionOperatorSeparatedTermList;
+Expression ::= ExpressionPrefix TermList;
 
 ExpressionPrefix ::= MINUS
 					 |
 					 /* epsilon */
 					 ;
 
-AdditionOperatorSeparatedTermList ::= AdditionOperator Term
-									  |
-									  /* epsilon */
-									  ;
+TermList ::= TermList AdditionOperator Term
+			 |
+			 Term
+			 ;
 
-Term ::= Factor MultiplicationOperatorSeparatedFactorList;
+Term ::=	FactorList;
 
-MultiplicationOperatorSeparatedFactorList ::= MultiplicationOperator Factor
-											  |
-											  /* epsilon */
-											  ;
+FactorList ::=	FactorList MultiplicationOperator Factor
+				|
+				Factor
+				;
 
 Factor ::= Designator OptionalParameters
 		   |
@@ -641,13 +637,13 @@ ArraySize ::= ArrayIndexer
 	   
 ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
 					|
-					LEFT_BRACKET error RIGHT_BRACKET //{: parser.getLogger().debug("ArrayIndexer error recovery"); :}
+					LEFT_BRACKET error RIGHT_BRACKET {: printSyntaxErrorDescription("Incorrect expression for array index"); :}
 					;
 					
 					
 Designator ::= IDENTIFIER AccessList;
 
-AccessList ::= AccessListElement AccessList
+AccessList ::= AccessList AccessListElement
 			   |
 			   /* epsilon */
 			   ;
