@@ -1,7 +1,7 @@
 program MJProgram
 	const int a = 2, b = 3;
 	const char c = '\n', z = 'a', q = '\040';
-	const boolean w = true;
+	const bool w = true;
 	int x, y;
 	char r, t;
 	int array1[], array2[];
