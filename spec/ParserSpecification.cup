@@ -468,7 +468,7 @@ IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 			  
 ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
 				|
-				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS //{: parser.getLogger().debug("Whole ForInnerStatement recovery");:}
+				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect for loop inner statements"); :}
 				;
 
 UnmatchedStatement ::= IfHeader 
@@ -523,21 +523,21 @@ PrintParameters ::= Expression
 
 ForInitialStatement ::= DesignatorStatement
 						|
-						error //{: parser.getLogger().debug("ForInitialStatement recovery"); :}
+						error {: printSyntaxErrorDescription("Incorrect initial for loop statement"); :}
 						|
 						/* epsilon */
 						;
 						 
 ForCondition ::=	Condition
 				 	|
-				 	error //{: parser.getLogger().debug("ForCondition recovery"); :}
+				 	error {: printSyntaxErrorDescription("Incorrect for condition statement"); :}
 				 	|
 				 	/* epsilon */
 		  		 	;
 		  		 
 ForPostStatement ::= DesignatorStatement
 					 |
-					 error //{: parser.getLogger().debug("ForPostStatement recovery"); :}
+					 error {: printSyntaxErrorDescription("Incorrect post for loop statement"); :}
 					 |
 					 /* epsilon */
 					 ;
