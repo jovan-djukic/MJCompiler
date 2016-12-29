@@ -3,6 +3,10 @@ package rs.ac.bg.etf.pp1;
 import java_cup.runtime.*;
 import org.apache.logging.log4j.Logger;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
+import java.util.*;
+import rs.etf.pp1.symboltable.concepts.*;
+import rs.ac.bg.etf.utilities.*;
+
 
 parser code {:
 	
@@ -28,11 +32,21 @@ parser code {:
     }
 
     public void report_error(String message, Object info) {
-        if (info instanceof Symbol) {
+        if (info != null && info instanceof Symbol) {
 			Symbol currentSymbol = (Symbol) info;
 			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
+			logger.info(message + ", current symbol: " + info.toString());
+		} else {
+			logger.info(message);
 		}
-		logger.info(message + ", current symbol: " + info.toString());
+		errorFound = true;
+    }
+
+    private boolean errorFound = false;
+
+    public void report_semantic_error(String message, int lineNumber) {
+    	report_error("Semantic error on line: " + lineNumber + ", " + message, null);
+    	errorFound = true;
     }
 
 :}
@@ -43,6 +57,10 @@ scan with {:
 	if (symbol != null && symbol.value != null) 
 		logger.debug(symbol.toString() + " " + symbol.value.toString());
 	return symbol;
+:}
+
+init with {:
+	SymbolTable.init(); // Universe scope
 :}
 
 action code {:
@@ -225,7 +243,7 @@ nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
 
 nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, GlobalVariableList, ClassDeclaration;
 
-nonterminal Type, ConstantList, Constant, Value, Variable, Brackets;
+nonterminal Variable, Brackets;
 
 nonterminal ParentClassDeclaration, ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
 
@@ -252,12 +270,34 @@ nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
 
 nonterminal MultiplicationOperator, MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
-Program ::= PROGRAM IDENTIFIER 
+//Semantic analysis non terminals
+nonterminal Obj ProgramName;
+
+nonterminal Struct Type;
+
+nonterminal Value Value;
+
+nonterminal Constant Constant;
+
+nonterminal List<Constant> ConstantList;
+
+Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
 			LEFT_BRACE 	
 				MethodDeclarationList 
-			RIGHT_BRACE;
-			
+			RIGHT_BRACE 
+			{:
+				SymbolTable.chainLocalSymbols(programObject);
+				SymbolTable.closeScope();
+			:};
+
+ProgramName ::= IDENTIFIER:name 
+				{:
+					RESULT  = SymbolTable.insert(Obj.Prog, name, SymbolTable.noType);
+					SymbolTable.openScope();
+				:}
+				;
+
 NonMethodDeclarationList ::= NonMethodDeclarationList NonMethodDeclaration
 							 |
 							 /* epsilon */
@@ -265,26 +305,65 @@ NonMethodDeclarationList ::= NonMethodDeclarationList NonMethodDeclaration
 
 NonMethodDeclaration ::= 	ConstantDeclaration
 						 	|
-						 	GlobalVariableDeclaration{: incrementGlobalArrayCount(); :}
+						 	GlobalVariableDeclaration {: incrementGlobalArrayCount(); :}
 						 	|
 						 	ClassDeclaration
 						 	;
 			
-ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
+ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
+						{:
+							for(Constant constant : constants) {
+								if (!typeNode.equals(constant.getValue().getType())) {
+									parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode.getKind()), typeNodeleft);
+								} else if (SymbolTable.find(constant.getName()) != SymbolTable.noObj) {
+											parser.report_semantic_error("Name " + constant.getName() + " already exists", typeNodeleft);		
+								} else {
+									SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
+								}
+							}
+						:}
+						;
 
-ConstantList ::= ConstantList COMA Constant {: incrementConstantCount(); :}
-				 |
-				 Constant {: incrementConstantCount(); :}
-				 ;	
+ConstantList ::=	ConstantList:constants COMA Constant:constant 
+					{: 
+						incrementConstantCount(); 
 
-Constant ::=	IDENTIFIER EQUALS Value;
+						//Semantic analysis
+						constants.add(constant);
+						RESULT = constants;
+					:}
+				 	|
+				 	Constant:constant 
+				 	{: 
+				 		incrementConstantCount();
 
-Value ::= NUMERICAL_CONSTANT
-		  |
-		  CHARACTER_CONSTANT
-		  |
-		  BOOLEAN_CONSTANT
-		  ;
+				 		//Semantic analysis
+				 		List<Constant> constants = new ArrayList<Constant>();
+				 		constants.add(constant);
+				 		RESULT = constants;
+				 	:}
+				 	;	
+
+Constant ::=	IDENTIFIER:name EQUALS Value:value
+				{:
+					RESULT = new Constant(name, value);
+				:};
+
+Value ::=	NUMERICAL_CONSTANT:value
+		  	{:
+		  		RESULT = new Value(SymbolTable.intType, value.intValue());
+		  	:}
+		  	|
+		  	CHARACTER_CONSTANT:value
+		  	{:
+		  		RESULT = new Value(SymbolTable.charType, (int)value.charAt(0));
+		  	:}
+		  	|
+		  	BOOLEAN_CONSTANT:value
+		  	{:
+		  		RESULT = new Value(SymbolTable.boolType, value.booleanValue() ? 1 : 0);
+		  	:}
+		  	;
 
 GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON
 								|
@@ -328,17 +407,17 @@ ParentClassDeclaration ::= EXTENDS Type
 						   error {: printSyntaxErrorDescription("Incorrect declaration of parent class"); :}
 						   ;
 					 
-ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
+ClassVariableDeclarationList ::=	ClassVariableDeclarationList ClassVariableDeclaration
 					  				|
 					  				/* epsilon */
-					  				|
-									error {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 					  				;
 
 ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON 
 								|
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
-								;
+								|
+								error {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
+				  				;
 
 ClassVariableList ::= 	ClassVariableList COMA Variable {: incrementClassVariableCount(); :}
 						|
@@ -424,7 +503,20 @@ MethodVariableList ::=	MethodVariableList COMA Variable {: incrementCurrentMetho
 						Variable {: incrementCurrentMethodVariableCount(); :}
 						;
 
-Type ::= IDENTIFIER;
+Type ::=	IDENTIFIER:name
+			{:
+				Obj typeNode = SymbolTable.find(name);
+				if (SymbolTable.noObj.equals(typeNode)) {
+					parser.report_semantic_error("no type named: " + name, nameleft);
+					RESULT = SymbolTable.noType;
+				} else if (Obj.Type != typeNode.getKind()) {
+					parser.report_semantic_error("Name: " + name + " is not a type", nameleft);
+					RESULT = SymbolTable.noType;
+				} else {
+					RESULT = typeNode.getType();
+				}
+			:}
+			;
 
 StatementList ::= StatementList Statement
 				  |

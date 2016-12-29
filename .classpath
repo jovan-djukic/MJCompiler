@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="lib/log4j-api-2.7.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-core-2.7.jar"/>
 	<classpathentry kind="lib" path="lib/java-cup-11a.jar"/>
+	<classpathentry kind="lib" path="lib/symboltable.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
