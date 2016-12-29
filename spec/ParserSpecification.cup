@@ -53,19 +53,18 @@ action code {:
 		return globalVariableCount;
 	}
 
-	private int currentVariableCount = 0;
+	private int currentMethodVariableCount = 0;
 
-	public void incrementCurrentVariableCount() {
-		currentVariableCount++;
+	public void incrementCurrentMethodVariableCount() {
+		currentMethodVariableCount++;
 	}
 
-	public void invalidateCurrentVariableCount() {
-		currentVariableCount = 0;
+	public void invalidateCurrentMethodVariableCount() {
+		currentMethodVariableCount = 0;
 	}
 	
 	public void incrementGlobalVariableCount() {
-		globalVariableCount += currentVariableCount;
-		currentVariableCount = 0;
+		globalVariableCount++;
 	}
 
 	private int mainVariableCount = 0;
@@ -75,8 +74,8 @@ action code {:
 	}
 
 	public void incrementMainVariableCount() {
-		mainVariableCount += currentVariableCount;
-		currentVariableCount = 0;
+		mainVariableCount += currentMethodVariableCount;
+		currentMethodVariableCount = 0;
 	}
 
 	private static String main = "main";
@@ -117,7 +116,6 @@ action code {:
 
 	private int staticMethodCount = 0;
 	private int nonStaticMethodCount = 0;
-	private int currentStaticMethodCount = 0;
 	private int currentNonStaticMethodCount = 0;
 
 	public int getStaticMethodCount() { 
@@ -132,17 +130,12 @@ action code {:
 		return currentNonStaticMethodCount;
 	}
 
-	public void incrementCurrentStaticMethodCount() {
-		currentStaticMethodCount++;
-	}
-
 	public void incrementCurrentNonStaticMethodCount() {
 		currentNonStaticMethodCount++;
 	}
 
 	public void incrementStaticMethodCount() {
-		staticMethodCount += currentStaticMethodCount;
-		currentStaticMethodCount = 0;
+		staticMethodCount++;
 	}
 
 	public void incrementNonStaticMethodCount() {
@@ -151,6 +144,7 @@ action code {:
 	}
 
 	private int codeBlockCount = 0;
+	private int currentMethodCallCount = 0;
 
 	public int getCodeBlockCount() {
 		return codeBlockCount;
@@ -161,7 +155,6 @@ action code {:
 	}
 
 	private int mainMethodCallCount = 0;
-	private int currentMethodCallCount = 0;
 
 	public int getMainMethodCalls() {
 		return mainMethodCallCount;
@@ -207,8 +200,7 @@ action code {:
 	}
 
 	public void incrementClassVariableCount() {
-		classVariableCount += currentVariableCount;
-		currentVariableCount = 0;
+		classVariableCount ++;
 	}
 
 	void printSyntaxErrorDescription(String message) {
@@ -246,7 +238,7 @@ nonterminal IfHeader, ForHeader;
 
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
-nonterminal DesignatorStatement, RestOfTheDesignatorStatement, ActualParameters, ExpressionList;
+nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, ActualParameters, ExpressionList;
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
@@ -266,33 +258,26 @@ Program ::= PROGRAM IDENTIFIER
 				MethodDeclarationList 
 			RIGHT_BRACE;
 			
-NonMethodDeclarationList ::= NonMethodDeclaration NonMethodDeclarationList
+NonMethodDeclarationList ::= NonMethodDeclarationList NonMethodDeclaration
 							 |
 							 /* epsilon */
 							 ;
 
 NonMethodDeclaration ::= 	ConstantDeclaration
 						 	|
-						 	GlobalVariableDeclaration
-							{:
-								incrementGlobalVariableCount();
-								incrementGlobalArrayCount();
-						 	:}
+						 	GlobalVariableDeclaration{: incrementGlobalArrayCount(); :}
 						 	|
 						 	ClassDeclaration
 						 	;
 			
 ConstantDeclaration ::= CONST Type ConstantList SEMICOLON;
 
-ConstantList ::= ConstantList COMA Constant
+ConstantList ::= ConstantList COMA Constant {: incrementConstantCount(); :}
 				 |
-				 Constant
+				 Constant {: incrementConstantCount(); :}
 				 ;	
 
-Constant ::=	IDENTIFIER EQUALS Value
-				{:
-					incrementConstantCount();
-				:};
+Constant ::=	IDENTIFIER EQUALS Value;
 
 Value ::= NUMERICAL_CONSTANT
 		  |
@@ -308,20 +293,16 @@ GlobalVariableDeclaration ::=	Type GlobalVariableList SEMICOLON
 								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 								;
 								
-GlobalVariableList ::=	GlobalVariableList COMA Variable
+GlobalVariableList ::=	GlobalVariableList COMA Variable {: incrementGlobalVariableCount(); :}
 				 		|
-				 		Variable
+				 		Variable {: incrementGlobalVariableCount(); :}
 				 		|
 				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		|
 				 		error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 				 		;
 				 
-Variable ::=	IDENTIFIER Brackets
-				{: 
-			 		incrementCurrentVariableCount();
-			 	:}
-			 	;
+Variable ::=	IDENTIFIER Brackets;
 
 Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	{:
@@ -333,13 +314,9 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 
 ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 							ClassVariableDeclarationList
-							{:
-								incrementClassVariableCount();
-							:}
 							ClassMethodList
 						 RIGHT_BRACE
 						 {:
-						 	incrementStaticMethodCount();
 						 	incrementNonStaticMethodCount();
 						 	incrementClassDefinitionCount();
 						 :};
@@ -363,9 +340,9 @@ ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 								;
 
-ClassVariableList ::= 	ClassVariableList COMA Variable
+ClassVariableList ::= 	ClassVariableList COMA Variable {: incrementClassVariableCount(); :}
 						|
-						Variable
+						Variable {: incrementClassVariableCount(); :}
 						;
 
 ClassMethodList ::= LEFT_BRACE
@@ -390,7 +367,7 @@ MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PAREN
 								incrementMainVariableCount();
 								incrementMainMethodCallCount();
 							} else {
-								invalidateCurrentVariableCount();
+								invalidateCurrentMethodVariableCount();
 								invalidateCurrentArrayCount();
 								invalidateCurrentMethodCallCount();
 							}
@@ -399,7 +376,7 @@ MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PAREN
 					  
 StaticModifier ::= 	STATIC
 					{:
-						incrementCurrentStaticMethodCount();
+						incrementStaticMethodCount();
 					:} 
 				   	|
 				   	/* epsilon */
@@ -442,9 +419,9 @@ MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
 								Type error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
 								;
 
-MethodVariableList ::=	MethodVariableList COMA Variable
+MethodVariableList ::=	MethodVariableList COMA Variable {: incrementCurrentMethodVariableCount(); :}
 						|
-						Variable
+						Variable {: incrementCurrentMethodVariableCount(); :}
 						;
 
 Type ::= IDENTIFIER;
@@ -546,15 +523,18 @@ DesignatorStatement ::=	Designator RestOfTheDesignatorStatement;
 
 RestOfTheDesignatorStatement ::= 	AssignOperation
 									|
-									LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
-								 	{:
-								 		incrementCurrentMethodCallCount();
-								 	:}
+									MethodCall
 								 	|
 								 	INCREMENT
 								 	|
 								 	DECREMENT
 								 	;
+
+MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+			 	{:
+			 		incrementCurrentMethodCallCount();
+			 	:}
+			 	;
 
 AssignOperation ::= 	AssignOperator Expression
 						|
@@ -622,10 +602,7 @@ Factor ::= Designator OptionalParameters
 		   LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 		   ;
 		   
-OptionalParameters ::= 	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
-					   	{:
-					   		incrementCurrentMethodCallCount();
-					   	:}
+OptionalParameters ::= 	MethodCall
 					   	|
 					   	/* epsilon */
 					   	;		   
