@@ -27,8 +27,8 @@ program MJProgram
 	}
 	
 	class MyClass extends ParentClass {
+		char x, t, y;
 		int a[], b, c, d;
-	
 		{
 			static void m(int p1, char p2) 
 				char a;
@@ -71,6 +71,18 @@ program MJProgram
 				b += c;
 				
 				a = new int[5];
+			}
+		}
+	}
+	
+	class ErrorClass {
+		char return;
+		int a, b, c;
+		char return
+		break continue
+		{
+			void method1() {
+			
 			}
 		}
 	}
