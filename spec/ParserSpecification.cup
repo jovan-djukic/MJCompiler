@@ -449,7 +449,7 @@ MethodVariableList ::=	MethodVariableList COMA Variable
 
 Type ::= IDENTIFIER;
 
-StatementList ::= Statement StatementList
+StatementList ::= StatementList Statement
 				  |
 				  /* epsilon */
 				  ;
@@ -461,7 +461,9 @@ Statement ::= MatchedStatement
 
 IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				|
-				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS //{: parser.getLogger().debug("If condition error recovery"); :}
+				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
+				|
+				IF LEFT_PARENTHESIS RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
 				;
 			  
 ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
