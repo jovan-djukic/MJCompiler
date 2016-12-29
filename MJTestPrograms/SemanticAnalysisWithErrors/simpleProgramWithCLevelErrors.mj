@@ -75,7 +75,7 @@ program MJProgram
 		}
 	}
 	
-	class ErrorClass {
+	class ClassVaraibleSyntaxError {
 		char return;
 		int a, b, c;
 		char return
@@ -85,6 +85,10 @@ program MJProgram
 			
 			}
 		}
+	}
+	
+	class ExtendsSytaxError return {
+	
 	}
 	
 {

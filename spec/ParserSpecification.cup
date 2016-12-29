@@ -334,6 +334,8 @@ ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
 ParentClassDeclaration ::= EXTENDS Type
 						   |
 						   /* epsilon */
+						   |
+						   error //{: parser.getLogger().debug("LEFT_BRACE ParentClassDeclaration recovery"); :}
 						   ;
 					 
 ClassVariableDeclarationList ::=	ClassVariableDeclaration ClassVariableDeclarationList
