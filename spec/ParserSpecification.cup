@@ -255,7 +255,7 @@ nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration
 
 nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassMethodList;
 
-nonterminal MethodDeclaration, StaticModifier, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
+nonterminal MethodDeclaration, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
 			FormalParameter;
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
@@ -302,6 +302,7 @@ nonterminal List<Variable> MethodVariableList;
 
 //class declaration
 nonterminal ClassHeader;
+nonterminal Boolean StaticModifier;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -598,7 +599,7 @@ MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
 						  /* epsilon */
 						  ;
 						  
-MethodDeclaration ::=	StaticModifier MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
 							MethodVariableDeclarationList
 					  	LEFT_BRACE
 					  		StatementList
@@ -628,14 +629,18 @@ MethodDeclaration ::=	StaticModifier MethodTypeAndName LEFT_PARENTHESIS FormalPa
 						:}
 						;
 					  
-MethodTypeAndName ::=	ReturnType:typeNode IDENTIFIER:identifier
+MethodTypeAndName ::=	StaticModifier:isStatic ReturnType:typeNode IDENTIFIER:identifier
 						{:
 							//Semantic analysis
 							if (typeNode != SymbolTable.noType) {
 								if (SymbolTable.currentScope.findSymbol(identifier) != null) {
 									parser.report_semantic_error("Redefinition of " + identifier, identifierleft);
 								} else {
-									currentMethod = SymbolTable.insert(Obj.Meth, identifier, typeNode);
+									if (isStatic != null && isStatic.booleanValue()) {
+										currentMethod = SymbolTable.insert(MyObj.Static, identifier, typeNode);
+									} else {
+										currentMethod = SymbolTable.insert(Obj.Meth, identifier, typeNode);
+									}
 									
 									if (currentMethod == SymbolTable.noObj) {
 										currentMethod = null;
@@ -651,14 +656,26 @@ MethodTypeAndName ::=	ReturnType:typeNode IDENTIFIER:identifier
 						:}
 						;
 
-StaticModifier ::= 	STATIC
+StaticModifier ::= 	STATIC:attribute
 					{:
 						incrementStaticMethodCount();
+
+						//Semantic analysis
+						if (currentClass == null) {
+							parser.report_semantic_error("Static method outside class", attributeleft);
+							RESULT = false;
+						} else {
+							RESULT = true;
+						}
+						
 					:} 
 				   	|
 				   	/* epsilon */
 				   	{:
 				   		incrementCurrentNonStaticMethodCount();
+				   		
+				   		//Semantic analysis
+						RESULT = false;
 				   	:}
 				   	;
 				   	

@@ -8,7 +8,13 @@ class class1 {
 	int a, b, c;
 	
 	{
-		void method1() {
+		void method1(int a, char b, int c)
+			int d;
+		{
+		
+		}
+		
+		static void staticMethod1(int a, int b, int c) {
 		
 		}
 	}
