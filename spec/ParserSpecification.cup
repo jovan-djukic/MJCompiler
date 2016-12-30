@@ -230,6 +230,7 @@ action code {:
 	
 	private int formalParameterCount = 0;
 	private Obj currentMethod = null;
+
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -301,6 +302,9 @@ Program ::= PROGRAM ProgramName:programObject
 				MethodDeclarationList 
 			RIGHT_BRACE 
 			{:
+				if (SymbolTable.currentScope.findSymbol(main) == null) {
+					parser.report_semantic_error("No main symbol found", programObjectleft);
+				} 
 				SymbolTable.chainLocalSymbols(programObject);
 				SymbolTable.closeScope();
 			:};
@@ -393,7 +397,7 @@ GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables S
 										} else {
 											Obj newObject = null;
 											if (variable.isArray()) {
-												newObject = SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode));
+												newObject = SymbolTable.insert(Obj.Var, variable.getName(), new MyStruct(Struct.Array, typeNode));
 											} else {
 												newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
 											}
@@ -525,7 +529,8 @@ MethodDeclaration ::=	StaticModifier MethodTypeAndName LEFT_PARENTHESIS FormalPa
 							currentMethod = null;
 							variablePosition = 0;
 							formalParameterCount = 0;
-						:};
+						:}
+						;
 					  
 MethodTypeAndName ::=	ReturnType:typeNode IDENTIFIER:identifier
 						{:
@@ -592,7 +597,7 @@ FormalParameter ::= Type:typeNode IDENTIFIER:name Brackets:isArray
 						} else {
 							Obj newObject = null;
 							if (isArray) {
-								newObject = SymbolTable.insert(Obj.Var, name, new Struct(Struct.Array, typeNode));
+								newObject = SymbolTable.insert(Obj.Var, name, new MyStruct(Struct.Array, typeNode));
 							} else {
 								newObject = SymbolTable.insert(Obj.Var, name, typeNode);
 							}
@@ -626,7 +631,7 @@ MethodVariableDeclaration ::=	Type:typeNode MethodVariableList:locals SEMICOLON
 										} else {
 											Obj newObject = null;
 											if (localVariable.isArray()) {
-												newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), new Struct(Struct.Array, typeNode));
+												newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), new MyStruct(Struct.Array, typeNode));
 											} else {
 												newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), typeNode);
 											}
