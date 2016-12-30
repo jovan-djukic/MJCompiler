@@ -6,6 +6,12 @@ int a, b, c[];
 
 class class1 {
 	int a, b, c;
+	
+	{
+		void method1() {
+		
+		}
+	}
 }
 
 {

@@ -9,6 +9,9 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 	public void visitObjNode(Obj objToVisit) {
 		output.append("[");
 		super.visitObjNode(objToVisit);
+		if (objToVisit.getKind() == Obj.Meth) {
+			output.append(currentIndent.toString());
+		}
 		output.append("]");
 	}
 	
@@ -16,7 +19,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 	public void visitStructNode(Struct structToVisit) {
 		switch (structToVisit.getKind()) {
 		case Struct.None:
-			output.append("notype");
+			output.append("void");
 			break;
 		case Struct.Int:
 			output.append("int");
@@ -49,8 +52,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 			}
 			break;
 		case Struct.Class:
-			output.append("Class [");
-			output.append("\n");
+			output.append("Class [\n");
 			nextIndentationLevel();
 			for (Obj obj : structToVisit.getMembers()) {
 				output.append(currentIndent.toString());
@@ -58,9 +60,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 				output.append("\n");
 			}
 			previousIndentationLevel();
-			output.append(indent.toString());
-			output.append("]\n");
-			output.append(indent.toString());
+			output.append(currentIndent.toString() + "]");
 			break;
 		}
 
