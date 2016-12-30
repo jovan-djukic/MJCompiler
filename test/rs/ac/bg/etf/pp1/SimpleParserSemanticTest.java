@@ -62,6 +62,7 @@ public class SimpleParserSemanticTest {
 					logger.info(le);
 				} catch (Exception e) {
 					logger.info(e);
+					e.printStackTrace();
 				}
 			} catch (FileNotFoundException fnfe) {
 				// TODO: handle exception
