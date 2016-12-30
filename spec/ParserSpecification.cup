@@ -226,7 +226,7 @@ action code {:
 	}
 
 	//Semantic analysis 
-	private globalVariablePosition = 0;
+	private int globalVariablePosition = 0;
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -322,7 +322,12 @@ ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
 								} else if (SymbolTable.find(constant.getName()) != SymbolTable.noObj) {
 											parser.report_semantic_error("Redefinition of name " + constant.getName(), typeNodeleft);		
 								} else {
-									SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
+									Obj newObject = SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
+									if (newObject != null && newObject != SymbolTable.noObj) {
+										newObject.setAdr(constant.getValue().getValue());
+									} else {
+										parser.report_semantic_error("Could not insert symbol: " + constant.getName() + " into symbol table", typeNodeleft);
+									}
 								}
 							}
 						:}
@@ -376,12 +381,19 @@ GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables S
 										if(SymbolTable.find(variable.getName()) != SymbolTable.noObj) {
 											parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
 										} else {
+											Obj newObject = null;
 											if (variable.isArray()) {
-												SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode), globalVariablePosition, SymbolTable.getCurrentLevel());
+												newObject = SymbolTable.insert(Obj.Var, variable.getName(), new Struct(Struct.Array, typeNode));
 											} else {
-												SymbolTable.insert(Obj.Var, variable.getName(), typeNode, globalVariablePosition, SymbolTable.getCurrentLevel());
+												newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
 											}
-											globalVariablePosition++;
+											if (newObject != null && newObject != SymbolTable.noObj) {
+												newObject.setAdr(globalVariablePosition);
+												newObject.setLevel(SymbolTable.getCurrentLevel());
+												globalVariablePosition++;
+											} else {
+												parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeNodeleft);
+											}
 										}
 									}
 								:}

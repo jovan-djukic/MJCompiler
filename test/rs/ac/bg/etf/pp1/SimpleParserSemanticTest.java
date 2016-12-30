@@ -55,19 +55,6 @@ public class SimpleParserSemanticTest {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
 					SymbolTable.dump(new MyDumpSymbolTableVisitor());
-					logger.info("SYMBOL IS: " + symbol.sym);
-					logger.info("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
-					logger.info("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
-					logger.info("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
-					logger.info("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
-					logger.info("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
-					logger.info("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
-					logger.info("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
-					logger.info("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
-					logger.info("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
-					logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
-					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
-					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);
