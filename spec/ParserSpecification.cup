@@ -333,7 +333,7 @@ NonMethodDeclaration ::= 	ConstantDeclaration
 			
 ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
 						{:
-							if (typeNode != SymbolTable.noType) {
+							if (typeNode != null && constants != null && typeNode != SymbolTable.noType) {
 								for(Constant constant : constants) {
 									if (!typeNode.equals(constant.getValue().getType())) {
 										parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode.getKind()), typeNodeleft);
@@ -396,7 +396,7 @@ Value ::=	NUMERICAL_CONSTANT:value
 GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables SEMICOLON
 								{:
 									//Semantic analysis
-									if (typeNode != SymbolTable.noType) {
+									if (typeNode != null && globalVariables != null && typeNode != SymbolTable.noType) {
 										for(Variable variable : globalVariables) {
 											if(SymbolTable.currentScope.findSymbol(variable.getName()) != null) {
 												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
@@ -605,7 +605,7 @@ FormalParameter ::= Type:typeNode IDENTIFIER:name Brackets:isArray
 						
 						//Semantic analysis
 						//If the exists in the current scop then it is an error
-						if (typeNode != SymbolTable.noType) {
+						if (typeNode != null && typeNode != SymbolTable.noType) {
 							if (SymbolTable.currentScope.findSymbol(name) != null) {
 								parser.report_semantic_error("Redefinition of " + name, nameleft);
 							} else {
@@ -640,7 +640,7 @@ MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDe
 MethodVariableDeclaration ::=	Type:typeNode MethodVariableList:locals SEMICOLON
 								{:
 									//Semantic analysis
-									if (typeNode != SymbolTable.noType) {
+									if (typeNode != null && locals != null && typeNode != SymbolTable.noType) {
 										for(Variable localVariable : locals) {
 											if (SymbolTable.currentScope.findSymbol(localVariable.getName()) != null) {
 												parser.report_semantic_error("Redefinition of name " + localVariable.getName(), typeNodeleft);
