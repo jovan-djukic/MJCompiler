@@ -5,6 +5,13 @@ const bool const6 = true, const7 = 1;
 int a, b, c[];
 int a;
 {
+	int globalFunction1(int parameter1, int parameter2, char parameter3)
+		int local1, local2;
+		char local3[];
+		{
+			
+		}
+	
 	void main() {
 	
 	}

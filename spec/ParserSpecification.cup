@@ -226,7 +226,10 @@ action code {:
 	}
 
 	//Semantic analysis 
-	private int globalVariablePosition = 0;
+	private int variablePosition = 0;
+	
+	private int formalParameterCount = 0;
+	private Obj currentMethod = null;
 :}
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
@@ -247,7 +250,7 @@ nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration
 
 nonterminal ParentClassDeclaration, ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
 
-nonterminal MethodDeclaration, StaticModifier, ReturnType, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration, MethodVariableList,
+nonterminal MethodDeclaration, StaticModifier, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
 			FormalParameter;
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
@@ -283,7 +286,14 @@ nonterminal List<Constant> ConstantList;
 //varaibles
 nonterminal Variable Variable;
 nonterminal Boolean Brackets;
+
+//global varaibles
 nonterminal List<Variable> GlobalVariableList;
+
+//method variables
+nonterminal MethodTypeAndName;
+nonterminal Struct ReturnType;
+nonterminal List<Variable> MethodVariableList;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -319,7 +329,7 @@ ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
 							for(Constant constant : constants) {
 								if (!typeNode.equals(constant.getValue().getType())) {
 									parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode.getKind()), typeNodeleft);
-								} else if (SymbolTable.find(constant.getName()) != SymbolTable.noObj) {
+								} else if (SymbolTable.currentScope.findSymbol(constant.getName()) != null) {
 											parser.report_semantic_error("Redefinition of name " + constant.getName(), typeNodeleft);		
 								} else {
 									Obj newObject = SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
@@ -378,7 +388,7 @@ GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables S
 								{:
 									//Semantic analysis
 									for(Variable variable : globalVariables) {
-										if(SymbolTable.find(variable.getName()) != SymbolTable.noObj) {
+										if(SymbolTable.currentScope.findSymbol(variable.getName()) != null) {
 											parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
 										} else {
 											Obj newObject = null;
@@ -388,9 +398,9 @@ GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables S
 												newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
 											}
 											if (newObject != null && newObject != SymbolTable.noObj) {
-												newObject.setAdr(globalVariablePosition);
+												newObject.setAdr(variablePosition);
 												newObject.setLevel(SymbolTable.getCurrentLevel());
-												globalVariablePosition++;
+												variablePosition++;
 											} else {
 												parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeNodeleft);
 											}
@@ -488,13 +498,13 @@ MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
 						  /* epsilon */
 						  ;
 						  
-MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+MethodDeclaration ::=	StaticModifier MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
 							MethodVariableDeclarationList
 					  	LEFT_BRACE
 					  		StatementList
 					  	RIGHT_BRACE
 					  	{:
-							if (isMain(identifier)) {
+							if (isMain(currentMethod.getName())) {
 								incrementMainVariableCount();
 								incrementMainMethodCallCount();
 							} else {
@@ -503,8 +513,41 @@ MethodDeclaration ::=	StaticModifier ReturnType IDENTIFIER:identifier LEFT_PAREN
 								invalidateCurrentMethodCallCount();
 							}
 							incrementCodeBlockCount();
+
+							//Semantic analysis
+							if (currentMethod != null) {
+								SymbolTable.chainLocalSymbols(currentMethod);
+								SymbolTable.closeScope();
+
+								currentMethod.setLevel(formalParameterCount);
+							}
+
+							currentMethod = null;
+							variablePosition = 0;
+							formalParameterCount = 0;
 						:};
 					  
+MethodTypeAndName ::=	ReturnType:typeNode IDENTIFIER:identifier
+						{:
+							//Semantic analysis
+							if (SymbolTable.currentScope.findSymbol(identifier) != null) {
+								parser.report_semantic_error("Redefinition of " + identifier, identifierleft);
+							} else {
+								currentMethod = SymbolTable.insert(Obj.Meth, identifier, typeNode);
+								
+								if (currentMethod == SymbolTable.noObj) {
+									currentMethod = null;
+									parser.report_semantic_error("Could not insert symbol " + identifier + "into symbol talbe", identifierleft);
+								} else {
+									variablePosition = 0;
+									formalParameterCount = 0;
+
+									SymbolTable.openScope();
+								}
+							}
+						:}
+						;
+
 StaticModifier ::= 	STATIC
 					{:
 						incrementStaticMethodCount();
@@ -516,10 +559,16 @@ StaticModifier ::= 	STATIC
 				   	:}
 				   	;
 				   	
-ReturnType ::= Type
-			   |
-			   VOID
-			   ;
+ReturnType ::=	Type:typeNode
+			   	{:
+			   		RESULT = typeNode;
+			   	:}
+			   	|
+			   	VOID
+			   	{:
+			   		RESULT = SymbolTable.noType;
+			   	:}
+			   	;
 
 FormalParameterList ::= FormalParameterList COMA FormalParameter
 						|
@@ -532,9 +581,32 @@ FormalParameterList ::= FormalParameterList COMA FormalParameter
 						error {: printSyntaxErrorDescription("Incorrect formal parameter declaration"); :}
 						;	
 						
-FormalParameter ::= Type IDENTIFIER Brackets
+FormalParameter ::= Type:typeNode IDENTIFIER:name Brackets:isArray
 					{:
 						incrementFormalArgumentsCount();
+						
+						//Semantic analysis
+						//If the exists in the current scop then it is an error
+						if (SymbolTable.currentScope.findSymbol(name) != null) {
+							parser.report_semantic_error("Redefinition of " + name, nameleft);
+						} else {
+							Obj newObject = null;
+							if (isArray) {
+								newObject = SymbolTable.insert(Obj.Var, name, new Struct(Struct.Array, typeNode));
+							} else {
+								newObject = SymbolTable.insert(Obj.Var, name, typeNode);
+							}
+
+							if (newObject == SymbolTable.noObj) {
+								parser.report_semantic_error("Could not insert symbol " + name + " into symbol table", nameleft);
+							} else {
+								newObject.setLevel(SymbolTable.getCurrentLevel());
+								newObject.setFpPos(variablePosition);
+								newObject.setAdr(variablePosition);
+								variablePosition++;
+								formalParameterCount++;
+							}
+						}
 					:}
 					;
 
@@ -545,14 +617,53 @@ MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDe
 								  /* epsilon */
 								  ;
 
-MethodVariableDeclaration ::=	Type MethodVariableList SEMICOLON
+MethodVariableDeclaration ::=	Type:typeNode MethodVariableList:locals SEMICOLON
+								{:
+									//Semantic analysis
+									for(Variable localVariable : locals) {
+										if (SymbolTable.currentScope.findSymbol(localVariable.getName()) != null) {
+											parser.report_semantic_error("Redefinition of name " + localVariable.getName(), typeNodeleft);
+										} else {
+											Obj newObject = null;
+											if (localVariable.isArray()) {
+												newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), new Struct(Struct.Array, typeNode));
+											} else {
+												newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), typeNode);
+											}
+
+											if (newObject == SymbolTable.noObj) {
+												parser.report_semantic_error("Could not insert symbol " + localVariable.getName() + " into symbol table", typeNodeleft);
+											} else {
+												newObject.setLevel(SymbolTable.getCurrentLevel());
+												newObject.setFpPos(variablePosition);
+												newObject.setAdr(variablePosition);
+												variablePosition++;
+												formalParameterCount++;
+											}
+										}
+									}
+								:}
 								|
 								Type error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
 								;
 
-MethodVariableList ::=	MethodVariableList COMA Variable {: incrementCurrentMethodVariableCount(); :}
+MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable 
+						{: 
+							incrementCurrentMethodVariableCount(); 
+
+							//Semantic analysis
+							locals.add(variable);
+							RESULT = locals;
+						:}
 						|
-						Variable {: incrementCurrentMethodVariableCount(); :}
+						Variable:variable
+						{: 
+							incrementCurrentMethodVariableCount(); 
+
+							//Semantic analysis
+							RESULT = new ArrayList<Variable>();
+							RESULT.add(variable);
+						:}
 						;
 
 Type ::=	IDENTIFIER:name
