@@ -50,10 +50,17 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 			break;
 		case Struct.Class:
 			output.append("Class [");
+			output.append("\n");
+			nextIndentationLevel();
 			for (Obj obj : structToVisit.getMembers()) {
+				output.append(currentIndent.toString());
 				obj.accept(this);
+				output.append("\n");
 			}
-			output.append("]");
+			previousIndentationLevel();
+			output.append(indent.toString());
+			output.append("]\n");
+			output.append(indent.toString());
 			break;
 		}
 

@@ -225,14 +225,17 @@ action code {:
 		parser.getLogger().info("Description: " + message);
 	}
 
-	//Semantic analysis 
+	//Semantic analysis
+
 	private int variablePosition = 0;
 	
 	private int formalParameterCount = 0;
 	private Obj currentMethod = null;
 
 	private Struct currentClass = null;
+	private int classVariablePosition = 0;
 :}
+
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
 terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
@@ -250,7 +253,7 @@ nonterminal Program, NonMethodDeclarationList, MethodDeclarationList;
 
 nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration, ClassDeclaration;
 
-nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassVariableList, ClassMethodList;
+nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassMethodList;
 
 nonterminal MethodDeclaration, StaticModifier, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
 			FormalParameter;
@@ -290,7 +293,7 @@ nonterminal Variable Variable;
 nonterminal Boolean Brackets;
 
 //global varaibles
-nonterminal List<Variable> GlobalVariableList;
+nonterminal List<Variable> GlobalVariableList, ClassVariableList;
 
 //method variables
 nonterminal MethodTypeAndName;
@@ -298,6 +301,7 @@ nonterminal Struct ReturnType;
 nonterminal List<Variable> MethodVariableList;
 
 //class declaration
+nonterminal ClassHeader;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -335,8 +339,8 @@ ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
 						{:
 							if (typeNode != null && constants != null && typeNode != SymbolTable.noType) {
 								for(Constant constant : constants) {
-									if (!typeNode.equals(constant.getValue().getType())) {
-										parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode.getKind()), typeNodeleft);
+									if (!typeNode.assignableTo(constant.getValue().getType())) {
+										parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode), typeNodeleft);
 									} else if (SymbolTable.currentScope.findSymbol(constant.getName()) != null) {
 												parser.report_semantic_error("Redefinition of name " + constant.getName(), typeNodeleft);		
 									} else {
@@ -464,22 +468,65 @@ Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
 			 	:}
 			 	;
 			 
-ClassDeclaration ::=	CLASS IDENTIFIER ParentClassDeclaration LEFT_BRACE
+ClassDeclaration ::=	ClassHeader
+						LEFT_BRACE
 							ClassVariableDeclarationList
 							ClassMethodList
 						 RIGHT_BRACE
 						 {:
 						 	incrementNonStaticMethodCount();
 						 	incrementClassDefinitionCount();
+
+						 	//Semantic analysis
+						 	if (currentClass != null) {
+						 		SymbolTable.chainLocalSymbols(currentClass);
+						 		SymbolTable.closeScope();
+						 	}
+
+						 	classVariablePosition = 0;
+						 	currentClass = null;
 						 :};
-					 
+				
+ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeNode
+				{:
+					if (SymbolTable.find(name) != SymbolTable.noObj) {
+						parser.report_semantic_error("Redefinition of " + name, nameleft);
+					} else {
+						if (typeNode != null && typeNode != SymbolTable.noType) {
+							currentClass = new Struct(Struct.Class, typeNode);
+						} else {
+							currentClass = new Struct(Struct.Class);
+						}
+
+						Obj newObject = SymbolTable.insert(Obj.Type, name, currentClass);
+						if (newObject == null || newObject.equals(SymbolTable.noObj)) {
+							parser.report_semantic_error("Could not insert name " + name + " into symbol table", nameleft);
+						} else {
+							SymbolTable.openScope();
+							classVariablePosition = 0;
+						}
+					}
+				:};
+
+
 ParentClassDeclaration ::=	EXTENDS Type:typeNode
 						   	{:
 						   		//Semantic analysis
-						   		if (typeNode != SymbolTable.noType) {}
+						   		if (typeNode != SymbolTable.noType) {
+						   			if (typeNode.getKind() != Struct.Class) {
+						   				parser.report_semantic_error("Name " + SymbolTable.getBasicTypeName(typeNode) + " is not a class type", typeNodeleft);
+						   				
+						   				RESULT = SymbolTable.noType;
+						   			} else {
+						   				RESULT = typeNode;
+						   			}
+						   		}
 						   	:}
 						   	|
 						   	/* epsilon */
+						   	{:
+						   		RESULT = SymbolTable.noType;
+						   	:}
 						   	|
 						   	error {: printSyntaxErrorDescription("Incorrect declaration of parent class"); :}
 						   	;
@@ -489,16 +536,54 @@ ClassVariableDeclarationList ::=	ClassVariableDeclarationList ClassVariableDecla
 					  				/* epsilon */
 					  				;
 
-ClassVariableDeclaration ::=	Type ClassVariableList SEMICOLON 
+ClassVariableDeclaration ::=	Type:typeNode ClassVariableList:variables SEMICOLON 
+								{:
+									//Semantic analysis
+									if (typeNode != null && variables != null && typeNode != SymbolTable.noType) {
+										for(Variable variable : variables) {
+											if(SymbolTable.currentScope.findSymbol(variable.getName()) != null) {
+												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
+											} else {
+												Obj newObject = null;
+												if (variable.isArray()) {
+													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), new MyStruct(Struct.Array, typeNode));
+												} else {
+													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), typeNode);
+												}
+												if (newObject != null && newObject != SymbolTable.noObj) {
+													newObject.setAdr(classVariablePosition);
+													newObject.setLevel(SymbolTable.getCurrentLevel());
+													classVariablePosition++;
+												} else {
+													parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeNodeleft);
+												}
+											}
+										}
+									}
+								:}
 								|
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 								|
 								error {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 				  				;
 
-ClassVariableList ::= 	ClassVariableList COMA Variable {: incrementClassVariableCount(); :}
+ClassVariableList ::= 	ClassVariableList:variables COMA Variable:variable 
+						{: 
+							incrementClassVariableCount(); 
+
+							//Semantic analysis
+							variables.add(variable);
+							RESULT = variables;
+						:}
 						|
-						Variable {: incrementClassVariableCount(); :}
+						Variable:variable 
+						{: 
+							incrementClassVariableCount(); 
+
+							//Semantic analysis
+							RESULT = new ArrayList<Variable>();
+							RESULT.add(variable);
+						:}
 						;
 
 ClassMethodList ::= LEFT_BRACE

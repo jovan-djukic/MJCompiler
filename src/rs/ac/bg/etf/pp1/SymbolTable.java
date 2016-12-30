@@ -1,7 +1,9 @@
 package rs.ac.bg.etf.pp1;
 
+
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
+import rs.etf.pp1.symboltable.concepts.Scope;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SymbolTable extends Tab{
@@ -30,8 +32,8 @@ public class SymbolTable extends Tab{
 		currentLevel--;
 	}
 	
-	public static String getBasicTypeName(int basicType) {
-		switch (basicType) {
+	public static String getBasicTypeName(Struct type) {
+		switch (type.getKind()) {
 			case Struct.Int: {
 				return "int";
 			}
@@ -42,7 +44,27 @@ public class SymbolTable extends Tab{
 				return "bool";
 			}
 			case Struct.Array: {
-				return "array";
+				String name = "Array of ";
+				switch (type.getElemType().getKind()) {
+					case Struct.Int: {
+						return name + "int";
+					}
+					case Struct.Char: {
+						return name +"char";
+					}
+					case Struct.Bool: {
+						return name + "bool";
+					}
+					case Struct.Class: {
+						return name + "class";
+					}
+					case Struct.None: {
+						return name + "void";
+					}
+					default: {
+						return "";
+					}
+				}
 			}
 			case Struct.Class: {
 				return "class";
@@ -54,5 +76,17 @@ public class SymbolTable extends Tab{
 				return "";
 			}
 		}
+	}
+
+	public static String getClassTypeName(Struct classType) {
+		for(Scope scope = currentScope; scope != null; scope = scope.getOuter()) {
+			for(Obj object : scope.getLocals().symbols()) {
+				if (object.getType() == classType && object.getKind() == Obj.Type) {
+					return object.getName();
+				}
+			}
+		}
+		
+		return "";
 	}
 }
