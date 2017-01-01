@@ -20,6 +20,16 @@ class class1 {
 	}
 }
 
+class class2 extends class1 {
+	int d, e, f, g, h;
+	
+	{
+		void method2() {
+		
+		}
+	}
+}
+
 {
 	int globalFunction1(int parameter1, int parameter2, char parameter3)
 		int local1, local2[];

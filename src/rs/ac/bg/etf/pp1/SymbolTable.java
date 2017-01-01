@@ -1,6 +1,8 @@
 package rs.ac.bg.etf.pp1;
 
 
+import java.util.Iterator;
+
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Scope;
@@ -80,9 +82,18 @@ public class SymbolTable extends Tab{
 
 	public static String getClassTypeName(Struct classType) {
 		for(Scope scope = currentScope; scope != null; scope = scope.getOuter()) {
-			for(Obj object : scope.getLocals().symbols()) {
-				if (object.getType() == classType && object.getKind() == Obj.Type) {
-					return object.getName();
+			for(Obj topObject : scope.getLocals().symbols()) {
+				if (topObject.getType().equals(classType) && topObject.getKind() == Obj.Type) {
+					return topObject.getName();
+				}
+				if (topObject.getLocalSymbols().size() > 0) {
+					Iterator<Obj> iterator = topObject.getLocalSymbols().iterator();
+					while (iterator.hasNext()) {
+						Obj currentObject = iterator.next();
+						if (currentObject.getType().equals(classType) && currentObject.getKind() == Obj.Type) {
+							return currentObject.getName();
+						}
+					}
 				}
 			}
 		}

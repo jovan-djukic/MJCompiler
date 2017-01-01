@@ -8,6 +8,9 @@ public class MyStruct extends Struct {
 	public MyStruct(int kind, Struct elemType) {
 		super(kind, elemType);
 		// TODO Auto-generated constructor stub
+		if (elemType.getKind() == Struct.Class) {
+			this.setElementType(elemType);
+		}
 	}
 
 	public MyStruct(int kind, SymbolDataStructure members) {

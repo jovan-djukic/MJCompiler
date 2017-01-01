@@ -10,12 +10,21 @@ class class1 {
 	int a, b, c;
 	char a;
 }
+
+class class2 extends int {
+
+}
+
 {
 	int globalFunction1(int parameter1, int parameter2, char parameter3)
 		int local1, local2;
 		char local3[], local2[], parameter2;
 	{
-		
+			
+	}
+	
+	static int globalFunction2() {
+	
 	}
 	
 	void main() {

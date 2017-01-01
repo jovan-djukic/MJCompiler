@@ -36,13 +36,14 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 		case Obj.Fld:  output.append("Fld "); break;
 		case Obj.Prog: output.append("Prog "); break;
 		case MyObj.Static: output.append("StaticMeth "); break;
+		case MyObj.Global: output.append("Global "); break;
 		}
 		
 		output.append(objToVisit.getName());
 		output.append(": ");
 		
 		if ((Obj.Var == objToVisit.getKind()) && "this".equalsIgnoreCase(objToVisit.getName()))
-			output.append("");
+			output.append("THIS_POINTER");
 		else
 			objToVisit.getType().accept(this);
 		
@@ -51,7 +52,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 		output.append(", ");
 		output.append(objToVisit.getLevel() + " ");
 				
-		if (objToVisit.getKind() == Obj.Prog || objToVisit.getKind() == Obj.Meth || objToVisit.getKind() == MyObj.Static) {
+		if (objToVisit.getKind() == Obj.Prog || objToVisit.getKind() == Obj.Meth || objToVisit.getKind() == MyObj.Static || objToVisit.getKind() == MyObj.Global) {
 			output.append("\n");
 			nextIndentationLevel();
 		}
@@ -63,7 +64,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 			output.append("\n");
 		}
 		
-		if (objToVisit.getKind() == Obj.Prog || objToVisit.getKind() == Obj.Meth || objToVisit.getKind() == MyObj.Static) {
+		if (objToVisit.getKind() == Obj.Prog || objToVisit.getKind() == Obj.Meth || objToVisit.getKind() == MyObj.Static || objToVisit.getKind() == MyObj.Global) {
 			previousIndentationLevel();
 			output.append(currentIndent.toString());
 		}
@@ -127,7 +128,7 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 		case Struct.Class:
 			output.append("Class");
 			if (structToVisit.getElemType() != null) {
-				output.append(", parent is " + SymbolTable.getClassTypeName(structToVisit.getElemType()));
+				output.append(", parent is " + SymbolTable.getClassTypeName(structToVisit.getElemType()) + " ");
 			}
 			output.append("[\n");
 			nextIndentationLevel();
