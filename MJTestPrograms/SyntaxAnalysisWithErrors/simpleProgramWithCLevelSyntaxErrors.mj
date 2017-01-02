@@ -112,7 +112,7 @@ program MJProgram
 		
 		parent.m(c, d);
 		
-		global1(a, return);
+		global1(a, return, b, c);
 		
 		parent.m(c, d);
 		

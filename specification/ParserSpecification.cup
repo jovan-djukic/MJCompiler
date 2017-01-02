@@ -271,7 +271,7 @@ nonterminal IfHeader, ForHeader;
 
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
-nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, ActualParameters, ExpressionList;
+nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, ExpressionList;
 
 nonterminal Condition, ConditionTerm, ConditionFact;
 
@@ -320,6 +320,8 @@ nonterminal String RelationalOperator;
 nonterminal Obj Factor, Expression;
 nonterminal Boolean ArraySize, ExpressionPrefix;
 
+//Actual parameters
+nonterminal Stack<List<Obj>> ActualParameters;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -947,6 +949,8 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
 			 	{:
 			 		incrementCurrentMethodCallCount();
 			 	:}
+			 	|
+			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
 			 	;
 
 AssignOperation ::= 	AssignOperator Expression
@@ -954,12 +958,12 @@ AssignOperation ::= 	AssignOperator Expression
 						error {: printSyntaxErrorDescription("Incorrect asign operation syntax"); :}
 						;
 								 
-ActualParameters ::= ExpressionList
-					 |
-					 /* epsilon */
-					 |
-					 error {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
-					 ;
+ActualParameters ::=	ActualParameters COMA Expression:expression
+						|
+						Expression:expression
+						|
+						/* epsilon */
+						;
 
 ExpressionList ::=	ExpressionList COMA Expression
 					|

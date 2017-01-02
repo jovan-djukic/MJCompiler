@@ -5,8 +5,8 @@ class Table {
 	{
 		 void putp (int a, int idx) { this.pos[idx]=a; }
 		 void putn (int a, int idx) { this.neg[idx]=a; }
-		 void getp (int idx) { return pos[idx]; }
-		 void getn (int idx) { return neg[idx]; }
+		 int getp (int idx) { return pos[idx]; }
+		 int getn (int idx) { return neg[idx]; }
 	}
 }
 Table val;
