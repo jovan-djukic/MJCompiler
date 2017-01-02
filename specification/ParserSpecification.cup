@@ -273,17 +273,18 @@ nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, Actua
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal Expression, ExpressionPrefix, Factor;
+nonterminal Expression, ExpressionPrefix;
 
-nonterminal OptionalParameters, ArraySize, ArrayIndexer;
+nonterminal OptionalParameters, ArrayIndexer;
 
 nonterminal AssignOperation, AssignOperator;
 
-nonterminal /*AdditionOperator,*/ AdditionOperatorLeft, AdditionOperatorRight;
+nonterminal AdditionOperatorLeft, AdditionOperatorRight;
 
-nonterminal /*MultiplicationOperator,*/ MultiplicationOperatorLeft, MultiplicationOperatorRight;
+nonterminal MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Semantic analysis non terminals
+//Basic non terminals
 nonterminal Obj ProgramName, Type;
 
 //constants
@@ -313,6 +314,10 @@ nonterminal Obj Designator;
 
 //For left associated and right associated operators, this super rule to sub rule passing
 nonterminal LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList, RightAssociatedFactorList; 
+
+//Factor
+nonterminal Obj Factor;
+nonterminal Boolean ArraySize;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -1003,28 +1008,46 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorLeft
 								Factor
 								;
 
-Factor ::= Designator OptionalParameters
-		   |
-		   NUMERICAL_CONSTANT
-		   |
-		   CHARACTER_CONSTANT
-		   |
-		   BOOLEAN_CONSTANT
-		   |
-		   NEW Type ArraySize
-		   |
-		   LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
-		   ;
+Factor ::=	Designator OptionalParameters
+		   	|
+		   	NUMERICAL_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.intType, value.intValue(), SymbolTable.getCurrentLevel()); :}
+		   	|
+		   	CHARACTER_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.charType, (int)value.charAt(0), SymbolTable.getCurrentLevel()); :}
+		   	|
+		   	BOOLEAN_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.boolType, value.booleanValue() ? 1 : 0, SymbolTable.getCurrentLevel()); :}
+		   	|
+		   	NEW Type:typeObject ArraySize:isArray
+		   	{:
+		   		if (!isArray.booleanValue() && typeObject.getType().getKind() != MyStruct.Class) {
+		   			parser.report_semantic_error("Cannot instantiate a object of non class type " + typeObject.getName(), typeObjectleft);
+		   			RESULT = SymbolTable.noObj;
+		   		} else {
+		   			if(isArray.booleanValue()) {
+		   				RESULT = new Obj(Obj.Type, typeObject.getName() + "[]", new MyStruct(MyStruct.Array, typeObject.getType()));
+		   			} else {
+		   				RESULT = typeObject;
+		   			}
+		   		}
+		   	:}
+		   	|
+		   	LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+		   	;
 		   
 OptionalParameters ::= 	MethodCall
 					   	|
 					   	/* epsilon */
 					   	;		   
 		   						  
-ArraySize ::= ArrayIndexer
-			  |
-			  /* epsilon */
-			  ;
+ArraySize ::=	ArrayIndexer
+			  	{: 
+			  		RESULT = true;
+			  	:}
+			  	|
+			  	/* epsilon */
+			  	{:
+			  		RESULT = false;
+			  	:}
+			  	;
 	   
 ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
 					|
