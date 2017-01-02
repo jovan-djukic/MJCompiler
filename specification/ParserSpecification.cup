@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 import java.util.*;
 import rs.etf.pp1.symboltable.concepts.*;
+import rs.etf.pp1.symboltable.structure.*;
 import rs.ac.bg.etf.utilities.*;
 
 
@@ -228,6 +229,7 @@ action code {:
 	//Semantic analysis
 
 	private static final String THIS = "this";
+	private static final String BRACKETS = "[]";
 
 	private int variablePosition = 0;
 	
@@ -236,6 +238,7 @@ action code {:
 
 	private Struct currentClass = null;
 	private int classVariablePosition = 0;
+
 :}
 
 
@@ -274,7 +277,7 @@ nonterminal Expression, ExpressionPrefix, TermList, Term, FactorList, Factor;
 
 nonterminal OptionalParameters, ArraySize, ArrayIndexer;
 
-nonterminal Designator, AccessList, AccessListElement, AssignOperation, AssignOperator;
+nonterminal AssignOperation, AssignOperator;
 
 nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
 
@@ -305,6 +308,9 @@ nonterminal List<Variable> MethodVariableList;
 //class declaration
 nonterminal ClassHeader;
 nonterminal Boolean StaticModifier;
+
+//Use of declaratiosn
+nonterminal Obj Designator;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -1017,18 +1023,75 @@ ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
 					;
 					
 					
-Designator ::= IDENTIFIER AccessList;
+Designator ::=	Designator:object DOT IDENTIFIER:name
+				{:
+					//Semantic analysis
+					if (object != null) {
+						if (object.getType().getKind() != MyStruct.Class) {
+							parser.report_semantic_error("Symbol " + object.getName() + " is not of class type", objectleft);
+							RESULT = null;
+						} else {
+							Obj member = null;
+							//If object is THIS we need to search in top scope because members are not associated with class node yet
+							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass))) {
+								member = SymbolTable.currentScope.getOuter().findSymbol(name);
+							} else {
+								SymbolDataStructure members = object.getType().getMembersTable();
+								member = members.searchKey(name);
+							}
 
-AccessList ::= AccessList AccessListElement
-			   |
-			   /* epsilon */
-			   ;
+							if (member == null) {
+								parser.report_semantic_error("Symbol " + object.getName() + " has no member of name " + name, objectleft);
+								RESULT = null;
+							} else if(object.getKind() == MyObj.Type && member.getKind() != MyObj.Static) {
+								parser.report_semantic_error("Use of non-static method or varaible through class name symbol " + object.getName(), objectleft);
+								RESULT = null;
+							} else {
+								RESULT = member;
+							}
+						}
+					} else {
+						RESULT = null;
+					}
+				:}
+				|
+				Designator:object ArrayIndexer
+				{:
+					//Semantic analysis
+					if (object != null) {
+						if(object.getType().getKind() != MyStruct.Array) {
+							parser.report_semantic_error("Symbol " + object.getName() + " is not an array", objectleft);
+							RESULT = null;
+						} else if(object.getType().getElemType() == null) {
+							parser.report_semantic_error("Internal error, array without an element type", objectleft);
+							RESULT = null;
+						} else {
+							//Return temp object that represents and array element
+							RESULT = new MyObj(MyObj.Var, object.getName(), object.getType().getElemType());
+						}
+					} else {
+						RESULT = null;
+					}
+				:}
+				|
+				IDENTIFIER:name 
+				{:
+					//Semantic analysis
+					Obj object = SymbolTable.find(name);
+					if (object.equals(SymbolTable.noObj)) {
+						if (THIS.equals(name)) {
+							parser.report_semantic_error("Use of " + THIS + " outside of class non-static method", nameleft);
+							RESULT = null;
+						} else {
+							parser.report_error("Use of undefined symbol " + name, nameleft);
+							RESULT = null;
+						}
+					} else {	
+						RESULT = object;
+					}
+				:}
+				;
 			   
-AccessListElement ::= DOT IDENTIFIER
-					  |
-					  ArrayIndexer
-					  ;
-
 AssignOperator ::= 	EQUALS
 					|
 					AdditionOperatorRight
