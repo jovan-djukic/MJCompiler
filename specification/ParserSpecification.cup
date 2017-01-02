@@ -236,7 +236,7 @@ action code {:
 	private int formalParameterCount = 0;
 	private Obj currentMethod = null;
 
-	private Struct currentClass = null;
+	private Obj currentClass = null;
 	private int classVariablePosition = 0;
 
 :}
@@ -284,9 +284,7 @@ nonterminal /*AdditionOperator,*/ AdditionOperatorLeft, AdditionOperatorRight;
 nonterminal /*MultiplicationOperator,*/ MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Semantic analysis non terminals
-nonterminal Obj ProgramName;
-
-nonterminal Struct Type, ParentClassDeclaration;
+nonterminal Obj ProgramName, Type;
 
 //constants
 nonterminal Value Value;
@@ -302,12 +300,13 @@ nonterminal List<Variable> GlobalVariableList, ClassVariableList;
 
 //method variables
 nonterminal MethodTypeAndName;
-nonterminal Struct ReturnType;
+nonterminal Obj ReturnType;
 nonterminal List<Variable> MethodVariableList;
 
 //class declaration
 nonterminal ClassHeader;
 nonterminal Boolean StaticModifier;
+nonterminal Obj ParentClassDeclaration;
 
 //Use of declaratiosn
 nonterminal Obj Designator;
@@ -347,20 +346,20 @@ NonMethodDeclaration ::= 	ConstantDeclaration
 						 	ClassDeclaration
 						 	;
 			
-ConstantDeclaration ::=	CONST Type:typeNode ConstantList:constants SEMICOLON
+ConstantDeclaration ::=	CONST Type:typeObject ConstantList:constants SEMICOLON
 						{:
-							if (typeNode != null && constants != null && typeNode != SymbolTable.noType) {
+							if (typeObject != null && constants != null && typeObject.getType() != SymbolTable.noType) {
 								for(Constant constant : constants) {
-									if (!typeNode.assignableTo(constant.getValue().getType())) {
-										parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + SymbolTable.getBasicTypeName(typeNode), typeNodeleft);
-									} else if (SymbolTable.currentScope.findSymbol(constant.getName()) != null) {
-												parser.report_semantic_error("Redefinition of name " + constant.getName(), typeNodeleft);		
+									if (!typeObject.getType().assignableTo(constant.getValue().getType())) {
+										parser.report_semantic_error("Value " + constant.getValue() + " is not of type " + typeObject.getName(), typeObjectleft);
+									} else if (SymbolTable.find(constant.getName()) != SymbolTable.noObj) {
+												parser.report_semantic_error("Redefinition of name " + constant.getName(), typeObjectleft);		
 									} else {
-										Obj newObject = SymbolTable.insert(Obj.Con, constant.getName(), typeNode);
+										Obj newObject = SymbolTable.insert(Obj.Con, constant.getName(), typeObject.getType());
 										if (newObject != null && newObject != SymbolTable.noObj) {
 											newObject.setAdr(constant.getValue().getValue());
 										} else {
-											parser.report_semantic_error("Could not insert symbol: " + constant.getName() + " into symbol table", typeNodeleft);
+											parser.report_semantic_error("Could not insert symbol: " + constant.getName() + " into symbol table", typeObjectleft);
 										}
 									}
 								}
@@ -409,26 +408,26 @@ Value ::=	NUMERICAL_CONSTANT:value
 		  	:}
 		  	;
 
-GlobalVariableDeclaration ::=	Type:typeNode GlobalVariableList:globalVariables SEMICOLON
+GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables SEMICOLON
 								{:
 									//Semantic analysis
-									if (typeNode != null && globalVariables != null && typeNode != SymbolTable.noType) {
+									if (typeObject != null && globalVariables != null && typeObject.getType() != SymbolTable.noType) {
 										for(Variable variable : globalVariables) {
-											if(SymbolTable.currentScope.findSymbol(variable.getName()) != null) {
-												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
+											if(SymbolTable.find(variable.getName()) != SymbolTable.noObj) {
+												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeObjectleft);
 											} else {
 												Obj newObject = null;
 												if (variable.isArray()) {
-													newObject = SymbolTable.insert(Obj.Var, variable.getName(), new MyStruct(MyStruct.Array, typeNode));
+													newObject = SymbolTable.insert(Obj.Var, variable.getName(), new MyStruct(MyStruct.Array, typeObject.getType()));
 												} else {
-													newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeNode);
+													newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeObject.getType());
 												}
 												if (newObject != null && newObject != SymbolTable.noObj) {
 													newObject.setAdr(variablePosition);
 													newObject.setLevel(SymbolTable.getCurrentLevel());
 													variablePosition++;
 												} else {
-													parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeNodeleft);
+													parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeObjectleft);
 												}
 											}
 										}
@@ -491,7 +490,7 @@ ClassDeclaration ::=	ClassHeader
 
 						 	//Semantic analysis
 						 	if (currentClass != null) {
-						 		SymbolTable.chainLocalSymbols(currentClass);
+						 		SymbolTable.chainLocalSymbols(currentClass.getType());
 						 		SymbolTable.closeScope();
 						 	}
 
@@ -499,19 +498,18 @@ ClassDeclaration ::=	ClassHeader
 						 	currentClass = null;
 						 :};
 				
-ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeNode
+ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
 				{:
 					if (SymbolTable.find(name) != SymbolTable.noObj) {
 						parser.report_semantic_error("Redefinition of " + name, nameleft);
 					} else {
-						if (typeNode != null && typeNode != SymbolTable.noType) {
-							currentClass = new MyStruct(MyStruct.Class, typeNode);
+						if (typeObject != null && typeObject.getType() != SymbolTable.noType) {
+							currentClass = SymbolTable.insert(Obj.Type, name, new MyStruct(MyStruct.Class, typeObject.getType()));
 						} else {
-							currentClass = new MyStruct(MyStruct.Class);
+							currentClass = SymbolTable.insert(Obj.Type, name, new MyStruct(MyStruct.Class));
 						}
 
-						Obj newObject = SymbolTable.insert(Obj.Type, name, currentClass);
-						if (newObject == null || newObject.equals(SymbolTable.noObj)) {
+						if (currentClass == null || currentClass.equals(SymbolTable.noObj)) {
 							parser.report_semantic_error("Could not insert name " + name + " into symbol table", nameleft);
 						} else {
 							SymbolTable.openScope();
@@ -521,23 +519,23 @@ ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeNode
 				:};
 
 
-ParentClassDeclaration ::=	EXTENDS Type:typeNode
+ParentClassDeclaration ::=	EXTENDS Type:typeObject
 						   	{:
 						   		//Semantic analysis
-						   		if (typeNode != SymbolTable.noType) {
-						   			if (typeNode.getKind() != Struct.Class) {
-						   				parser.report_semantic_error("Name " + SymbolTable.getBasicTypeName(typeNode) + " is not a class type", typeNodeleft);
+						   		if (typeObject.getType() != SymbolTable.noType) {
+						   			if (typeObject.getType().getKind() != Struct.Class) {
+						   				parser.report_semantic_error("Name " + typeObject.getName() + " is not a class type", typeObjectleft);
 						   				
-						   				RESULT = SymbolTable.noType;
+						   				RESULT = SymbolTable.noObj;
 						   			} else {
-						   				RESULT = typeNode;
+						   				RESULT = typeObject;
 						   			}
 						   		}
 						   	:}
 						   	|
 						   	/* epsilon */
 						   	{:
-						   		RESULT = SymbolTable.noType;
+						   		RESULT = SymbolTable.noObj;
 						   	:}
 						   	|
 						   	error {: printSyntaxErrorDescription("Incorrect declaration of parent class"); :}
@@ -548,26 +546,26 @@ ClassVariableDeclarationList ::=	ClassVariableDeclarationList ClassVariableDecla
 					  				/* epsilon */
 					  				;
 
-ClassVariableDeclaration ::=	Type:typeNode ClassVariableList:variables SEMICOLON 
+ClassVariableDeclaration ::=	Type:typeObject ClassVariableList:variables SEMICOLON 
 								{:
 									//Semantic analysis
-									if (typeNode != null && variables != null && typeNode != SymbolTable.noType) {
+									if (typeObject != null && variables != null && typeObject.getType() != SymbolTable.noType) {
 										for(Variable variable : variables) {
 											if(SymbolTable.currentScope.findSymbol(variable.getName()) != null) {
-												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeNodeleft);
+												parser.report_semantic_error("Redefinition of name " + variable.getName(), typeObjectleft);
 											} else {
 												Obj newObject = null;
 												if (variable.isArray()) {
-													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), new MyStruct(MyStruct.Array, typeNode));
+													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), new MyStruct(MyStruct.Array, typeObject.getType()));
 												} else {
-													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), typeNode);
+													newObject = SymbolTable.insert(Obj.Fld, variable.getName(), typeObject.getType());
 												}
 												if (newObject != null && newObject != SymbolTable.noObj) {
 													newObject.setAdr(classVariablePosition);
 													newObject.setLevel(SymbolTable.getCurrentLevel());
 													classVariablePosition++;
 												} else {
-													parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeNodeleft);
+													parser.report_semantic_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeObjectleft);
 												}
 											}
 										}
@@ -616,7 +614,7 @@ MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIG
 					  		StatementList
 					  	RIGHT_BRACE
 					  	{:
-							if (isMain(currentMethod.getName())) {
+							if (currentMethod != null && isMain(currentMethod.getName())) {
 								incrementMainVariableCount();
 								incrementMainMethodCallCount();
 							} else {
@@ -640,20 +638,20 @@ MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIG
 						:}
 						;
 					  
-MethodTypeAndName ::=	StaticModifier:isStatic ReturnType:typeNode IDENTIFIER:identifier
+MethodTypeAndName ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:identifier
 						{:
 							//Semantic analysis
-							if (typeNode != SymbolTable.noType) {
-								if (SymbolTable.currentScope.findSymbol(identifier) != null) {
+							if (typeObject.getType() != SymbolTable.noType) {
+								if (SymbolTable.find(identifier) != SymbolTable.noObj) {
 									parser.report_semantic_error("Redefinition of " + identifier, identifierleft);
 								} else {
 									if (currentClass == null && isStatic.booleanValue() == false) {
-										currentMethod = SymbolTable.insert(MyObj.Global, identifier, typeNode);
+										currentMethod = SymbolTable.insert(MyObj.Global, identifier, typeObject.getType());
 									} else {
 										if (isStatic != null && isStatic.booleanValue()) {
-											currentMethod = SymbolTable.insert(MyObj.Static, identifier, typeNode);
+											currentMethod = SymbolTable.insert(MyObj.Static, identifier, typeObject.getType());
 										} else {
-											currentMethod = SymbolTable.insert(Obj.Meth, identifier, typeNode);
+											currentMethod = SymbolTable.insert(Obj.Meth, identifier, typeObject.getType());
 										}
 									}
 									
@@ -668,7 +666,7 @@ MethodTypeAndName ::=	StaticModifier:isStatic ReturnType:typeNode IDENTIFIER:ide
 
 										//If non-static method add this formal parameter
 										if (currentClass != null && !isStatic.booleanValue()) {
-											Obj newObject = SymbolTable.insert(MyObj.Var, THIS, currentClass);
+											Obj newObject = SymbolTable.insert(MyObj.Var, THIS, currentClass.getType());
 
 											if (newObject == SymbolTable.noObj) {
 												parser.report_semantic_error("Could not insert symbol " + THIS + " into symbol table", identifierleft);
@@ -709,14 +707,14 @@ StaticModifier ::= 	STATIC:attribute
 				   	:}
 				   	;
 				   	
-ReturnType ::=	Type:typeNode
+ReturnType ::=	Type:typeObject
 			   	{:
-			   		RESULT = typeNode;
+			   		RESULT = typeObject;
 			   	:}
 			   	|
 			   	VOID
 			   	{:
-			   		RESULT = SymbolTable.voidType;
+			   		RESULT = SymbolTable.find("void");
 			   	:}
 			   	;
 
@@ -731,21 +729,21 @@ FormalParameterList ::= FormalParameterList COMA FormalParameter
 						error {: printSyntaxErrorDescription("Incorrect formal parameter declaration"); :}
 						;	
 						
-FormalParameter ::= Type:typeNode IDENTIFIER:name Brackets:isArray
+FormalParameter ::= Type:typeObject IDENTIFIER:name Brackets:isArray
 					{:
 						incrementFormalArgumentsCount();
 						
 						//Semantic analysis
 						//If the exists in the current scop then it is an error
-						if (typeNode != null && typeNode != SymbolTable.noType) {
+						if (typeObject != null && typeObject.getType() != SymbolTable.noType) {
 							if (SymbolTable.currentScope.findSymbol(name) != null) {
 								parser.report_semantic_error("Redefinition of " + name, nameleft);
 							} else {
 								Obj newObject = null;
 								if (isArray) {
-									newObject = SymbolTable.insert(Obj.Var, name, new MyStruct(Struct.Array, typeNode));
+									newObject = SymbolTable.insert(Obj.Var, name, new MyStruct(Struct.Array, typeObject.getType()));
 								} else {
-									newObject = SymbolTable.insert(Obj.Var, name, typeNode);
+									newObject = SymbolTable.insert(Obj.Var, name, typeObject.getType());
 								}
 
 								if (newObject == SymbolTable.noObj) {
@@ -769,23 +767,23 @@ MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDe
 								  /* epsilon */
 								  ;
 
-MethodVariableDeclaration ::=	Type:typeNode MethodVariableList:locals SEMICOLON
+MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLON
 								{:
-									//Semantic analysis
-									if (typeNode != null && locals != null && typeNode != SymbolTable.noType) {
+									//Semantic analysis 
+									if (typeObject != null && locals != null && typeObject.getType() != SymbolTable.noType) {
 										for(Variable localVariable : locals) {
 											if (SymbolTable.currentScope.findSymbol(localVariable.getName()) != null) {
-												parser.report_semantic_error("Redefinition of name " + localVariable.getName(), typeNodeleft);
+												parser.report_semantic_error("Redefinition of name " + localVariable.getName(), typeObjectleft);
 											} else {
 												Obj newObject = null;
 												if (localVariable.isArray()) {
-													newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), new MyStruct(Struct.Array, typeNode));
+													newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), new MyStruct(Struct.Array, typeObject.getType()));
 												} else {
-													newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), typeNode);
+													newObject = SymbolTable.insert(Obj.Var, localVariable.getName(), typeObject.getType());
 												}
 
 												if (newObject == SymbolTable.noObj) {
-													parser.report_semantic_error("Could not insert symbol " + localVariable.getName() + " into symbol table", typeNodeleft);
+													parser.report_semantic_error("Could not insert symbol " + localVariable.getName() + " into symbol table", typeObjectleft);
 												} else {
 													newObject.setLevel(SymbolTable.getCurrentLevel());
 													newObject.setFpPos(variablePosition);
@@ -821,15 +819,15 @@ MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable
 
 Type ::=	IDENTIFIER:name
 			{:
-				Obj typeNode = SymbolTable.find(name);
-				if (SymbolTable.noObj.equals(typeNode)) {
+				Obj typeObject = SymbolTable.find(name);
+				if (SymbolTable.noObj.equals(typeObject)) {
 					parser.report_semantic_error("no type named: " + name, nameleft);
-					RESULT = SymbolTable.noType;
-				} else if (Obj.Type != typeNode.getKind()) {
+					RESULT = SymbolTable.noObj;
+				} else if (Obj.Type != typeObject.getKind()) {
 					parser.report_semantic_error("Name: " + name + " is not a type", nameleft);
-					RESULT = SymbolTable.noType;
+					RESULT = SymbolTable.noObj;
 				} else {
-					RESULT = typeNode.getType();
+					RESULT = typeObject;
 				}
 			:}
 			;

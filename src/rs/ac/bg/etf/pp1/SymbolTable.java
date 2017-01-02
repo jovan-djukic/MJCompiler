@@ -2,19 +2,20 @@ package rs.ac.bg.etf.pp1;
 
 
 import java.util.Iterator;
-
+import rs.ac.bg.etf.utilities.MyStruct;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Scope;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SymbolTable extends Tab{
-	public static final Struct boolType = new Struct(Struct.Bool);;
-	public static final Struct voidType = new Struct(Struct.None);;
-
+	public static final Struct boolType = new MyStruct(Struct.Bool);
+	public static final Struct voidType = new MyStruct(Struct.None);
+	
 	public static void init() {
 		Tab.init();
 		currentScope.addToLocals(new Obj(Obj.Type, "bool", boolType));
+		currentScope.addToLocals(new Obj(Obj.Type, "void", voidType));
 	}
 	
 	private static int currentLevel = -1;
