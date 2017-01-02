@@ -36,7 +36,13 @@ class class2 extends class1 {
 	
 	void main()
 		class1 instance1;
+		int a;
+		char c[], d[];
 	{
 		instance1 = new class1;
+		
+		a = 5 + 5 * 5 + 5;
+		c = new char[10];
+		d = new char[a];
 	}
 }	

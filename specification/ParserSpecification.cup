@@ -273,15 +273,11 @@ nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, Actua
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal Expression, ExpressionPrefix;
+nonterminal ExpressionPrefix;
 
 nonterminal OptionalParameters, ArrayIndexer;
 
 nonterminal AssignOperation, AssignOperator;
-
-nonterminal AdditionOperatorLeft, AdditionOperatorRight;
-
-nonterminal MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Semantic analysis non terminals
 //Basic non terminals
@@ -313,10 +309,14 @@ nonterminal Obj ParentClassDeclaration;
 nonterminal Obj Designator;
 
 //For left associated and right associated operators, this super rule to sub rule passing
-nonterminal LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList, RightAssociatedFactorList; 
+nonterminal Obj LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList, RightAssociatedFactorList; 
+
+//Addition operators for better error reporting
+nonterminal String AdditionOperatorLeft, AdditionOperatorRight;
+nonterminal String MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Factor
-nonterminal Obj Factor;
+nonterminal Obj Factor, Expression;
 nonterminal Boolean ArraySize;
 
 Program ::= PROGRAM ProgramName:programObject 
@@ -981,40 +981,181 @@ RestOfTheConditionFact ::= RelationalOperator Expression
 						   /* epsilon */
 						   ;
 						   
-Expression ::= ExpressionPrefix RightAssociatedTermList;
+Expression ::=	ExpressionPrefix RightAssociatedTermList:expression
+				{:
+					if (expression != null) {
+						RESULT = expression;
+					} else {
+						parser.report_semantic_error("Internal error, got null expression", expressionleft);
+						RESULT = SymbolTable.noObj;
+					}
+				:}
+				;
 
 ExpressionPrefix ::= MINUS
 					 |
 					 /* epsilon */
 					 ;
 
-RightAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorRight RightAssociatedTermList
+RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
+							{:
+								boolean error = false;
+								if (rightExpression == null || leftExpression == null) {
+									parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+									error = true;
+								}
+
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
+									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
+									error = true;
+								}
+
+								if(!error) {
+									RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+								} else {
+									RESULT = SymbolTable.noObj;
+								}
+							:}
 							|
-							LeftAssociatedTermList
+							LeftAssociatedTermList:expression
+							{:
+								if (expression != null) {
+									RESULT = expression;
+								} else {
+									parser.report_semantic_error("Internal error, got null expression", expressionleft);
+									RESULT = SymbolTable.noObj;
+								}
+							:}
 							;
 
-LeftAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorLeft RightAssociatedFactorList
+LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator RightAssociatedFactorList:rightExpression
+							{:
+								boolean error = false;
+								if (rightExpression == null || leftExpression == null) {
+									parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+									error = true;
+								}
+
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
+									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
+									error = true;
+								}
+
+								if(!error) {
+									RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+								} else {
+									RESULT = SymbolTable.noObj;
+								}
+							:}
 							|
-							RightAssociatedFactorList
+							RightAssociatedFactorList:expression
+							{:
+								if (expression != null) {
+									RESULT = expression;
+								} else {
+									parser.report_semantic_error("Internal error, got null expression", expressionleft);
+									RESULT = SymbolTable.noObj;
+								}
+							:}
 							;
 
-RightAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList
+RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorRight:operator RightAssociatedFactorList:rightExpression
+								{:
+									boolean error = false;
+									if (rightExpression == null || leftExpression == null) {
+										parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+										error = true;
+									}
+
+									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
+										parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+										error = true;
+									}
+
+									if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+										parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
+										error = true;
+									}
+
+									if(!error) {
+										RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+									} else {
+										RESULT = SymbolTable.noObj;
+									}
+								:}
 								|
-								LeftAssociatedFactorList
+								LeftAssociatedFactorList:expression
+								{:
+									if (expression != null) {
+										RESULT = expression;
+									} else {
+										parser.report_semantic_error("Internal error, got null expression", expressionleft);
+										RESULT = SymbolTable.noObj;
+									}
+								:}
 								;
 
-LeftAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorLeft Factor
+LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationOperatorLeft:operator Factor:factor
+								{:
+									boolean error = false;
+									if (expression == null || factor == null) {
+										parser.report_semantic_error("Internal error, got null expression", factorleft);
+										error = true;
+									}
+
+									if (expression != null && !expression.equals(SymbolTable.noObj) && (expression.getType().equals(SymbolTable.noType) || !expression.getType().equals(SymbolTable.intType))) {
+										parser.report_semantic_error("Expression " + expression.getName() + " is not of type int", expressionleft);
+										error = true;
+									}
+
+									if (factor != null && !factor.equals(SymbolTable.noObj) && (factor.getType().equals(SymbolTable.noType) || !factor.getType().equals(SymbolTable.intType))) {
+										parser.report_semantic_error("Expression " + factor.getName() + " is not of type int", factorleft);
+										error = true;
+									}
+
+									if(!error) {
+										RESULT = new MyObj(Obj.Var, expression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
+									} else {
+										RESULT = SymbolTable.noObj;
+									}
+								:}
 								|
-								Factor
+								Factor:factor
+								{:
+									if (factor != null) {
+										RESULT = factor;
+									} else {
+										parser.report_semantic_error("Internal error, got null factor", factorleft);
+										RESULT = SymbolTable.noObj;
+									}
+								:}
 								;
 
-Factor ::=	Designator OptionalParameters
+Factor ::=	Designator:designator OptionalParameters
+			{:
+				if (designator == null) {
+					parser.report_semantic_error("Internal error, got null designator", designatorleft);
+					RESULT = SymbolTable.noObj;
+				} else {
+					RESULT = designator;
+				}
+			:}
 		   	|
-		   	NUMERICAL_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.intType, value.intValue(), SymbolTable.getCurrentLevel()); :}
+		   	NUMERICAL_CONSTANT:value {: RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.intType, value.intValue(), SymbolTable.getCurrentLevel()); :}
 		   	|
-		   	CHARACTER_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.charType, (int)value.charAt(0), SymbolTable.getCurrentLevel()); :}
+		   	CHARACTER_CONSTANT:value {: RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.charType, (int)value.charAt(0), SymbolTable.getCurrentLevel()); :}
 		   	|
-		   	BOOLEAN_CONSTANT:value {: RESULT = new MyObj(Obj.Con, "", SymbolTable.boolType, value.booleanValue() ? 1 : 0, SymbolTable.getCurrentLevel()); :}
+		   	BOOLEAN_CONSTANT:value {: RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.boolType, value.booleanValue() ? 1 : 0, SymbolTable.getCurrentLevel()); :}
 		   	|
 		   	NEW Type:typeObject ArraySize:isArray
 		   	{:
@@ -1049,7 +1190,16 @@ ArraySize ::=	ArrayIndexer
 			  	:}
 			  	;
 	   
-ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
+ArrayIndexer ::=	LEFT_BRACKET Expression:expression RIGHT_BRACKET
+					{:
+						if (expression != null) {
+							if (!expression.getType().equals(SymbolTable.intType)) {
+								parser.report_semantic_error("Array index is not of type int", expressionleft);
+							}
+						} else {
+							parser.report_semantic_error("Internal error for ArrayIndexer production, expression is null", expressionleft);
+						}
+					:}
 					|
 					LEFT_BRACKET error RIGHT_BRACKET {: printSyntaxErrorDescription("Incorrect expression for array index"); :}
 					;
@@ -1063,7 +1213,7 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 							RESULT = null;
 						} else {
 							Obj member = null;
-							//If object is THIS we need to search in top scope because members are not associated with class node yet
+							//If object is THIS or we are invoking a static method of our own class we need to search in top scope because members are not associated with class node yet
 							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass.getType()))) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
 							} else {
@@ -1098,7 +1248,7 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 							RESULT = null;
 						} else {
 							//Return temp object that represents and array element
-							RESULT = new MyObj(MyObj.Var, object.getName(), object.getType().getElemType());
+							RESULT = new MyObj(MyObj.Var, object.getName() + "[]", object.getType().getElemType());
 						}
 					} else {
 						RESULT = null;
@@ -1143,28 +1293,28 @@ RelationalOperator ::= EQUAL
 					   LESS_OR_EQUAL_THAN
 					   ;  
 					 
-AdditionOperatorLeft ::= PLUS
+AdditionOperatorLeft ::= PLUS {: RESULT = "+"; :}
 						 |
-						 MINUS
+						 MINUS {: RESULT = "-"; :}
 						 ;					  
 					   
-AdditionOperatorRight ::= PLUS_EQUALS
+AdditionOperatorRight ::= PLUS_EQUALS {: RESULT = "+="; :}
 						  |
-						  MINUS_EQUALS
+						  MINUS_EQUALS {: RESULT = "-="; :}
 						  ;
 						
-MultiplicationOperatorLeft ::= TIMES
+MultiplicationOperatorLeft ::= TIMES {: RESULT = "*"; :}
 							   |
-							   SOLIDUS
+							   SOLIDUS {: RESULT = "/"; :}
 							   |													   
-							   PERCENT
+							   PERCENT {: RESULT = "%"; :}
 							   ;
 								
-MultiplicationOperatorRight ::= TIMES_EQUALS
+MultiplicationOperatorRight ::= TIMES_EQUALS {: RESULT = "*="; :}
 							    |
-							    SOLIDUS_EQUALS
+							    SOLIDUS_EQUALS {: RESULT = "/="; :}
 							    |
-							    PERCENT_EQUALS
+							    PERCENT_EQUALS {: RESULT = "%="; :}
 							    ;
 						   
 				 				
