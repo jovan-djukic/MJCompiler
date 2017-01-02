@@ -230,6 +230,8 @@ action code {:
 
 	private static final String THIS = "this";
 	private static final String BRACKETS = "[]";
+	private static final String EQUAL = "==";
+	private static final String NOT_EQUAL = "!=";
 
 	private int variablePosition = 0;
 	
@@ -263,7 +265,7 @@ nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassMethodL
 nonterminal MethodDeclaration, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
 			FormalParameter;
 
-nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, ReturnValue, PrintParameters;
+nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, PrintParameters, ReturnValue;
 
 nonterminal IfHeader, ForHeader;
 
@@ -271,7 +273,7 @@ nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
 nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, ActualParameters, ExpressionList;
 
-nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
+nonterminal Condition, ConditionTerm, ConditionFact;
 
 nonterminal OptionalParameters, ArrayIndexer;
 
@@ -312,10 +314,12 @@ nonterminal Obj LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedF
 //Addition operators for better error reporting
 nonterminal String AdditionOperatorLeft, AdditionOperatorRight;
 nonterminal String MultiplicationOperatorLeft, MultiplicationOperatorRight;
+nonterminal String RelationalOperator;
 
 //Factor
 nonterminal Obj Factor, Expression;
 nonterminal Boolean ArraySize, ExpressionPrefix;
+
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -972,13 +976,31 @@ ConditionTerm ::=	ConditionTerm AND ConditionFact
 				 	ConditionFact
 				 	;
 
-ConditionFact ::= Expression RestOfTheConditionFact;
+ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expression:rightExpression
+					{:
+						if (leftExpression == null || rightExpression == null) {
+							parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+						}
 
-RestOfTheConditionFact ::= RelationalOperator Expression
-						   |
-						   /* epsilon */
-						   ;
-						   
+						if (!leftExpression.getType().compatibleWith(rightExpression.getType())) {
+							parser.report_semantic_error("Expression " + leftExpression.getName() + " and " + rightExpression.getName() + " are incompatible", leftExpressionleft);
+						}
+
+						if (leftExpression.getType().isRefType() && rightExpression.getType().isRefType() && !EQUAL.equals(operator) && !NOT_EQUAL.equals(operator)) {
+							parser.report_semantic_error("Only " + EQUAL + " and " + NOT_EQUAL + " are aloved with referential types", operatorleft);
+						}
+					:}
+					|
+					Expression:expression
+					{:
+						if (expression == null) {
+							parser.report_semantic_error("Internal error, got null expression", expressionleft);
+						} else if (!expression.getType().equals(SymbolTable.boolType)) {
+							parser.report_semantic_error("Expression " + expression.getName() + " is not of bool value", expressionleft);
+						}
+					:}
+					;
+
 Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
 				{:
 					if (expression != null) {
@@ -1299,17 +1321,17 @@ AssignOperator ::= 	EQUALS
 					MultiplicationOperatorRight
 					;
 
-RelationalOperator ::= EQUAL
+RelationalOperator ::= EQUAL {: RESULT = "=="; :}
 					   |
-					   NOT_EQUAL
+					   NOT_EQUAL {: RESULT = "!="; :}
 					   |
-					   GREATER_THAN
+					   GREATER_THAN {: RESULT = ">"; :}
 					   |
-					   GREATER_OR_EQUAL_THAN
+					   GREATER_OR_EQUAL_THAN {: RESULT = ">="; :}
 					   |
-					   LESS_THAN
+					   LESS_THAN {: RESULT = "<"; :}
 					   |
-					   LESS_OR_EQUAL_THAN
+					   LESS_OR_EQUAL_THAN {: RESULT = "<="; :}
 					   ;  
 					 
 AdditionOperatorLeft ::= PLUS {: RESULT = "+"; :}

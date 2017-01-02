@@ -37,7 +37,7 @@ class class2 extends class1 {
 	}
 	
 	void main()
-		class1 instance1;
+		class1 instance1, instance2;
 		int a;
 		char c[], d[];
 	{
@@ -51,5 +51,11 @@ class class2 extends class1 {
 		a += const1 += 5;
 		b[0] += a;
 		a = - c[0];
+		
+		if ( a == d[5]) {
+			if (instance1 > instance2) {
+			
+			}
+		}
 	}
 }	
