@@ -1041,7 +1041,7 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 						} else {
 							Obj member = null;
 							//If object is THIS we need to search in top scope because members are not associated with class node yet
-							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass))) {
+							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass.getType()))) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
 							} else {
 								SymbolDataStructure members = object.getType().getMembersTable();
