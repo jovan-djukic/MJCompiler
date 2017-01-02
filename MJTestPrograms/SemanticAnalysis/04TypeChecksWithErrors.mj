@@ -1,0 +1,42 @@
+program TypeChecksWithErrors
+
+class class1 {
+	int a, b, c;
+	
+	{
+		void method1(int a, char b, int c)
+			int d;
+		{
+
+		}
+		
+		static void staticMethod1(int a, int b, int c) {
+		
+		}
+	}
+}
+
+class class2 extends class1 {
+	int d, e, f, g, h;
+	
+	{
+		void method2() {
+		
+		}
+	}
+}
+
+{
+	int globalFunction1(int parameter1, int parameter2, char parameter3)
+		int local1, local2[];
+		char local3[], local4;
+	{
+			
+	}
+	
+	void main()
+		class1 instance1;
+	{
+		instance1 = new int;
+	}
+}	
