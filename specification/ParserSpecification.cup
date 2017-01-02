@@ -1046,13 +1046,13 @@ RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperat
 									error = true;
 								}
 
-								if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld) {
+								if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
 									parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
 									error = true;
 								}
 
 								if(!error) {
-									RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+									RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 								} else {
 									RESULT = SymbolTable.noObj;
 								}
@@ -1088,7 +1088,7 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 								}
 
 								if(!error) {
-									RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+									RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 								} else {
 									RESULT = SymbolTable.noObj;
 								}
@@ -1123,13 +1123,13 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 										error = true;
 									}
 
-									if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld) {
+									if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
 										parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
 										error = true;
 									}
 
 									if(!error) {
-										RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+										RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
 									}
@@ -1165,7 +1165,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 									}
 
 									if(!error) {
-										RESULT = new MyObj(Obj.Var, expression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
+										RESULT = new MyObj(MyObj.Var, expression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
 									}
@@ -1254,12 +1254,25 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 							RESULT = null;
 						} else {
 							Obj member = null;
+							//Check for member in base class
 							//If object is THIS or we are invoking a static method of our own class we need to search in top scope because members are not associated with class node yet
 							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass.getType()))) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
 							} else {
 								SymbolDataStructure members = object.getType().getMembersTable();
 								member = members.searchKey(name);
+							}
+
+							//If we did not find it in base class we find it in parent class
+							if (member == null) {
+								Struct parent = object.getType().getElemType();
+								while (parent != null && member == null) {
+									SymbolDataStructure members = parent.getMembersTable();
+									member = members.searchKey(name);
+									if (member == null) {
+										parent = parent.getElemType();
+									}		
+								}
 							}
 
 							if (member == null) {
@@ -1289,7 +1302,7 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 							RESULT = null;
 						} else {
 							//Return temp object that represents and array element
-							RESULT = new MyObj(MyObj.Var, object.getName() + "[]", object.getType().getElemType());
+							RESULT = new MyObj(MyObj.Elem, object.getName() + "[]", object.getType().getElemType());
 						}
 					} else {
 						RESULT = null;

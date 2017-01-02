@@ -41,7 +41,10 @@ class class2 extends class1 {
 			
 	}
 	
-	void main() {
-	
+	void main()
+		class2 instance;
+	{
+		instance = new class2;
+		instance.a = 5;
 	}
 }	
