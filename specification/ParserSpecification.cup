@@ -273,7 +273,7 @@ nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, Actua
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal Expression, ExpressionPrefix, Term, Factor;
+nonterminal Expression, ExpressionPrefix, Factor;
 
 nonterminal OptionalParameters, ArraySize, ArrayIndexer;
 
@@ -990,12 +990,10 @@ RightAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorRight RightAs
 							LeftAssociatedTermList
 							;
 
-LeftAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorLeft Term
+LeftAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorLeft RightAssociatedFactorList
 							|
-							Term
+							RightAssociatedFactorList
 							;
-
-Term ::=	RightAssociatedFactorList;
 
 RightAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList
 								|
