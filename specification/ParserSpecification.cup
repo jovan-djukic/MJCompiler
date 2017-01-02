@@ -1033,7 +1033,6 @@ ArrayIndexer ::=	LEFT_BRACKET Expression RIGHT_BRACKET
 					LEFT_BRACKET error RIGHT_BRACKET {: printSyntaxErrorDescription("Incorrect expression for array index"); :}
 					;
 					
-					
 Designator ::=	Designator:object DOT IDENTIFIER:name
 				{:
 					//Semantic analysis
@@ -1121,12 +1120,7 @@ RelationalOperator ::= EQUAL
 					   LESS_THAN
 					   |
 					   LESS_OR_EQUAL_THAN
-					   ;
-					   
-/*AdditionOperator ::= AdditionOperatorLeft
-					 |
-					 AdditionOperatorRight
-					 ;					 */  
+					   ;  
 					 
 AdditionOperatorLeft ::= PLUS
 						 |
@@ -1137,11 +1131,6 @@ AdditionOperatorRight ::= PLUS_EQUALS
 						  |
 						  MINUS_EQUALS
 						  ;
-						   
-/*MultiplicationOperator ::= MultiplicationOperatorLeft
-						   |
-						   MultiplicationOperatorRight
-						   ;*/
 						
 MultiplicationOperatorLeft ::= TIMES
 							   |

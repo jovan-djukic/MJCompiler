@@ -37,6 +37,6 @@ Table val;
 			}
 			read(x);	
 		}		 
-		x = x + x * x + x;
+		x = x + x *= x + x;
 	}
 }
