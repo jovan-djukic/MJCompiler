@@ -273,15 +273,15 @@ nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, Actua
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal Expression, ExpressionPrefix, TermList, Term, FactorList, Factor;
+nonterminal Expression, ExpressionPrefix, Term, Factor;
 
 nonterminal OptionalParameters, ArraySize, ArrayIndexer;
 
 nonterminal AssignOperation, AssignOperator;
 
-nonterminal AdditionOperator, AdditionOperatorLeft, AdditionOperatorRight;
+nonterminal /*AdditionOperator,*/ AdditionOperatorLeft, AdditionOperatorRight;
 
-nonterminal MultiplicationOperator, MultiplicationOperatorLeft, MultiplicationOperatorRight;
+nonterminal /*MultiplicationOperator,*/ MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Semantic analysis non terminals
 nonterminal Obj ProgramName;
@@ -311,6 +311,9 @@ nonterminal Boolean StaticModifier;
 
 //Use of declaratiosn
 nonterminal Obj Designator;
+
+//For left associated and right associated operators, this super rule to sub rule passing
+nonterminal LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList, RightAssociatedFactorList; 
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -975,24 +978,34 @@ RestOfTheConditionFact ::= RelationalOperator Expression
 						   /* epsilon */
 						   ;
 						   
-Expression ::= ExpressionPrefix TermList;
+Expression ::= ExpressionPrefix RightAssociatedTermList;
 
 ExpressionPrefix ::= MINUS
 					 |
 					 /* epsilon */
 					 ;
 
-TermList ::= TermList AdditionOperator Term
-			 |
-			 Term
-			 ;
+RightAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorRight RightAssociatedTermList
+							|
+							LeftAssociatedTermList
+							;
 
-Term ::=	FactorList;
+LeftAssociatedTermList ::=	LeftAssociatedTermList AdditionOperatorLeft Term
+							|
+							Term
+							;
 
-FactorList ::=	FactorList MultiplicationOperator Factor
-				|
-				Factor
-				;
+Term ::=	RightAssociatedFactorList;
+
+RightAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList
+								|
+								LeftAssociatedFactorList
+								;
+
+LeftAssociatedFactorList ::=	LeftAssociatedFactorList MultiplicationOperatorLeft Factor
+								|
+								Factor
+								;
 
 Factor ::= Designator OptionalParameters
 		   |
@@ -1112,10 +1125,10 @@ RelationalOperator ::= EQUAL
 					   LESS_OR_EQUAL_THAN
 					   ;
 					   
-AdditionOperator ::= AdditionOperatorLeft
+/*AdditionOperator ::= AdditionOperatorLeft
 					 |
 					 AdditionOperatorRight
-					 ;					   
+					 ;					 */  
 					 
 AdditionOperatorLeft ::= PLUS
 						 |
@@ -1127,10 +1140,10 @@ AdditionOperatorRight ::= PLUS_EQUALS
 						  MINUS_EQUALS
 						  ;
 						   
-MultiplicationOperator ::= MultiplicationOperatorLeft
+/*MultiplicationOperator ::= MultiplicationOperatorLeft
 						   |
 						   MultiplicationOperatorRight
-						   ;
+						   ;*/
 						
 MultiplicationOperatorLeft ::= TIMES
 							   |
