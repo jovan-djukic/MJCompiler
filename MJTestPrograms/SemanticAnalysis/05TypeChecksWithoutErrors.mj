@@ -49,6 +49,6 @@ class class2 extends class1 {
 		instance1.a += 5;
 		a += 5;
 		b[0] += a;
-		
+		a = -a;
 	}
 }	

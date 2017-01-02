@@ -50,5 +50,6 @@ class class2 extends class1 {
 		instance1.a +=  const1 *= 5;
 		a += const1 += 5;
 		b[0] += a;
+		a = - c[0];
 	}
 }	

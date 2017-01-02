@@ -273,8 +273,6 @@ nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, Actua
 
 nonterminal Condition, ConditionTerm, ConditionFact, RestOfTheConditionFact, RelationalOperator;
 
-nonterminal ExpressionPrefix;
-
 nonterminal OptionalParameters, ArrayIndexer;
 
 nonterminal AssignOperation, AssignOperator;
@@ -317,7 +315,7 @@ nonterminal String MultiplicationOperatorLeft, MultiplicationOperatorRight;
 
 //Factor
 nonterminal Obj Factor, Expression;
-nonterminal Boolean ArraySize;
+nonterminal Boolean ArraySize, ExpressionPrefix;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -981,10 +979,15 @@ RestOfTheConditionFact ::= RelationalOperator Expression
 						   /* epsilon */
 						   ;
 						   
-Expression ::=	ExpressionPrefix RightAssociatedTermList:expression
+Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
 				{:
 					if (expression != null) {
-						RESULT = expression;
+						if (isNegated.booleanValue() && !expression.getType().equals(SymbolTable.intType)) {
+							parser.report_semantic_error("Expression must be of type int if it is negated", expressionleft);
+							RESULT = SymbolTable.noObj;
+						} else {
+							RESULT = expression;
+						}
 					} else {
 						parser.report_semantic_error("Internal error, got null expression", expressionleft);
 						RESULT = SymbolTable.noObj;
@@ -992,10 +995,16 @@ Expression ::=	ExpressionPrefix RightAssociatedTermList:expression
 				:}
 				;
 
-ExpressionPrefix ::= MINUS
-					 |
-					 /* epsilon */
-					 ;
+ExpressionPrefix ::=	MINUS
+						{:
+							RESULT = true;
+						:}
+						|
+					 	/* epsilon */
+					 	{:
+					 		RESULT = false;
+					 	:}
+					 	;
 
 RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
 							{:
