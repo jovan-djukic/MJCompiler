@@ -1015,6 +1015,11 @@ RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperat
 									error = true;
 								}
 
+								if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld) {
+									parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
+									error = true;
+								}
+
 								if(!error) {
 									RESULT = new MyObj(Obj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 								} else {
@@ -1084,6 +1089,11 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 
 									if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
 										parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
+										error = true;
+									}
+
+									if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld) {
+										parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
 										error = true;
 									}
 

@@ -36,7 +36,7 @@ class class2 extends class1 {
 	
 	void main()
 		class1 instance1;
-		int a;
+		int a, b[];
 		char c[], d[];
 	{
 		instance1 = new class1;
@@ -44,5 +44,11 @@ class class2 extends class1 {
 		a = 5 + 5 * 5 + 5;
 		c = new char[10];
 		d = new char[a];
+		b = new int[a];
+		
+		instance1.a += 5;
+		a += 5;
+		b[0] += a;
+		
 	}
 }	
