@@ -31,7 +31,7 @@ class class2 extends int {
 	
 	}
 	
-	void globalFunction1() {
+	void globalFunction1(int x4) {
 	
 	}
 	
