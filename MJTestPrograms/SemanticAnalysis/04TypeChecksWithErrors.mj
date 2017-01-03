@@ -42,6 +42,7 @@ class class2 extends class1 {
 	
 	void main()
 		class1 instance1, instance2;
+		class2 instance3;
 		int a;
 		char c[], d[];
 	{
@@ -73,5 +74,11 @@ class class2 extends class1 {
 		
 		const1++;
 		c[2] ++;
+		
+		a = a + a += instance1;
+		
+		const1 = 2;
+		a = '5';
+		instance3 = instance1;
 	}
 }	

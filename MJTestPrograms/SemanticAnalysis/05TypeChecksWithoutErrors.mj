@@ -70,5 +70,10 @@ class class2 extends class1 {
 		a++;
 		b[0]++;
 		instance3.a++;
+		
+		a += 5;
+		c[0] = 'a';
+		instance1.b *= 2;
+		instance1 = instance3;
 	}
 }	
