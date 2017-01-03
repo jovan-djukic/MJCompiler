@@ -1176,22 +1176,27 @@ ExpressionPrefix ::=	MINUS
 RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
 							{:
 								boolean error = false;
-								if (rightExpression == null || leftExpression == null) {
-									parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+								if (leftExpression == null) {
+									parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 									error = true;
 								}
 
-								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
-									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+								if (rightExpression == null) {
+									parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 									error = true;
 								}
 
-								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
+									parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
 									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
 									error = true;
 								}
 
-								if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
 									parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
 									error = true;
 								}
@@ -1217,17 +1222,22 @@ RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperat
 LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator RightAssociatedFactorList:rightExpression
 							{:
 								boolean error = false;
-								if (rightExpression == null || leftExpression == null) {
-									parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+								if (leftExpression == null) {
+									parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 									error = true;
 								}
 
-								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
-									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+								if (rightExpression == null) {
+									parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 									error = true;
 								}
 
-								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
+									parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
 									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
 									error = true;
 								}
@@ -1253,23 +1263,28 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorRight:operator RightAssociatedFactorList:rightExpression
 								{:
 									boolean error = false;
-									if (rightExpression == null || leftExpression == null) {
-										parser.report_semantic_error("Internal error, got null expression", leftExpressionleft);
+									if (leftExpression == null) {
+										parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 										error = true;
 									}
 
-									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && (leftExpression.getType().equals(SymbolTable.noType) || !leftExpression.getType().equals(SymbolTable.intType))) {
-										parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									if (rightExpression == null) {
+										parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
 										error = true;
 									}
 
-									if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && (rightExpression.getType().equals(SymbolTable.noType) || !rightExpression.getType().equals(SymbolTable.intType))) {
+									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
+										parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+										error = true;
+									}
+
+									if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
 										parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
 										error = true;
 									}
 
-									if (leftExpression != null && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
-										parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
+									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
+										parser.report_semantic_error(leftExpression.getName() + " is not a variable, array element or class field", leftExpressionleft);
 										error = true;
 									}
 
@@ -1285,7 +1300,7 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 									if (expression != null) {
 										RESULT = expression;
 									} else {
-										parser.report_semantic_error("Internal error, got null expression", expressionleft);
+										parser.report_internal_error("NULL expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList", expressionleft);
 										RESULT = SymbolTable.noObj;
 									}
 								:}
@@ -1294,17 +1309,22 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationOperatorLeft:operator Factor:factor
 								{:
 									boolean error = false;
-									if (expression == null || factor == null) {
-										parser.report_semantic_error("Internal error, got null expression", factorleft);
+									if (expression == null) {
+										parser.report_internal_error("NULL expression in production LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor", factorleft);
 										error = true;
 									}
 
-									if (expression != null && !expression.equals(SymbolTable.noObj) && (expression.getType().equals(SymbolTable.noType) || !expression.getType().equals(SymbolTable.intType))) {
+									if (factor == null) {
+										parser.report_internal_error("NULL factor in production LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor", factorleft);
+										error = true;
+									}
+
+									if (expression != null && !expression.equals(SymbolTable.noObj) && !expression.getType().equals(SymbolTable.intType)) {
 										parser.report_semantic_error("Expression " + expression.getName() + " is not of type int", expressionleft);
 										error = true;
 									}
 
-									if (factor != null && !factor.equals(SymbolTable.noObj) && (factor.getType().equals(SymbolTable.noType) || !factor.getType().equals(SymbolTable.intType))) {
+									if (factor != null && !factor.equals(SymbolTable.noObj) && !factor.getType().equals(SymbolTable.intType)) {
 										parser.report_semantic_error("Expression " + factor.getName() + " is not of type int", factorleft);
 										error = true;
 									}
@@ -1321,7 +1341,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 									if (factor != null) {
 										RESULT = factor;
 									} else {
-										parser.report_semantic_error("Internal error, got null factor", factorleft);
+										parser.report_internal_error("NULL factor in production LeftAssociatedFactorList ::= Factor", factorleft);
 										RESULT = SymbolTable.noObj;
 									}
 								:}
@@ -1330,10 +1350,10 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 Factor ::=	Designator:designator OptionalParameters:parameterList
 			{:
 				if (designator == null) {
-					parser.report_semantic_error("Internal error, got null designator or parameter list", designatorleft);
+					parser.report_internal_error("Internal error, got null designator or parameter list", designatorleft);
 					RESULT = SymbolTable.noObj;
-				} else if (designator != null && designator.getKind() == MyObj.Global && designator.getKind() == MyObj.Meth && designator.getKind() == MyObj.Static && parameterList == null) {
-					parser.report_semantic_error("Internal error, got null parameter list", designatorleft);
+				} else if (designator.getKind() == MyObj.Global && designator.getKind() == MyObj.Meth && designator.getKind() == MyObj.Static && parameterList == null) {
+					parser.report_internal_error("Internal error, got null parameter list", designatorleft);
 				} else {
 					//Check types and number of paramaters
 					if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Meth || designator.getKind() == MyObj.Static) {
@@ -1389,7 +1409,7 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 OptionalParameters ::= 	MethodCall:parameterList
 						{:
 							if(parameterList == null) { 
-								parser.report_semantic_error("Internal error, got null parameter list", parameterListleft);
+								parser.report_internal_error("NULL parameter list for production OptionalParameters ::= MethodCall", parameterListleft);
 								RESULT = null;
 							} else {
 								RESULT = parameterList;
@@ -1397,6 +1417,9 @@ OptionalParameters ::= 	MethodCall:parameterList
 						:}
 					   	|
 					   	/* epsilon */
+					   	{:
+					   		RESULT = null;
+					   	:}
 					   	;		   
 		   						  
 ArraySize ::=	ArrayIndexer
@@ -1417,7 +1440,7 @@ ArrayIndexer ::=	LEFT_BRACKET Expression:expression RIGHT_BRACKET
 								parser.report_semantic_error("Array index is not of type int", expressionleft);
 							}
 						} else {
-							parser.report_semantic_error("Internal error for ArrayIndexer production, expression is null", expressionleft);
+							parser.report_internal_error("NULL expression for production ArrayIndexer ::= LEFT_BRACKET Expression RIGHT_BRACKET", expressionleft);
 						}
 					:}
 					|
