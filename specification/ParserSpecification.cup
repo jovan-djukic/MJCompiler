@@ -247,8 +247,9 @@ action code {:
 	private Obj currentClass = null;
 	private int classVariablePosition = 0;
 
-
 	private Stack<List<Obj>> actualParametersStack = new Stack<>();
+
+	private boolean returnFound = false;
 :}
 
 
@@ -273,7 +274,7 @@ nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassMethodL
 nonterminal MethodDeclaration, FormalParameterList, MethodVariableDeclarationList, MethodVariableDeclaration,
 			FormalParameter;
 
-nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, PrintParameters, ReturnValue;
+nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, PrintParameters;
 
 nonterminal IfHeader, ForHeader;
 
@@ -332,6 +333,9 @@ nonterminal List<Obj> MethodCall, OptionalParameters;
 
 //Assign operation
 nonterminal Obj AssignOperation;
+
+//Return statement
+nonterminal Obj ReturnValue;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -626,7 +630,7 @@ MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
 						  /* epsilon */
 						  ;
 						  
-MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS
+MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS:token
 							MethodVariableDeclarationList
 					  	LEFT_BRACE
 					  		StatementList
@@ -648,11 +652,16 @@ MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIG
 								SymbolTable.closeScope();
 
 								currentMethod.setLevel(formalParameterCount);
+								
+								if (!currentMethod.getType().equals(SymbolTable.voidType) && !returnFound) {
+									parser.report_semantic_error("No return statement found for procedure " + currentMethod.getName(), tokenleft);
+								}
 							}
 
 							currentMethod = null;
 							variablePosition = 0;
 							formalParameterCount = 0;
+							returnFound = false;
 						:}
 						;
 					  
@@ -679,6 +688,7 @@ MethodTypeAndName ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:i
 									} else {
 										variablePosition = 0;
 										formalParameterCount = 0;
+										returnFound = false;
 
 										SymbolTable.openScope();
 
@@ -898,7 +908,22 @@ MatchedStatement ::= 	IfHeader
 						|
 						CONTINUE SEMICOLON
 					 	|
-					 	RETURN ReturnValue SEMICOLON
+					 	RETURN ReturnValue:value SEMICOLON
+					 	{:
+					 		if (value == null) {
+					 			parser.report_semantic_error("Internal expression, got null value", valueleft);
+					 		} else if (currentMethod == null) {
+					 			parser.report_semantic_error("Found returns statement outside of method", valueleft);
+					 		} else if (currentMethod.getType().equals(SymbolTable.voidType) && !value.equals(SymbolTable.noObj)) {
+					 			parser.report_semantic_error("Return statement must be empty for void type procedure " + currentMethod.getName(), valueleft);
+					 		} else if (!currentMethod.getType().equals(SymbolTable.voidType) && value.equals(SymbolTable.noObj)) {
+					 			parser.report_semantic_error("Empty return expression, must be of type " + SymbolTable.getTypeName(currentMethod.getType()), valueleft);
+					 		} else if (!currentMethod.getType().equals(SymbolTable.voidType) && !value.getType().equals(currentMethod.getType())) {
+					 			parser.report_semantic_error("Return type must be equivalent to " + SymbolTable.getTypeName(currentMethod.getType()), valueleft);
+					 		} else {
+					 			returnFound = true;
+					 		}
+					 	:}
 					 	|
 					 	READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
 					 	|
@@ -912,9 +937,15 @@ MatchedStatement ::= 	IfHeader
 					 	:}			
 					 	;
 
-ReturnValue ::= Expression
+ReturnValue ::= Expression:expression
+				{:
+					RESULT = expression;
+				:}
 				|
 				/* epsilon */
+				{:
+					RESULT = SymbolTable.noObj;
+				:}
 				;
 				
 PrintParameters ::= Expression
