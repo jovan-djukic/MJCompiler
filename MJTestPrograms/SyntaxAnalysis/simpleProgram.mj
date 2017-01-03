@@ -10,7 +10,7 @@ program MJProgram
 		char t, f, g;
 		
 		{
-			int m(int p1, char p2) { return 1; }
+			static int m(int p1, char p2) { return 1; }
 		
 			void foo()
 				char message[];
@@ -27,17 +27,18 @@ program MJProgram
 	}
 	
 	class MyClass extends ParentClass {
-		int a[], b, c, d;
+		int a, b, c, d;
 	
 		{
 			static void m(int p1, char p2) 
-				char a;
+				char l;
+				int i;
 			{
-				a = '=';
+				l = '=';
 				for (i = 0; i < 3; i++) 
 					if ( x > y) {
 						for ( i = 2; i < 4; i++) {
-							print(a);
+							print(l);
 							continue;
 						}
 						break;
@@ -46,31 +47,22 @@ program MJProgram
 							
 				print(c);
 				
-				fcall1(a, b, c, a + b);
+				ParentClass.m(1, 'b');
 				
 				if ( a >= b || a <= b && c == d) {
 					a = - 5;
 				}
-				
-				break;
-				continue;
-				return;
 			}
 			
 			void g(int p1)
 				char c1, c2;
 			{
-				a = a + m(c1, c2);
-				if (c > b) b++;
-				if (c > b) if ( c > b ) {
+				if (a > b) if ( a > b ) {
 				
 				} else {
 				
 				}
 				
-				b += c;
-				
-				a = new int[5];
 			}
 		}
 	}
@@ -88,11 +80,10 @@ program MJProgram
 	{
 		instance = new MyClass;
 		parent = new MyClass;
-		instance.g();
-		intsance.t = 'a';
-		instance.a[5] = 2;
-		parent.m(c, d);
-		parent.m(c, d);
+		instance.g(1);
+		instance.t = 'a';
+		parent.m(1, d);
+		parent.m(1, d);
 		{}
 	}
 }

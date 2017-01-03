@@ -37,6 +37,7 @@ program MJProgram
 		{
 			static void m(int p1, char p2) 
 				char a;
+				int e
 			{
 				a =;
 				for (i = 0; i < 3; i++) 

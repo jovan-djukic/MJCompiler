@@ -526,9 +526,24 @@ GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
  							}
 				 		:}
 				 		|
-				 		GlobalVariableList COMA error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
+				 		GlobalVariableList:globalVariables COMA error 
+				 		{: 
+				 			printSyntaxErrorDescription("Incorrect global variable declaration"); 
+
+				 			if (globalVariables == null) {
+				 				parser.report_internal_error("NULL global variable list in production GlobalVariableList ::= GlobalVariableList COMA error", globalVariablesleft);
+				 				RESULT = null;
+				 			} else {
+				 				RESULT = globalVariables;
+				 			}
+				 		:}
 				 		|
-				 		error {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
+				 		error 
+				 		{: 
+				 			printSyntaxErrorDescription("Incorrect global variable declaration"); 
+
+				 			RESULT = new ArrayList<Variable>();
+				 		:}
 				 		;
 				 
 Variable ::=	IDENTIFIER:name Brackets:isArray
@@ -610,7 +625,12 @@ ParentClassDeclaration ::=	EXTENDS Type:typeObject
 						   		RESULT = SymbolTable.noObj;
 						   	:}
 						   	|
-						   	error {: printSyntaxErrorDescription("Incorrect declaration of parent class"); :}
+						   	error 
+						   	{: 
+						   		printSyntaxErrorDescription("Incorrect declaration of parent class"); 
+
+						   		RESULT = SymbolTable.noObj;
+						   	:}
 						   	;
 					 
 ClassVariableDeclarationList ::=	ClassVariableDeclarationList ClassVariableDeclaration
@@ -859,8 +879,6 @@ FormalParameter ::= Type:typeObject IDENTIFIER:name Brackets:isArray
 
 MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDeclaration
 								  |
-								  error {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
-								  |
 								  /* epsilon */
 								  ;
 
@@ -896,7 +914,9 @@ MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLO
 									}
 								:}
 								|
-								Type error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
+								error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
+								|
+								error {: printSyntaxErrorDescription("Incorrect local variable declaration"); :} 
 								;
 
 MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable 
@@ -1071,7 +1091,7 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 								parser.report_internal_error("NULL designator in production DesignatorStatement ::= Designator AssignOperation", designatorleft);
 							} else if (expression == null) {
 								parser.report_internal_error("NULL expression in production DesignatorStatement ::= Designator AssignOperation", expressionleft);
-							} else if (!designator.equals(SymbolTable.noObj) && expression.equals(SymbolTable.noObj)) {
+							} else if (!designator.equals(SymbolTable.noObj) && !expression.equals(SymbolTable.noObj)) {
 								if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
 									parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", expressionleft);
 								} else if (!expression.getType().assignableTo(designator.getType())) {
@@ -1154,7 +1174,12 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 		}
 			 	:}
 			 	|
-			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
+			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS 
+			 	{: 
+			 		printSyntaxErrorDescription("Incorrect actual parameter list syntax"); 
+
+			 		RESULT = new ArrayList<Obj>();
+			 	:}
 			 	;
 
 AssignOperation ::= 	AssignOperator:operator Expression:expression
@@ -1283,7 +1308,7 @@ RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperat
 								}
 
 								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
-									parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
 									error = true;
 								}
 
@@ -1329,7 +1354,7 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 								}
 
 								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
-									parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
 									error = true;
 								}
 
@@ -1370,7 +1395,7 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 									}
 
 									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
-										parser.report_semantic_error("leftExpression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+										parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
 										error = true;
 									}
 

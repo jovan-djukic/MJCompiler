@@ -28,12 +28,10 @@ program MJProgram
 	
 	class MyClass extends ParentClass {
 		char x, t, y;
-		int a[], b, c, d;
+		int a, b, c, d, i;
 		{
 			static void m(int p1, char p2) 
-				char a;
 			{
-				a = '=';
 				for (i = 0; i < 3; i++) 
 					if ( x > y) {
 						for ( i = 2; i < 4; i++) {
@@ -46,21 +44,15 @@ program MJProgram
 							
 				print(c);
 				
-				fcall1(a, b, c, a + b);
-				
 				if ( a >= b || a <= b && c == d) {
 					a = - 5;
 				}
 				
-				break;
-				continue;
-				return;
 			}
 			
 			void g(int p1)
 				char c1, c2;
 			{
-				a = a + m(c1, c2);
 				if (c > b) b++;
 				if (c > b) if ( c > b ) {
 				
@@ -68,9 +60,6 @@ program MJProgram
 				
 				}
 				
-				b += c;
-				
-				a = new int[5];
 			}
 		}
 	}
@@ -97,24 +86,20 @@ program MJProgram
 	}
 	
 	void main()
-		int a, b;
-		char c, d;
+		int a, b, c, d;
 		MyClass instance;
 		ParentClass parent;
 	{
 		instance = new MyClass;
 		parent = new MyClass;
-		instance.g();
-		intsance.t = 'a';
-		instance.a[5] = 2;
 		
 		global1( return );
 		
-		parent.m(c, d);
+		parent.m(c, 'd');
 		
 		global1(a, return, b, c);
 		
-		parent.m(c, d);
+		parent.m(c, 'd');
 		
 	}
 }
