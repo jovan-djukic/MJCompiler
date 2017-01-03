@@ -59,7 +59,7 @@ public class SymbolTable extends Tab{
 						return name + "bool";
 					}
 					case Struct.Class: {
-						return name + "class";
+						return name + SymbolTable.getClassTypeName(type);
 					}
 					case Struct.None: {
 						return name + "void";
@@ -100,5 +100,13 @@ public class SymbolTable extends Tab{
 		}
 		
 		return "";
+	}
+	
+	public static String getTypeName(Struct typeNode) {
+		if (typeNode.getKind() == Struct.Class) {
+			return SymbolTable.getClassTypeName(typeNode);
+		} else {
+			return SymbolTable.getBasicTypeName(typeNode);
+		}
 	}
 }

@@ -44,8 +44,10 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 		
 		if ((Obj.Var == objToVisit.getKind()) && "this".equalsIgnoreCase(objToVisit.getName()))
 			output.append("THIS_POINTER");
-		else
+		else if (objToVisit.getKind() == MyObj.Type)
 			objToVisit.getType().accept(this);
+		else
+			output.append(SymbolTable.getTypeName(objToVisit.getType()));
 		
 		output.append(", ");
 		output.append(objToVisit.getAdr());
