@@ -50,6 +50,10 @@ parser code {:
     	errorFound = true;
     }
 
+    public void report_internal_error(String message, int lineNumber) {
+    	report_error("Internal error on line: " + lineNumber + ", " + message, null);
+    	errorFound = true;	
+    }
 :}
 
 
@@ -1420,27 +1424,30 @@ ArrayIndexer ::=	LEFT_BRACKET Expression:expression RIGHT_BRACKET
 					LEFT_BRACKET error RIGHT_BRACKET {: printSyntaxErrorDescription("Incorrect expression for array index"); :}
 					;
 					
-Designator ::=	Designator:object DOT IDENTIFIER:name
+Designator ::=	Designator:designator DOT IDENTIFIER:name
 				{:
 					//Semantic analysis
-					if (object != null) {
-						if (object.getType().getKind() != MyStruct.Class) {
-							parser.report_semantic_error("Symbol " + object.getName() + " is not of class type", objectleft);
-							RESULT = null;
+					if (designator == null) {
+						parser.report_internal_error("NULL designator in production Designator ::= Designator DOT IDENTIFIER", designatorleft);
+						RESULT = SymbolTable.noObj;
+					} else if (!designator.equals(SymbolTable.noObj)) {
+						if (designator.getType().getKind() != MyStruct.Class) {
+							parser.report_semantic_error("Symbol " + designator.getName() + " is not of class type", designatorleft);
+							RESULT = SymbolTable.noObj;
 						} else {
 							Obj member = null;
 							//Check for member in base class
-							//If object is THIS or we are invoking a static method of our own class we need to search in top scope because members are not associated with class node yet
-							if (THIS.equals(object.getName()) || (currentClass != null && object.getKind() == MyObj.Type && object.getType().equals(currentClass.getType()))) {
+							//If designator is THIS or we are invoking a static method of our own class we need to search in top scope because members are not associated with class node yet
+							if (THIS.equals(designator.getName()) || (currentClass != null && designator.getKind() == MyObj.Type && designator.getType().equals(currentClass.getType()))) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
 							} else {
-								SymbolDataStructure members = object.getType().getMembersTable();
+								SymbolDataStructure members = designator.getType().getMembersTable();
 								member = members.searchKey(name);
 							}
 
 							//If we did not find it in base class we find it in parent class
 							if (member == null) {
-								Struct parent = object.getType().getElemType();
+								Struct parent = designator.getType().getElemType();
 								while (parent != null && member == null) {
 									SymbolDataStructure members = parent.getMembersTable();
 									member = members.searchKey(name);
@@ -1451,36 +1458,36 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 							}
 
 							if (member == null) {
-								parser.report_semantic_error("Symbol " + object.getName() + " has no member of name " + name, objectleft);
-								RESULT = null;
-							} else if(object.getKind() == MyObj.Type && member.getKind() != MyObj.Static) {
-								parser.report_semantic_error("Use of non-static method or varaible through class name symbol " + object.getName(), objectleft);
-								RESULT = null;
+								parser.report_semantic_error("Symbol " + designator.getName() + " has no member of name " + name, designatorleft);
+								RESULT = SymbolTable.noObj;
+							} else if(designator.getKind() == MyObj.Type && member.getKind() != MyObj.Static) {
+								parser.report_semantic_error("Use of non-static method or varaible through class name symbol " + designator.getName(), designatorleft);
+								RESULT = SymbolTable.noObj;
 							} else {
 								RESULT = member;
 							}
 						}
-					} else {
-						RESULT = null;
 					}
 				:}
 				|
-				Designator:object ArrayIndexer
+				Designator:designator ArrayIndexer
 				{:
 					//Semantic analysis
-					if (object != null) {
-						if(object.getType().getKind() != MyStruct.Array) {
-							parser.report_semantic_error("Symbol " + object.getName() + " is not an array", objectleft);
-							RESULT = null;
-						} else if(object.getType().getElemType() == null) {
-							parser.report_semantic_error("Internal error, array without an element type", objectleft);
+					if (designator == null) {
+						parser.report_internal_error("NULL designator in production Designator ::= Designator ArrayIndexer", designatorleft);
+					} else if (!designator.equals(SymbolTable.noObj)) {
+						if(designator.getType().getKind() != MyStruct.Array) {
+							parser.report_semantic_error("Symbol " + designator.getName() + " is not an array", designatorleft);
+							RESULT = SymbolTable.noObj;
+						} else if(designator.getType().getElemType() == null) {
+							parser.report_internal_error("Array without an element type in production Designator ::= Designator ArrayIndexer", designatorleft);
 							RESULT = null;
 						} else {
-							//Return temp object that represents and array element
-							RESULT = new MyObj(MyObj.Elem, object.getName() + "[]", object.getType().getElemType());
+							//Return temp designator that represents and array element
+							RESULT = new MyObj(MyObj.Elem, designator.getName() + "[]", designator.getType().getElemType());
 						}
 					} else {
-						RESULT = null;
+						RESULT = SymbolTable.noObj;
 					}
 				:}
 				|
@@ -1518,41 +1525,41 @@ AssignOperator ::= 	EQUALS
 					:}
 					;
 
-RelationalOperator ::= EQUAL {: RESULT = "=="; :}
+RelationalOperator ::= EQUAL {: RESULT = EQUAL; :}
 					   |
-					   NOT_EQUAL {: RESULT = "!="; :}
+					   NOT_EQUAL {: RESULT = NOT_EQUAL; :}
 					   |
-					   GREATER_THAN {: RESULT = ">"; :}
+					   GREATER_THAN {: RESULT = GREATER_THAN; :}
 					   |
-					   GREATER_OR_EQUAL_THAN {: RESULT = ">="; :}
+					   GREATER_OR_EQUAL_THAN {: RESULT = GREATER_OR_EQUAL_THAN; :}
 					   |
-					   LESS_THAN {: RESULT = "<"; :}
+					   LESS_THAN {: RESULT = LESS_THAN; :}
 					   |
-					   LESS_OR_EQUAL_THAN {: RESULT = "<="; :}
+					   LESS_OR_EQUAL_THAN {: RESULT = LESS_OR_EQUAL_THAN; :}
 					   ;  
 					 
-AdditionOperatorLeft ::= PLUS {: RESULT = "+"; :}
+AdditionOperatorLeft ::= PLUS {: RESULT = PLUS; :}
 						 |
-						 MINUS {: RESULT = "-"; :}
+						 MINUS {: RESULT = MINUS; :}
 						 ;					  
 					   
-AdditionOperatorRight ::= PLUS_EQUALS {: RESULT = "+="; :}
+AdditionOperatorRight ::= PLUS_EQUALS {: RESULT = PLUS_EQUALS; :}
 						  |
-						  MINUS_EQUALS {: RESULT = "-="; :}
+						  MINUS_EQUALS {: RESULT = MINUS_EQUALS; :}
 						  ;
 						
-MultiplicationOperatorLeft ::= TIMES {: RESULT = "*"; :}
+MultiplicationOperatorLeft ::= TIMES {: RESULT = TIMES; :}
 							   |
-							   SOLIDUS {: RESULT = "/"; :}
+							   SOLIDUS {: RESULT = SOLIDUS; :}
 							   |													   
-							   PERCENT {: RESULT = "%"; :}
+							   PERCENT {: RESULT = PERCENT; :}
 							   ;
 								
-MultiplicationOperatorRight ::= TIMES_EQUALS {: RESULT = "*="; :}
+MultiplicationOperatorRight ::= TIMES_EQUALS {: RESULT = TIMES_EQUALS; :}
 							    |
-							    SOLIDUS_EQUALS {: RESULT = "/="; :}
+							    SOLIDUS_EQUALS {: RESULT = SOLIDUS_EQUALS; :}
 							    |
-							    PERCENT_EQUALS {: RESULT = "%="; :}
+							    PERCENT_EQUALS {: RESULT = PERCENT_EQUALS; :}
 							    ;
 						   
 				 				
