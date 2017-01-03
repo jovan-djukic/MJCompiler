@@ -1,0 +1,25 @@
+program TypeChecksWithErrors2
+
+class class1 {
+	{
+		int method1(int a, char b, int c)
+			int d;
+		{
+			return;
+			return 'a';
+		}
+		
+		static void staticMethod1(int a, int b, int c) {
+			return 0;
+		}
+		
+		int method2() {
+		
+		}
+	}
+}
+{
+	void main()
+	{
+	}
+}	

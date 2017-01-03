@@ -1,0 +1,25 @@
+program TypeChecksWithoutErrors2
+
+class class1 {
+	{
+		int method1(int a, char b, int c)
+			int d;
+		{
+			if (true) {
+				return 0;
+			} else {
+				return d;
+			}
+		}
+		
+		static void staticMethod1(int a, int b, int c) {
+			
+		}
+	}
+}
+{
+	void main()
+	{
+		return;
+	}
+}	
