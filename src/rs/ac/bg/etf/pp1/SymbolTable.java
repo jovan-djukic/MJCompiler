@@ -11,6 +11,7 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 public class SymbolTable extends Tab{
 	public static final Struct boolType = new MyStruct(Struct.Bool);
 	public static final Struct voidType = new MyStruct(Struct.None);
+	public static final Obj voidObject = new Obj(Obj.Var, "voidObject", voidType);
 	
 	public static void init() {
 		Tab.init();
