@@ -968,9 +968,27 @@ DesignatorStatement ::=	Designator AssignOperation
 							}
 						:}
 						|
-						Designator INCREMENT
+						Designator:designator INCREMENT
+						{:
+							if (designator == null) {
+								parser.report_semantic_error("Internal error, got null designator", designatorleft); 
+							} else if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
+								parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", designatorleft);
+							} else if (!designator.getType().equals(SymbolTable.intType)) {
+								parser.report_semantic_error("Designator " + designator.getName() + " must be of type int", designatorleft);
+							}
+						:}
 						|
-						Designator DECREMENT
+						Designator:designator DECREMENT
+						{:
+							if (designator == null) {
+								parser.report_semantic_error("Internal error, got null designator", designatorleft); 
+							} else if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
+								parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", designatorleft);
+							} else if (!designator.getType().equals(SymbolTable.intType)) {
+								parser.report_semantic_error("Designator " + designator.getName() + " must be of type int", designatorleft);
+							}
+						:}
 						;
 
 MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
