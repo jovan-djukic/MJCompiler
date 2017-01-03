@@ -1,7 +1,23 @@
 program TypeChecksWithoutErrors2
 
-class class1 {
+const int inc = 5;
+int a;
+
+class utilities {
 	{
+		static int utilitieFunction1() {
+			return 0;
+		}
+		
+		static int utilitieFunction2() {
+			return 0;
+		}
+	}
+}
+
+
+class class1 extends utilities {
+	{		
 		int method1(int a, char b, int c)
 			int d;
 		{
@@ -13,7 +29,17 @@ class class1 {
 		}
 		
 		static void staticMethod1(int a, int b, int c) {
+			 //use of visible globla varaible
+			 a += inc;			
+		}
+		
+		static void staticMethod2() {
+			//use of visible static method
+			class1.staticMethod1(1, 1, 1);
+			utilities.utilitieFunction1();
 			
+			//use of static method inherited from super class
+			class1.utilitieFunction2();
 		}
 	}
 }
