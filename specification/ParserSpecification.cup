@@ -279,7 +279,7 @@ nonterminal Condition, ConditionTerm, ConditionFact;
 
 nonterminal ArrayIndexer;
 
-nonterminal AssignOperation, AssignOperator;
+nonterminal AssignOperator;
 
 //Semantic analysis non terminals
 //Basic non terminals
@@ -324,6 +324,9 @@ nonterminal Boolean ArraySize, ExpressionPrefix;
 
 //Actual parameters
 nonterminal List<Obj> MethodCall, OptionalParameters;
+
+//Assign operation
+nonterminal Obj AssignOperation;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -935,7 +938,16 @@ ForPostStatement ::= DesignatorStatement
 					 /* epsilon */
 					 ;
 
-DesignatorStatement ::=	Designator AssignOperation
+DesignatorStatement ::=	Designator:designator AssignOperation:expression
+						{:
+							if (designator == null || expression == null) {
+								parser.getLogger().debug("Internal error, got null designator or expression", expressionleft);
+							} else if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
+								parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", expressionleft);
+							} else if (!expression.getType().assignableTo(designator.getType())) {
+								parser.report_semantic_error("Expression " + expression.getName() + " of type " + SymbolTable.getTypeName(expression.getType()) + " is not assignable to designator " + designator.getName() + " of type " + SymbolTable.getTypeName(designator.getType()), expressionleft);
+							}
+						:}
 						|
 						Designator:designator MethodCall:parameterList
 						{:
@@ -1005,9 +1017,21 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
 			 	;
 
-AssignOperation ::= 	AssignOperator Expression
+AssignOperation ::= 	AssignOperator Expression:expression
+						{:
+							if (expression == null) {
+								parser.getLogger().debug("Internal error, got null expression", expressionleft);
+								RESULT = null;
+							} else {
+								RESULT = expression;
+							}
+						:} 
 						|
-						error {: printSyntaxErrorDescription("Incorrect asign operation syntax"); :}
+						error 
+						{: 
+							printSyntaxErrorDescription("Incorrect asign operation syntax"); 
+							RESULT = null;
+						:}
 						;
 								 
 ActualParameters ::=	ActualParameters COMA Expression:expression
