@@ -949,7 +949,7 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 								parser.getLogger().debug("Internal error, got null designator or expression", expressionleft);
 							} else if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
 								parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", expressionleft);
-							} else if (!expression.getType().assignableTo(designator.getType())) {
+							} else if (!expression.equals(SymbolTable.noObj) && !expression.getType().assignableTo(designator.getType())) {
 								parser.report_semantic_error("Expression " + expression.getName() + " of type " + SymbolTable.getTypeName(expression.getType()) + " is not assignable to designator " + designator.getName() + " of type " + SymbolTable.getTypeName(designator.getType()), expressionleft);
 							}
 						:}
@@ -1028,12 +1028,10 @@ AssignOperation ::= 	AssignOperator:operator Expression:expression
 								parser.getLogger().debug("Internal error, got null expression", expressionleft);
 								RESULT = null;
 							} else {
-								if (!EQUALS.equals(operator) && !expression.getType().equals(SymbolTable.intType)) {
+								if (!expression.equals(SymbolTable.noObj) && !EQUALS.equals(operator) && !expression.getType().equals(SymbolTable.intType)) {
 									parser.report_semantic_error("Expression " + expression.getName() + " musts be of type int when using combined operator " + operator, expressionleft);
-									RESULT = null;
-								} else {
-									RESULT = expression;
-								}
+								} 
+								RESULT = expression;
 							}
 						:} 
 						|
