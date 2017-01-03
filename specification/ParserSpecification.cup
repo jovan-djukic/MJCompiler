@@ -587,7 +587,7 @@ ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
 					if (typeObject == null) {
 						parser.report_internal_error("NULL type object in production ClassHeader ::= CLASS IDENTIFIER ParentClassDeclaration", typeObjectleft);
 					} else if (SymbolTable.find(name) != SymbolTable.noObj) {
-						parser.report_semantic_error("Redefinition of " + name, nameleft);
+						parser.report_semantic_error("Redefinition of name " + name, nameleft);
 					} else {
 						if (!typeObject.equals(SymbolTable.noObj)) {
 							currentClass = SymbolTable.insert(Obj.Type, name, new MyStruct(MyStruct.Class, typeObject.getType()));
@@ -740,7 +740,7 @@ MethodDeclaration ::=	MethodTypeAndName LEFT_PARENTHESIS FormalParameterList RIG
 								currentMethod.setLevel(formalParameterCount);
 								
 								if (!currentMethod.getType().equals(SymbolTable.voidType) && !returnFound) {
-									parser.report_semantic_error("No return statement found for procedure " + currentMethod.getName(), tokenleft);
+									parser.report_semantic_error("No return statement found for method or function " + currentMethod.getName(), tokenleft);
 								}
 							}
 
@@ -951,10 +951,10 @@ Type ::=	IDENTIFIER:name
 			{:
 				Obj typeObject = SymbolTable.find(name);
 				if (SymbolTable.noObj.equals(typeObject)) {
-					parser.report_semantic_error("No symbol named: " + name, nameleft);
+					parser.report_semantic_error("No symbol named " + name, nameleft);
 					RESULT = SymbolTable.noObj;
 				} else if (Obj.Type != typeObject.getKind()) {
-					parser.report_semantic_error("Name: " + name + " is not a type", nameleft);
+					parser.report_semantic_error("Name " + name + " is not a type", nameleft);
 					RESULT = SymbolTable.noObj;
 				} else {
 					RESULT = typeObject;
@@ -1020,7 +1020,7 @@ MatchedStatement ::= 	IfHeader
 					 		} else if (currentMethod.getType().equals(SymbolTable.voidType) && !value.equals(SymbolTable.voidObject)) {
 					 			parser.report_semantic_error("Return statement must be empty for void type method or function " + currentMethod.getName(), valueleft);
 					 			returnFound = true;
-					 		} else if (!currentMethod.getType().equals(SymbolTable.voidType) && value.equals(SymbolTable.voidType)) {
+					 		} else if (!currentMethod.getType().equals(SymbolTable.voidType) && value.equals(SymbolTable.voidObject)) {
 					 			parser.report_semantic_error("Empty return expression, must be of type " + SymbolTable.getTypeName(currentMethod.getType()), valueleft);
 					 			returnFound = true;
 					 		} else if (!currentMethod.getType().equals(SymbolTable.voidType) && !value.getType().equals(currentMethod.getType())) {
@@ -1189,7 +1189,7 @@ AssignOperation ::= 	AssignOperator:operator Expression:expression
 								RESULT = SymbolTable.noObj;
 							} else {
 								if (!expression.equals(SymbolTable.noObj) && !EQUALS.equals(operator) && !expression.getType().equals(SymbolTable.intType)) {
-									parser.report_semantic_error("Expression " + expression.getName() + " musts be of type int when using combined operator " + operator, expressionleft);
+									parser.report_semantic_error("Expression " + expression.getName() + " must be of type int when using combined operator " + operator, expressionleft);
 								} 
 								RESULT = expression;
 							}
