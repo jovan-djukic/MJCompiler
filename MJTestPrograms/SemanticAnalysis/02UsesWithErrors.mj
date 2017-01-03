@@ -11,6 +11,7 @@ class class1 {
 		void method1(int a, char b, int c)
 			int d;
 		{
+			//test for designator production
 			a.b = 5;
 			this.d = 4;
 			d[5] = 2;
@@ -34,7 +35,7 @@ class class2 extends class1 {
 }
 
 {
-	int globalFunction1(int parameter1, int parameter2, char parameter3)
+	void globalFunction1(int parameter1, int parameter2, char parameter3)
 		int local1, local2[];
 		char local3[], local4;
 	{

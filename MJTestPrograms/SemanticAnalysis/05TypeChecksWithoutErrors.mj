@@ -31,7 +31,7 @@ class class2 extends class1 {
 		int local1, local2[];
 		char local3[], local4;
 	{
-			
+		return 0;
 	}
 	
 	void globalFunction2(class1 parameter1) {

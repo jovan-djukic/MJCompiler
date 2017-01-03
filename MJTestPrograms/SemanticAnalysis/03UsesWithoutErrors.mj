@@ -34,7 +34,7 @@ class class2 extends class1 {
 }
 
 {
-	int globalFunction1(int parameter1, int parameter2, char parameter3)
+	void globalFunction1(int parameter1, int parameter2, char parameter3)
 		int local1, local2[];
 		char local3[], local4;
 	{
@@ -46,5 +46,7 @@ class class2 extends class1 {
 	{
 		instance = new class2;
 		instance.a = 5;
+		class2.staticMethod1(1, 1, 1);
+		instance.staticMethod1(1, 1, 1);
 	}
 }	
