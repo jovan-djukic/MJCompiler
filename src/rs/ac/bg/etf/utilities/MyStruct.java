@@ -1,5 +1,6 @@
 package rs.ac.bg.etf.utilities;
 
+import rs.ac.bg.etf.pp1.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Struct;
 import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 
@@ -36,4 +37,5 @@ public class MyStruct extends Struct {
 		}
 		return false;
 	}
+	
 }
