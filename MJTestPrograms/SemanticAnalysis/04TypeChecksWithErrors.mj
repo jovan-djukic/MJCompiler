@@ -80,5 +80,6 @@ class class2 extends class1 {
 		const1 = 2;
 		a = '5';
 		instance3 = instance1;
+		instance3 += instance1;
 	}
 }	
