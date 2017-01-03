@@ -66,5 +66,9 @@ class class2 extends class1 {
 		a = b[0] + globalFunction1(1, instance1.method1(1, 'a', 2), 'a') + instance1.method1(1, 'a', 2) + globalFunction1(globalFunction1(globalFunction1(globalFunction1(1, 2, 'a'), 3, 'b'), 4, 'c'), 5, 'd');
 	
 		globalFunction2(instance3);
+		
+		a++;
+		b[0]++;
+		instance3.a++;
 	}
 }	

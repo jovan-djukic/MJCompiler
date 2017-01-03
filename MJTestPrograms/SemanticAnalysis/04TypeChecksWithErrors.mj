@@ -70,5 +70,8 @@ class class2 extends class1 {
 		a += instance1.method1(1, 'a', 2, 3) + instance1.method1(1, 'a', 'b');
 		
 		globalFunction2(instance1);
+		
+		const1++;
+		c[2] ++;
 	}
 }	
