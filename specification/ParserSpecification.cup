@@ -241,16 +241,18 @@ action code {:
 	private Obj currentClass = null;
 	private int classVariablePosition = 0;
 
+
+	private Stack<List<Obj>> actualParametersStack = new Stack<>();
 :}
 
 
 terminal PROGRAM, LEFT_BRACE, RIGHT_BRACE, CONST, SEMICOLON, EQUALS, COMA, LEFT_BRACKET, RIGHT_BRACKET;
-terminal CLASS, LEFT_PARENTHESIS, RIGHT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
+terminal CLASS, LEFT_PARENTHESIS, STATIC, VOID, IF, ELSE, BREAK, CONTINUE, RETURN, FOR, INCREMENT;
 terminal DECREMENT, OR, AND, NEW, DOT, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_OR_EQUAL_THAN, LESS_THAN;
 terminal LESS_OR_EQUAL_THAN, PLUS, MINUS, PLUS_EQUALS, MINUS_EQUALS, TIMES, SOLIDUS, PERCENT, TIMES_EQUALS;
 terminal SOLIDUS_EQUALS, PERCENT_EQUALS, READ, PRINT, EXTENDS;
 
-terminal String IDENTIFIER, CHARACTER_CONSTANT;
+terminal String IDENTIFIER, CHARACTER_CONSTANT, RIGHT_PARENTHESIS;
 
 terminal Integer NUMERICAL_CONSTANT;
 
@@ -271,11 +273,11 @@ nonterminal IfHeader, ForHeader;
 
 nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
-nonterminal DesignatorStatement, RestOfTheDesignatorStatement, MethodCall, ExpressionList;
+nonterminal DesignatorStatement, ActualParameters;
 
 nonterminal Condition, ConditionTerm, ConditionFact;
 
-nonterminal OptionalParameters, ArrayIndexer;
+nonterminal ArrayIndexer;
 
 nonterminal AssignOperation, AssignOperator;
 
@@ -321,7 +323,7 @@ nonterminal Obj Factor, Expression;
 nonterminal Boolean ArraySize, ExpressionPrefix;
 
 //Actual parameters
-nonterminal Stack<List<Obj>> ActualParameters;
+nonterminal List<Obj> MethodCall, OptionalParameters;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -526,7 +528,6 @@ ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
 						}
 					}
 				:};
-
 
 ParentClassDeclaration ::=	EXTENDS Type:typeObject
 						   	{:
@@ -863,17 +864,17 @@ ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SE
 				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect for loop inner statements"); :}
 				;
 
-UnmatchedStatement ::= IfHeader 
+UnmatchedStatement ::=	IfHeader 
 							Statement
-					   |
-					   IfHeader
+					  	|
+					  	IfHeader
 					   		MatchedStatement
-					   ELSE
+					  	ELSE
 					   		UnmatchedStatement
-					   | /* umatched for */
-					   ForHeader
+					  	| /* umatched for */
+					   	ForHeader
 					 		UnmatchedStatement
-					   ;
+					   	;
 					 
 MatchedStatement ::= 	IfHeader 
 							MatchedStatement
@@ -934,20 +935,53 @@ ForPostStatement ::= DesignatorStatement
 					 /* epsilon */
 					 ;
 
-DesignatorStatement ::=	Designator RestOfTheDesignatorStatement;
+DesignatorStatement ::=	Designator AssignOperation
+						|
+						Designator:designator MethodCall:parameterList
+						{:
+							if (designator == null || parameterList == null) {
+								parser.report_semantic_error("Internal error, got null for designator or parameters", designatorleft);
+							} else if (designator.getKind() != MyObj.Global && designator.getKind() != MyObj.Static && designator.getKind() != MyObj.Meth) {
+								parser.report_semantic_error("Symbol " + designator.getName() + " is not callable", designatorleft);
+							} else {
+								if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
+									parser.report_semantic_error("Incorrect number of parameters in the invokation of " + designator.getName(), designatorleft);
+								} else {
+									Collection<Obj> functionLocals = designator.getLocalSymbols();
+									Iterator<Obj> formalParameterIterator = functionLocals.iterator();
 
-RestOfTheDesignatorStatement ::= 	AssignOperation
-									|
-									MethodCall
-								 	|
-								 	INCREMENT
-								 	|
-								 	DECREMENT
-								 	;
+									//If MyObj.Meth skip this parameter
+									if (designator.getKind() == MyObj.Meth) {
+										formalParameterIterator.next();
+									}
+									Iterator<Obj> actualParameterIterator = parameterList.iterator();
 
-MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+									while (formalParameterIterator.hasNext() && actualParameterIterator.hasNext()) {
+										Obj formalParameter = formalParameterIterator.next();
+										Obj actualParameter = actualParameterIterator.next();
+
+										if(!actualParameter.getType().assignableTo(formalParameter.getType())) {
+											parser.report_semantic_error("Actual parameter " + actualParameter.getName() + " of type " + SymbolTable.getTypeName(actualParameter.getType()) + " is not assignable to formal parameter " + formalParameter.getName() + " of type " + SymbolTable.getTypeName(formalParameter.getType()), designatorleft);
+										}
+									}
+								}
+							}
+						:}
+						|
+						Designator INCREMENT
+						|
+						Designator DECREMENT
+						;
+
+MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	{:
 			 		incrementCurrentMethodCallCount();
+
+			 		if (actualParametersStack.isEmpty()) {
+			 			parser.report_semantic_error("Internal error, empty actual parameter stack", tokenleft);
+			 		} else {
+			 			RESULT = actualParametersStack.pop();
+			 		}
 			 	:}
 			 	|
 			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
@@ -959,16 +993,26 @@ AssignOperation ::= 	AssignOperator Expression
 						;
 								 
 ActualParameters ::=	ActualParameters COMA Expression:expression
+						{:
+							if (actualParametersStack.empty()) {
+								parser.report_semantic_error("Internal error, got empty parameter list", expressionleft);
+							} else {
+								actualParametersStack.peek().add(expression);
+							}
+						:}
 						|
 						Expression:expression
+						{:
+							List<Obj> parameters = new ArrayList<>();
+							parameters.add(expression);
+							actualParametersStack.push(parameters);
+						:}
 						|
 						/* epsilon */
+						{:
+							actualParametersStack.push(new ArrayList<>());
+						:}
 						;
-
-ExpressionList ::=	ExpressionList COMA Expression
-					|
-					Expression
-					;
 				 				
 Condition ::= Condition OR ConditionTerm
 			  |
@@ -1186,12 +1230,38 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 								:}
 								;
 
-Factor ::=	Designator:designator OptionalParameters
+Factor ::=	Designator:designator OptionalParameters:parameterList
 			{:
 				if (designator == null) {
-					parser.report_semantic_error("Internal error, got null designator", designatorleft);
+					parser.report_semantic_error("Internal error, got null designator or parameter list", designatorleft);
 					RESULT = SymbolTable.noObj;
+				} else if (designator != null && designator.getKind() == MyObj.Global && designator.getKind() == MyObj.Meth && designator.getKind() == MyObj.Static && parameterList == null) {
+					parser.report_semantic_error("Internal error, got null parameter list", designatorleft);
 				} else {
+					//Check types and number of paramaters
+					if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Meth || designator.getKind() == MyObj.Static) {
+						if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
+							parser.report_semantic_error("Incorrect number of parameters in the invokation of " + designator.getName(), designatorleft);
+						} else {
+							Collection<Obj> functionLocals = designator.getLocalSymbols();
+							Iterator<Obj> formalParameterIterator = functionLocals.iterator();
+
+							//If MyObj.Meth skip this parameter
+							if (designator.getKind() == MyObj.Meth) {
+								formalParameterIterator.next();
+							}
+							Iterator<Obj> actualParameterIterator = parameterList.iterator();
+
+							while (formalParameterIterator.hasNext() && actualParameterIterator.hasNext()) {
+								Obj formalParameter = formalParameterIterator.next();
+								Obj actualParameter = actualParameterIterator.next();
+
+								if(!actualParameter.getType().assignableTo(formalParameter.getType())) {
+									parser.report_semantic_error("Actual parameter " + actualParameter.getName() + " of type " + SymbolTable.getTypeName(actualParameter.getType()) + " is not assignable to formal parameter " + formalParameter.getName() + " of type " + SymbolTable.getTypeName(formalParameter.getType()), designatorleft);
+								}
+							}
+						}
+					}
 					RESULT = designator;
 				}
 			:}
@@ -1219,7 +1289,15 @@ Factor ::=	Designator:designator OptionalParameters
 		   	LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 		   	;
 		   
-OptionalParameters ::= 	MethodCall
+OptionalParameters ::= 	MethodCall:parameterList
+						{:
+							if(parameterList == null) { 
+								parser.report_semantic_error("Internal error, got null parameter list", parameterListleft);
+								RESULT = null;
+							} else {
+								RESULT = parameterList;
+							}
+						:}
 					   	|
 					   	/* epsilon */
 					   	;		   
