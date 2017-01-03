@@ -232,6 +232,12 @@ action code {:
 	private static final String BRACKETS = "[]";
 	private static final String EQUAL = "==";
 	private static final String NOT_EQUAL = "!=";
+	private static final String EQUALS = "=";
+	private static final String PLUS_EQUALS = "+=";
+	private static final String MINUS_EQUALS = "-=";
+	private static final String TIMES_EQUALS = "*=";
+	private static final String SOLIDUS_EQUALS = "/=";
+	private static final String PERCENT_EQUALS = "%=";
 
 	private int variablePosition = 0;
 	
@@ -279,8 +285,6 @@ nonterminal Condition, ConditionTerm, ConditionFact;
 
 nonterminal ArrayIndexer;
 
-nonterminal AssignOperator;
-
 //Semantic analysis non terminals
 //Basic non terminals
 nonterminal Obj ProgramName, Type;
@@ -317,6 +321,7 @@ nonterminal Obj LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedF
 nonterminal String AdditionOperatorLeft, AdditionOperatorRight;
 nonterminal String MultiplicationOperatorLeft, MultiplicationOperatorRight;
 nonterminal String RelationalOperator;
+nonterminal String AssignOperator;
 
 //Factor
 nonterminal Obj Factor, Expression;
@@ -1017,13 +1022,18 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect actual parameter list syntax"); :}
 			 	;
 
-AssignOperation ::= 	AssignOperator Expression:expression
+AssignOperation ::= 	AssignOperator:operator Expression:expression
 						{:
 							if (expression == null) {
 								parser.getLogger().debug("Internal error, got null expression", expressionleft);
 								RESULT = null;
 							} else {
-								RESULT = expression;
+								if (!EQUALS.equals(operator) && !expression.getType().equals(SymbolTable.intType)) {
+									parser.report_semantic_error("Expression " + expression.getName() + " musts be of type int when using combined operator " + operator, expressionleft);
+									RESULT = null;
+								} else {
+									RESULT = expression;
+								}
 							}
 						:} 
 						|
@@ -1452,10 +1462,19 @@ Designator ::=	Designator:object DOT IDENTIFIER:name
 				;
 			   
 AssignOperator ::= 	EQUALS
+					{:
+						RESULT = EQUALS;
+					:}
 					|
-					AdditionOperatorRight
+					AdditionOperatorRight:operator
+					{:
+						RESULT = operator;
+					:}
 					|
-					MultiplicationOperatorRight
+					MultiplicationOperatorRight:operator
+					{:
+						RESULT = operator;
+					:}
 					;
 
 RelationalOperator ::= EQUAL {: RESULT = "=="; :}
