@@ -1085,7 +1085,18 @@ MatchedStatement ::= 	IfHeader
 					 		}
 					 	:}
 					 	|
-					 	READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
+					 	READ LEFT_PARENTHESIS Designator:designator RIGHT_PARENTHESIS SEMICOLON
+					 	{:
+					 		if (designator == null) {
+					 			parser.report_internal_error("NULL designator in production MatchedStatement ::= READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON", designatorleft);
+					 		} else if (!designator.equals(SymbolTable.noObj)) {
+					 			if (designator.getKind() != MyObj.Var && designator.getKind() != MyObj.Elem && designator.getKind() != MyObj.Fld) {
+					 				parser.report_semantic_error("Designator " + designator.getName() +" must be a variable, array element or class field", designatorleft);
+					 			} else if (!designator.getType().equals(SymbolTable.intType) && !designator.getType().equals(SymbolTable.charType) && !designator.getType().equals(SymbolTable.boolType)) {
+					 				parser.report_semantic_error("Designator " + designator.getName() +" must be of int, char of bool type", designatorleft);
+					 			}
+					 		}
+					 	:}
 					 	|
 					 	PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
 					 	|
@@ -1113,9 +1124,27 @@ ReturnValue ::= Expression:expression
 				:}
 				;
 				
-PrintParameters ::= Expression
+PrintParameters ::=	Expression:expression
+					{:
+						if (expression == null) {
+							parser.report_internal_error("NULL expression in production PrintParameters ::= Expression", expressionleft);
+						} else if (!expression.equals(SymbolTable.noObj)) {
+							if (!expression.getType().equals(SymbolTable.intType) && !expression.getType().equals(SymbolTable.charType) && !expression.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Expression " + expression.getName() + " must be of int, char or bool type", expressionleft);
+							}
+						}
+					:}
 					|
-					Expression COMA NUMERICAL_CONSTANT
+					Expression:expression COMA NUMERICAL_CONSTANT
+					{:
+						if (expression == null) {
+							parser.report_internal_error("NULL expression in production PrintParameters ::= Expression", expressionleft);
+						} else if (!expression.equals(SymbolTable.noObj)) {
+							if (!expression.getType().equals(SymbolTable.intType) && !expression.getType().equals(SymbolTable.charType) && !expression.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Expression " + expression.getName() + " must be of int, char or bool type", expressionleft);
+							}
+						}
+					:}
 					;
 
 ForInitialStatement ::= DesignatorStatement
