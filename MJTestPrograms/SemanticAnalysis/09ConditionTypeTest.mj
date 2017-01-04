@@ -1,0 +1,47 @@
+program ConditionTypeTest
+
+class class1 {
+
+}
+
+class class2 {
+	int a;
+}
+
+{
+	void main() 
+		bool fact1, fact2, fact3;
+		int number1, number2, number3;
+		char char1, char2, char3;
+		class1 instance1, instance2;
+		class2 instance3, instance4;
+	{
+		if (number1 > number2) {
+			
+		}
+		
+		if(fact1 && number1 == number2 || true) {
+		
+		}
+		
+		if ((fact1 && number3 != number1) || (true && false) || (number3 > number1)) {
+		
+		}
+		
+		if (1 && fact1) {
+		
+		}
+		
+		if ( char1 < number1 && char2) {
+		
+		}
+		
+		if (number1 || char1 && fact1) {
+		
+		}
+		
+		if (instance1 < instance2 || instance1 == instance3) {
+		
+		}
+	}
+}
