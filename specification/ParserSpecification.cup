@@ -261,6 +261,7 @@ action code {:
 	private int classVariablePosition = 0;
 
 	private Stack<List<Obj>> actualParametersStack = new Stack<>();
+	private Stack<List<Integer>>  forLoopBreakStack = new Stack<>(), forLoopContinueStack = new Stack<>();
 
 	private boolean returnFound = false;
 :}
@@ -987,8 +988,18 @@ IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				;
 			  
 ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+				{:
+					forLoopBreakStack.push(new ArrayList<>());
+					forLoopContinueStack.push(new ArrayList<>());
+				:}
 				|
-				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect for loop inner statements"); :}
+				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS
+				{:
+					printSyntaxErrorDescription("Incorrect for loop inner statements");
+
+					forLoopBreakStack.push(new ArrayList<>());
+					forLoopContinueStack.push(new ArrayList<>());
+				:}
 				;
 
 UnmatchedStatement ::=	IfHeader 
@@ -999,8 +1010,19 @@ UnmatchedStatement ::=	IfHeader
 					  	ELSE
 					   		UnmatchedStatement
 					  	| /* umatched for */
-					   	ForHeader
+					   	ForHeader:token
 					 		UnmatchedStatement
+						{:
+							if (forLoopBreakStack.isEmpty()) {
+								parser.report_internal_error("For loop break stack is empty", tokenleft);
+							} else if (forLoopContinueStack.isEmpty()) {
+								parser.report_internal_error("For loop continue stack is empty", tokenleft);
+							} else {
+								//Iterate trough both lists and fix break and continue adressess
+								forLoopBreakStack.pop();
+								forLoopContinueStack.pop();
+							}
+						:}
 					   	;
 					 
 MatchedStatement ::= 	IfHeader 
@@ -1009,14 +1031,39 @@ MatchedStatement ::= 	IfHeader
 							MatchedStatement
 						| 
 						/* matched for */
-						ForHeader
+						ForHeader:token
 							MatchedStatement
+						{:
+							if (forLoopBreakStack.isEmpty()) {
+								parser.report_internal_error("For loop break stack is empty", tokenleft);
+							} else if (forLoopContinueStack.isEmpty()) {
+								parser.report_internal_error("For loop continue stack is empty", tokenleft);
+							} else {
+								//Iterate trough both lists and fix break and continue adressess
+								forLoopBreakStack.pop();
+								forLoopContinueStack.pop();
+							}
+						:}
 						|
 						DesignatorStatement SEMICOLON
 						|
-						BREAK SEMICOLON
+						BREAK SEMICOLON:token
+						{:
+							if (forLoopBreakStack.isEmpty()) {
+								parser.report_semantic_error("BREAK statement found outside of loop", tokenleft);
+							} else {
+								//Add the address of break statement
+							}
+						:}
 						|
-						CONTINUE SEMICOLON
+						CONTINUE SEMICOLON:token
+						{:
+							if (forLoopContinueStack.isEmpty()) {
+								parser.report_semantic_error("CONTINUE statement found outside of loop", tokenleft);
+							} else {
+								//Add the address of continue statement
+							}
+						:}
 					 	|
 					 	RETURN ReturnValue:value SEMICOLON
 					 	{:
