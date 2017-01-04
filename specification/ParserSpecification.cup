@@ -295,8 +295,6 @@ nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 
 nonterminal DesignatorStatement, ActualParameters;
 
-nonterminal Condition, ConditionTerm, ConditionFact;
-
 nonterminal ArrayIndexer;
 
 //Semantic analysis non terminals
@@ -349,6 +347,9 @@ nonterminal Obj AssignOperation;
 
 //Return statement
 nonterminal Obj ReturnValue;
+
+//condition
+nonterminal Obj Condition, ConditionTerm, ConditionFact;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -1238,28 +1239,108 @@ ActualParameters ::=	ActualParameters COMA Expression:expression
 						:}
 						;
 				 				
-Condition ::= Condition OR ConditionTerm
-			  |
-			  ConditionTerm
-			  ;	
+Condition ::=	Condition:condition OR ConditionTerm:term
+				{:
+					if (condition == null) {
+						parser.report_internal_error("NULL condition in production Condition ::= Condition OR ConditionTerm", termleft);
+						RESULT = SymbolTable.noObj;
+					} else if (term == null) {
+						parser.report_internal_error("NULL term in production Condition ::= Condition OR ConditionTerm", termleft);
+						RESULT = SymbolTable.noObj;
+					} else if (!condition.equals(SymbolTable.noObj) && !term.equals(SymbolTable.noObj)) {
+						if (!condition.getType().equals(SymbolTable.boolType)) {
+							parser.report_semantic_error("Expression " + condition.getName() + " is not of type bool", termleft);
+							RESULT = SymbolTable.noObj;
+						} else if (!term.getType().equals(SymbolTable.boolType)) {
+							parser.report_semantic_error("Expression " + term.getName() + " is not of type bool", termleft);
+							RESULT = SymbolTable.noObj;
+						} else {
+							RESULT = new MyObj(MyObj.Var, condition.getName() + " || " + term.getName(), SymbolTable.boolType);
+						}
+					} else {
+						RESULT = SymbolTable.noObj;
+					}
+				:}
+			 	|
+			 	ConditionTerm:term
+			 	{:
+			 		if (term == null) {
+			 			parser.report_internal_error("NULL term in production Condition ::= ConditionTerm", termleft);
+			 			RESULT = SymbolTable.noObj;
+			 		} else if (!term.equals(SymbolTable.noObj)) {
+			 			if (!term.getType().equals(SymbolTable.boolType)) {
+			 				parser.report_semantic_error("Expression " + term.getName() + " is not of type bool", termleft);
+			 				RESULT = SymbolTable.noObj;
+			 			} else {
+			 				RESULT = term;
+			 			}
+			 		} else {
+			 			RESULT = SymbolTable.noObj;
+			 		}
+			  	:}
+			  	;		
 				 				
-ConditionTerm ::=	ConditionTerm AND ConditionFact
+ConditionTerm ::=	ConditionTerm:term AND ConditionFact:fact
+					{:
+						if (term == null) {
+							parser.report_internal_error("NULL term in production ConditionTerm ::= ConditionTerm AND ConditionFact", factleft);
+							RESULT = SymbolTable.noObj;
+						} else if (fact == null) {
+							parser.report_internal_error("NULL fact in production ConditionTerm ::= ConditionTerm AND ConditionFact", factleft);
+							RESULT = SymbolTable.noObj;
+						} else if (!term.equals(SymbolTable.noObj) && !fact.equals(SymbolTable.noObj)) {
+							if (!term.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Expression " + term.getName() + " is not of type bool", factleft);
+								RESULT = SymbolTable.noObj;
+							} else if (!fact.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Expression " + fact.getName() + " is not of type bool", factleft);
+								RESULT = SymbolTable.noObj;
+							} else {
+								RESULT = new MyObj(MyObj.Var, term.getName() + " && " + fact.getName(), SymbolTable.boolType);
+							}
+						} else {
+							RESULT = SymbolTable.noObj;
+						}
+					:}
 				 	|
-				 	ConditionFact
+				 	ConditionFact:fact
+				 	{:
+				 		if (fact == null) {
+				 			parser.report_internal_error("NULL factor in production ConditionTerm ::= ConditionFact", factleft);
+				 			RESULT = SymbolTable.noObj;
+				 		} else if (!fact.equals(SymbolTable.noObj)) {
+				 			if (!fact.getType().equals(SymbolTable.boolType)) {
+				 				parser.report_semantic_error("Expression " + fact.getName() + " is not of type bool", factleft);
+				 				RESULT = SymbolTable.noObj;
+				 			} else {
+				 				RESULT = fact;
+				 			}
+				 		} else {
+				 			RESULT = SymbolTable.noObj;
+				 		}
+				 	:}
 				 	;
 
 ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expression:rightExpression
 					{:
 						if (leftExpression == null) {
 							parser.report_internal_error("NULL left expression in production ConditionFact ::= Expression RelationalOperator Expression", leftExpressionleft);
-						}else if (rightExpression == null) {
+							RESULT = SymbolTable.noObj;
+						} else if (rightExpression == null) {
 							parser.report_internal_error("NULL right expression in production ConditionFact ::= Expression RelationalOperator Expression", rightExpressionleft);
+							RESULT = SymbolTable.noObj;
 						} else if (!leftExpression.equals(SymbolTable.noObj) && !rightExpression.equals(SymbolTable.noObj)){
 							if (!leftExpression.getType().compatibleWith(rightExpression.getType())) {
-								parser.report_semantic_error("Expression " + leftExpression.getName() + " and " + rightExpression.getName() + " are incompatible", leftExpressionleft);
+								parser.report_semantic_error("Expressions " + leftExpression.getName() + " and " + rightExpression.getName() + " are incompatible", leftExpressionleft);
+								RESULT = SymbolTable.noObj;
 							} else if (leftExpression.getType().isRefType() && rightExpression.getType().isRefType() && !EQUAL.equals(operator) && !NOT_EQUAL.equals(operator)) {
 								parser.report_semantic_error("Only " + EQUAL + " and " + NOT_EQUAL + " are aloved with referential types", operatorleft);
+								RESULT = SymbolTable.noObj;
+							} else {
+								RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.boolType);
 							}
+						} else {
+							RESULT = SymbolTable.noObj;
 						}
 					:}
 					|
@@ -1267,8 +1348,12 @@ ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expressi
 					{:
 						if (expression == null) {
 							parser.report_internal_error("NULL expression in production ConditionFact ::= Expression", expressionleft);
+							RESULT = SymbolTable.noObj;
 						} else if (!expression.getType().equals(SymbolTable.boolType)) {
-							parser.report_semantic_error("Expression " + expression.getName() + " is not of bool value", expressionleft);
+							parser.report_semantic_error("Expression " + expression.getName() + " is not of bool type", expressionleft);
+							RESULT = SymbolTable.noObj;
+						} else {
+							RESULT = expression;
 						}
 					:}
 					;
@@ -1481,7 +1566,7 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 					RESULT = SymbolTable.noObj;
 				} else if (designator.getKind() == MyObj.Global && designator.getKind() == MyObj.Meth && designator.getKind() == MyObj.Static && parameterList == null) {
 					parser.report_internal_error("Internal error, got null parameter list", designatorleft);
-				} else {
+				} else if (!designator.equals(SymbolTable.noObj)) {
 					//Check types and number of paramaters
 					if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Meth || designator.getKind() == MyObj.Static) {
 						if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
@@ -1507,6 +1592,8 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 						}
 					}
 					RESULT = designator;
+				} else {
+					RESULT = SymbolTable.noObj;
 				}
 			:}
 		   	|
@@ -1652,7 +1739,7 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 							parser.report_semantic_error("Use of " + THIS + " outside of class non-static method", nameleft);
 							RESULT = SymbolTable.noObj;
 						} else {
-							parser.report_error("Use of undefined symbol " + name, nameleft);
+							parser.report_semantic_error("Use of undefined symbol " + name, nameleft);
 							RESULT = SymbolTable.noObj;
 						}
 					} else {	
