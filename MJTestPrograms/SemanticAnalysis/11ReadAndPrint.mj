@@ -1,0 +1,53 @@
+program ReadAndPrint
+
+const int const1 = 5;
+
+class class1 {
+	int number1;
+	char char1;
+	bool fact1;
+}
+
+{
+	void main() 
+		int number1, iarray1[];
+		char char1, carray1[];
+		bool fact1, barray1[];
+		class1 instance1;
+	{
+		//Fields as parameters of read
+		read(instance1.number1);
+		read(instance1.char1);
+		read(instance1.fact1);
+		
+		//Variables for parameters of read
+		read(number1);
+		read(char1);
+		read(fact1);
+		
+		//Array elements as parameters of read
+		read(iarray1[0]);
+		read(carray1[0]);
+		read(barray1[0]);
+	
+		//Constant as parameter of read
+		read(const1);
+		
+		//Class variable for parameter of read
+		read(instance1);
+		
+		//int parameter of read
+		print(number1, 4);
+		
+		//char parameter of read
+		print(char1, 4);
+	
+		//bool parameter of read
+		print(fact1);
+	
+		//Class variable for parameter of print
+		print(instance1);
+		print(instance1, 4);
+		//print(fact1, fact1);
+	}
+}
