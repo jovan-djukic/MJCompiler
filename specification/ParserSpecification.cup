@@ -1135,13 +1135,17 @@ PrintParameters ::=	Expression:expression
 						}
 					:}
 					|
-					Expression:expression COMA NUMERICAL_CONSTANT
+					Expression:printExpression COMA Expression:numberExpression
 					{:
-						if (expression == null) {
-							parser.report_internal_error("NULL expression in production PrintParameters ::= Expression", expressionleft);
-						} else if (!expression.equals(SymbolTable.noObj)) {
-							if (!expression.getType().equals(SymbolTable.intType) && !expression.getType().equals(SymbolTable.charType) && !expression.getType().equals(SymbolTable.boolType)) {
-								parser.report_semantic_error("Expression " + expression.getName() + " must be of int, char or bool type", expressionleft);
+						if (printExpression == null) {
+							parser.report_internal_error("NULL print expression in production PrintParameters ::= Expression COMA Expression", printExpressionleft);
+						} else if (numberExpression == null) { 
+							parser.report_internal_error("NULL number expression in production PrintParameters ::= Expression COMA Expression", printExpressionleft);
+						} else if (!printExpression.equals(SymbolTable.noObj) && !numberExpression.equals(SymbolTable.noObj)) {
+							if (!printExpression.getType().equals(SymbolTable.intType) && !printExpression.getType().equals(SymbolTable.charType) && !printExpression.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Print expression " + printExpression.getName() + " must be of int, char or bool type", printExpressionleft);
+							} else if (!numberExpression.getType().equals(SymbolTable.intType)) {
+								parser.report_semantic_error("Number expression " + numberExpression.getName() + " must be of int type", printExpressionleft);
 							}
 						}
 					:}
