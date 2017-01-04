@@ -21,7 +21,7 @@ program MJProgram
 				message[2] = 'l';
 				message[3] = 'l';
 				message[4] = 'o';
-				print(message, 5);
+				print(5, 5);
 			}
 		}
 	}
@@ -30,7 +30,7 @@ program MJProgram
 		int a, b, c, d;
 	
 		{
-			static void m(int p1, char p2) 
+			void m(int p1, char p2) 
 				char l;
 				int i;
 			{

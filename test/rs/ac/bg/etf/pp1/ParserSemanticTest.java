@@ -16,9 +16,9 @@ import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 import rs.ac.bg.etf.utilities.MyDumpSymbolTableVisitor;
 import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
 
-public class SimpleParserSemanticTest {
+public class ParserSemanticTest {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/SemanticAnalysis";
-	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserSemanticTest.class);
+	private static Logger logger = MyLoggerFactory.getLogger(ParserSemanticTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;

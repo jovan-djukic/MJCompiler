@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 import java_cup.runtime.Symbol;
 import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
-public class SimpleParserSyntaxTestWithSyntaxErrors {
+public class ParserSyntaxTestWithSyntaxErrors {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/SyntaxAnalysisWithErrors";
-	private static Logger logger = MyLoggerFactory.getLogger(SimpleParserSyntaxTestWithSyntaxErrors.class);
+	private static Logger logger = MyLoggerFactory.getLogger(ParserSyntaxTestWithSyntaxErrors.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
