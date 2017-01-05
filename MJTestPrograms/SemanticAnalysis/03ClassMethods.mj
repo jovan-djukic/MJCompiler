@@ -41,7 +41,8 @@ class class2 extends class1 {
 		
 		int method2(char p1, char p2, char p3) 
 			int l1, l2;
-			char l3, l4;
+			char l3, l4, p1;
+			int l1;
 		{
 			return 0;
 		}
@@ -81,6 +82,14 @@ class class4 extends class3 {
 		
 		int method9(char aa, int bb, bool cc) {
 			return 0;
+		}
+		
+		void method10() 
+			int a b;
+			char e, f, g;
+			int c
+		{
+		
 		}
 	}
 }
