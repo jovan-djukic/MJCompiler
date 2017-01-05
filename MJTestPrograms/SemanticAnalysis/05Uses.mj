@@ -67,7 +67,16 @@ class class2 extends class1 {
 	}
 
 	void main() 
+		class2 instance;
+		int l1, l2[];
+		
 	{
 		globalFunction1();
+		
+		instance.fld1 = 2;
+		instance.x = 2;
+		l1.a = 5;
+		l1[4] = 2;
+		l2[0] = 2;
 	}
 }

@@ -48,6 +48,5 @@ class class1 {
 		//Class variable for parameter of print
 		print(instance1);
 		print(instance1, 4);
-		print(fact1, fact1);
 	}
 }

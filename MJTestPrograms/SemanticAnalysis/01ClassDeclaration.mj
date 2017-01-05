@@ -1,6 +1,6 @@
 program ClassDeclaration
 
-class class1 {
+class class1 extends class1 {
 
 }
 

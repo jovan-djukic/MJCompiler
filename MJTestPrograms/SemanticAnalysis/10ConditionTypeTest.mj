@@ -28,7 +28,7 @@ class class2 {
 		
 		}
 		
-		if (1 && fact1) {
+		if (1 && fact1 && (number1 + number2)) {
 		
 		}
 		
@@ -41,6 +41,10 @@ class class2 {
 		}
 		
 		if (instance1 < instance2 || instance1 == instance3) {
+		
+		}
+		
+		if (instance1 == null || instance1 < null) {
 		
 		}
 	}
