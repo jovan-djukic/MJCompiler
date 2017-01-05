@@ -4,6 +4,8 @@ package rs.ac.bg.etf.pp1;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+
+import rs.ac.bg.etf.utilities.MyObj;
 import rs.ac.bg.etf.utilities.MyStruct;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -62,7 +64,7 @@ public class SymbolTable extends Tab{
 						return name + "bool";
 					}
 					case Struct.Class: {
-						return name + SymbolTable.getClassTypeName(type);
+						return name + SymbolTable.getClassTypeName(type.getElemType());
 					}
 					case Struct.None: {
 						return name + "void";
@@ -87,14 +89,14 @@ public class SymbolTable extends Tab{
 	public static String getClassTypeName(Struct classType) {
 		for(Scope scope = currentScope; scope != null; scope = scope.getOuter()) {
 			for(Obj topObject : scope.values()) {
-				if (topObject.getType().equals(classType) && topObject.getKind() == Obj.Type) {
+				if (topObject.getType() == classType && topObject.getKind() == Obj.Type) {
 					return topObject.getName();
 				}
 				if (topObject.getLocalSymbols().size() > 0) {
 					Iterator<Obj> iterator = topObject.getLocalSymbols().iterator();
 					while (iterator.hasNext()) {
 						Obj currentObject = iterator.next();
-						if (currentObject.getType().equals(classType) && currentObject.getKind() == Obj.Type) {
+						if (currentObject.getType() == classType && currentObject.getKind() == Obj.Type) {
 							return currentObject.getName();
 						}
 					}
@@ -113,16 +115,17 @@ public class SymbolTable extends Tab{
 		}
 	}
 	
-	public static Obj getMember(Struct classNode, String name) {
-		for (Struct node = classNode; node != null; node = node.getElemType()) {
-			Collection<Obj> members = node.getMembers();
-			for(Iterator<Obj> i = members.iterator(); i.hasNext();) {
-				Obj object = i.next();
-				if (object.getName().equals(name)) {
-					return object;
-				}
-			}
+	
+	public static Obj insert(int kind, String name, Struct type) {
+		// create a new Object node with kind, name, type
+		Obj newObj = new MyObj(kind, name, type, 0, ((currentLevel != 0)? 1 : 0)); 
+		
+		// append the node to the end of the symbol list
+		if (!currentScope.addToLocals(newObj)) {
+			Obj res = currentScope.findSymbol(name);
+			return (res != null) ? res : noObj;
 		}
-		return null;
+		else 
+			return newObj;
 	}
 }
