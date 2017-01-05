@@ -1,0 +1,91 @@
+program ClassMethods
+
+class class1 {
+	int method3;
+	{
+		void method1(int a, int b, int c)
+			int d, e;
+			char f;
+		{
+		
+		}
+		
+		int method2(char a, char b, char c) {
+			return 0;
+		}
+		
+		static void method2() {
+		
+		}
+		
+		static void method3() {
+		
+		}
+		
+		static void method4(int a, int b, int c) {
+		
+		}
+		
+		static void method5(int a int b, int c) {
+		
+		}
+	}
+}
+
+class class2 extends class1 {
+	int method6;
+	{
+		void method1(int p1, int p2, int p3) {
+		
+		}
+		
+		int method2(char p1, char p2, char p3) 
+			int l1, l2;
+			char l3, l4;
+		{
+			return 0;
+		}
+		
+		void method3() {
+		
+		}
+	}
+}
+
+class class3 extends class2 {
+	int method7;
+	{
+		static void method6() {
+		
+		}
+		
+		static int method8() {
+			return 0;	
+		}
+		
+		int method9(char a, int b, bool c) {
+			return 0;
+		}
+	}
+}
+
+class class4 extends class3 {
+	{
+		void method1(int q1, int q2, int q3) {
+		
+		}
+		
+		static void method6() {
+		
+		}
+		
+		int method9(char aa, int bb, bool cc) {
+			return 0;
+		}
+	}
+}
+{
+	void main() 
+	{
+	}	
+}
