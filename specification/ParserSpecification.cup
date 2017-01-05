@@ -254,8 +254,8 @@ action code {:
 
 	private int variablePosition = 0;
 	
-	private int formalParameterCount = 0;
 	private Obj currentMethod = null;
+	private int methodVariablePosition = 0;
 
 	private Obj currentClass = null;
 	private int classVariablePosition = 0;
@@ -760,8 +760,7 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationList LEFT_BRACE S
 
 							SymbolTable.closeScope();
 							currentMethod = null;
-							variablePosition = 0;
-							formalParameterCount = 0;
+							methodVariablePosition = 0;
 							returnFound = false;
 						:}
 						;
@@ -775,7 +774,8 @@ MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:ide
 								parser.report_internal_error("NULL formal parameter list in production MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterleft RIGHT_PARENTHESIS", typeObjectleft);
 							} else if (!typeObject.equals(SymbolTable.noObj)) {
 								currentMethod = null;
-								
+								methodVariablePosition = 0;
+
 								if (SymbolTable.currentScope.findSymbol(identifier) != null) {
 									parser.report_semantic_error("Redefinition of symbol " + identifier, identifierleft);
 								} else {
@@ -841,15 +841,14 @@ MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:ide
 													parser.report_internal_error("Could not insert symbol " + formalParameter.getName() + " into symbol table", identifierleft);
 												} else {
 													newObject.setLevel(SymbolTable.getCurrentLevel());
-													newObject.setFpPos(variablePosition);
-													newObject.setAdr(variablePosition);
-													variablePosition++;
-													formalParameterCount++;
+													newObject.setFpPos(methodVariablePosition);
+													newObject.setAdr(methodVariablePosition);
+													methodVariablePosition++;
 												}
 											}
 										}
 
-										currentMethod.setLevel(formalParameterCount);
+										currentMethod.setLevel(methodVariablePosition);
 									}
 								}
 							} else {
@@ -989,7 +988,7 @@ MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLO
 									} else if (typeObject.getType() != SymbolTable.noType) {
 										for(Variable localVariable : locals) {
 											if (SymbolTable.currentScope.findSymbol(localVariable.getName()) != null) {
-												parser.report_semantic_error("Redefinition of name " + localVariable.getName(), typeObjectleft);
+												parser.report_semantic_error("Redefinition of symbol " + localVariable.getName(), typeObjectleft);
 											} else {
 												Obj newObject = null;
 												if (localVariable.isArray()) {
@@ -1002,9 +1001,9 @@ MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLO
 													parser.report_internal_error("Could not insert symbol " + localVariable.getName() + " into symbol table", typeObjectleft);
 												} else {
 													newObject.setLevel(SymbolTable.getCurrentLevel());
-													newObject.setFpPos(variablePosition);
-													newObject.setAdr(variablePosition);
-													variablePosition++;
+													newObject.setFpPos(methodVariablePosition);
+													newObject.setAdr(methodVariablePosition);
+													methodVariablePosition++;
 												}
 											}
 										}
@@ -1832,26 +1831,9 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 							parser.report_semantic_error("Symbol " + designator.getName() + " is not of class type", designatorleft);
 							RESULT = SymbolTable.noObj;
 						} else {
-							Obj member = null;
-							//Check for member in base class
-							//If designator is THIS or we are invoking a static method of our own class we need to search in top scope because members are not associated with class node yet
-							if (THIS.equals(designator.getName()) || (currentClass != null && designator.getKind() == MyObj.Type && designator.getType().equals(currentClass.getType()))) {
+							Obj member = designator.getType().getMembersTable().searchKey(name);
+							if (member == null && currentClass != null && (THIS.equals(designator.getName()) || (designator.getKind() == MyObj.Type && designator.getType().equals(currentClass.getType())))) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
-							} else {
-								SymbolDataStructure members = designator.getType().getMembersTable();
-								member = members.searchKey(name);
-							}
-
-							//If we did not find it in base class we find it in parent class
-							if (member == null) {
-								Struct parent = designator.getType().getElemType();
-								while (parent != null && member == null) {
-									SymbolDataStructure members = parent.getMembersTable();
-									member = members.searchKey(name);
-									if (member == null) {
-										parent = parent.getElemType();
-									}		
-								}
 							}
 
 							if (member == null) {
@@ -1880,7 +1862,7 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 							RESULT = SymbolTable.noObj;
 						} else if(designator.getType().getElemType() == null) {
 							parser.report_internal_error("Array without an element type in production Designator ::= Designator ArrayIndexer", designatorleft);
-							RESULT = null;
+							RESULT = SymbolTable.noObj;
 						} else {
 							//Return temp designator that represents and array element
 							RESULT = new MyObj(MyObj.Elem, designator.getName() + "[]", designator.getType().getElemType());
@@ -1894,7 +1876,10 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 				{:
 					//Semantic analysis
 					Obj object = SymbolTable.find(name);
-					if (object.equals(SymbolTable.noObj)) {
+					if (object.equals(SymbolTable.noObj) && currentClass != null) {
+						object = currentClass.getType().getMembersTable().searchKey(name);
+					}
+					if (object == null || object.equals(SymbolTable.noObj)) {
 						if (THIS.equals(name)) {
 							parser.report_semantic_error("Use of " + THIS + " outside of class non-static method", nameleft);
 							RESULT = SymbolTable.noObj;
