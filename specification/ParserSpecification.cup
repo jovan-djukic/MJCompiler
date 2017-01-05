@@ -51,7 +51,7 @@ parser code {:
     }
 
     public void report_internal_error(String message, int lineNumber) {
-    	report_error("Internal error on line: " + lineNumber + ", " + message, null);
+    	report_error("Internal error on line: " + (lineNumber + 1) + ", " + message, null);
     	errorFound = true;	
     }
 :}
@@ -359,7 +359,8 @@ Program ::= PROGRAM ProgramName:programObject
 				MethodDeclarationList 
 			RIGHT_BRACE 
 			{:
-				if (SymbolTable.currentScope.findSymbol(MAIN) == null) {
+				Obj main = SymbolTable.currentScope.findSymbol(MAIN); 
+				if (main == null || main.getLevel() != 0 || !main.getType().equals(SymbolTable.voidType)) {
 					parser.report_semantic_error("No main symbol found", programObjectleft);
 				} 
 				SymbolTable.chainLocalSymbols(programObject);
@@ -1214,18 +1215,14 @@ PrintParameters ::=	Expression:expression
 						}
 					:}
 					|
-					Expression:printExpression COMA Expression:numberExpression
+					Expression:printExpression COMA NUMERICAL_CONSTANT:value
 					{:
 						if (printExpression == null) {
 							parser.report_internal_error("NULL print expression in production PrintParameters ::= Expression COMA Expression", printExpressionleft);
-						} else if (numberExpression == null) { 
-							parser.report_internal_error("NULL number expression in production PrintParameters ::= Expression COMA Expression", printExpressionleft);
-						} else if (!printExpression.equals(SymbolTable.noObj) && !numberExpression.equals(SymbolTable.noObj)) {
+						} else if (!printExpression.equals(SymbolTable.noObj)) {
 							if (!printExpression.getType().equals(SymbolTable.intType) && !printExpression.getType().equals(SymbolTable.charType) && !printExpression.getType().equals(SymbolTable.boolType)) {
 								parser.report_semantic_error("Print expression " + printExpression.getName() + " must be of int, char or bool type", printExpressionleft);
-							} else if (!numberExpression.getType().equals(SymbolTable.intType)) {
-								parser.report_semantic_error("Number expression " + numberExpression.getName() + " must be of int type", printExpressionleft);
-							}
+							} 
 						}
 					:}
 					;
@@ -1465,7 +1462,7 @@ ConditionTerm ::=	ConditionTerm:term AND ConditionFact:fact
 				 	ConditionFact:fact
 				 	{:
 				 		if (fact == null) {
-				 			parser.report_internal_error("NULL factor in production ConditionTerm ::= ConditionFact", factleft);
+				 			parser.report_internal_error("NULL rightExpression in production ConditionTerm ::= ConditionFact", factleft);
 				 			RESULT = SymbolTable.noObj;
 				 		} else if (!fact.equals(SymbolTable.noObj)) {
 				 			if (!fact.getType().equals(SymbolTable.boolType)) {
@@ -1544,16 +1541,16 @@ ExpressionPrefix ::=	MINUS
 					 	:}
 					 	;
 
-RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
+RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
 							{:
 								boolean error = false;
 								if (leftExpression == null) {
-									parser.report_internal_error("NULL left expression in production RightAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorRight RightAssociatedTermList", leftExpressionleft);
+									parser.report_internal_error("NULL left expression in production RightAssociatedTermList ::= RightAssociatedFactorList AdditionOperatorRight RightAssociatedTermList", leftExpressionleft);
 									error = true;
 								}
 
 								if (rightExpression == null) {
-									parser.report_internal_error("NULL right expression in production RightAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorRight RightAssociatedTermList", leftExpressionleft);
+									parser.report_internal_error("NULL right expression in production RightAssociatedTermList ::= RightAssociatedFactorList AdditionOperatorRight RightAssociatedTermList", leftExpressionleft);
 									error = true;
 								}
 
@@ -1568,53 +1565,12 @@ RightAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperat
 								}
 
 								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
-									parser.report_semantic_error("Left side is not a varaible, array element or class field", leftExpressionleft);
+									parser.report_semantic_error("Left side " + leftExpression.getName() + " is not a varaible, array element or class field a", leftExpressionleft);
 									error = true;
 								}
 
 								if(!error) {
-									RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
-								} else {
-									RESULT = SymbolTable.noObj;
-								}
-							:}
-							|
-							LeftAssociatedTermList:expression
-							{:
-								if (expression != null) {
-									RESULT = expression;
-								} else {
-									parser.report_semantic_error("NULL expression in production RightAssociatedTermList ::= LeftAssociatedTermList", expressionleft);
-									RESULT = SymbolTable.noObj;
-								}
-							:}
-							;
-
-LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator RightAssociatedFactorList:rightExpression
-							{:
-								boolean error = false;
-								if (leftExpression == null) {
-									parser.report_internal_error("NULL left expression in production LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft RightAssociatedFactorList", leftExpressionleft);
-									error = true;
-								}
-
-								if (rightExpression == null) {
-									parser.report_internal_error("NULL right expression in production LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft RightAssociatedFactorList", leftExpressionleft);
-									error = true;
-								}
-
-								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
-									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
-									error = true;
-								}
-
-								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
-									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
-									error = true;
-								}
-
-								if(!error) {
-									RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+									RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 								} else {
 									RESULT = SymbolTable.noObj;
 								}
@@ -1625,22 +1581,22 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 								if (expression != null) {
 									RESULT = expression;
 								} else {
-									parser.report_semantic_error("NULL expression in production LeftAssociatedTermList ::= RightAssociatedFactorList", expressionleft);
+									parser.report_internal_error("NULL expression in production RightAssociatedTermList ::= RightAssociatedFactorList", expressionleft);
 									RESULT = SymbolTable.noObj;
 								}
 							:}
 							;
 
-RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorRight:operator RightAssociatedFactorList:rightExpression
+RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator RightAssociatedFactorList:rightExpression
 								{:
 									boolean error = false;
 									if (leftExpression == null) {
-										parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
+										parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList", rightExpressionleft);
 										error = true;
 									}
 
 									if (rightExpression == null) {
-										parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorRight RightAssociatedFactorList", leftExpressionleft);
+										parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList", rightExpressionleft);
 										error = true;
 									}
 
@@ -1660,28 +1616,69 @@ RightAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplica
 									}
 
 									if(!error) {
-										RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+										RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
 									}
 								:}
 								|
-								LeftAssociatedFactorList:expression
+								LeftAssociatedTermList:expression
 								{:
 									if (expression != null) {
 										RESULT = expression;
 									} else {
-										parser.report_internal_error("NULL expression in production RightAssociatedFactorList ::= LeftAssociatedFactorList", expressionleft);
+										parser.report_internal_error("NULL expression in production RightAssociatedFactorList ::= LeftAssociatedTermList", expressionleft);
 										RESULT = SymbolTable.noObj;
 									}
 								:}
 								;
 
-LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationOperatorLeft:operator Factor:factor
+LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator LeftAssociatedFactorList:rightExpression
+							{:
+								boolean error = false;
+								if (leftExpression == null) {
+									parser.report_internal_error("NULL left expression in production LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft LeftAssociatedFactorList", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression == null) {
+									parser.report_internal_error("NULL right expression in production LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft LeftAssociatedFactorList", leftExpressionleft);
+									error = true;
+								}
+
+								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
+									parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
+									error = true;
+								}
+
+								if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
+									parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
+									error = true;
+								}
+
+								if(!error) {
+									RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
+								} else {
+									RESULT = SymbolTable.noObj;
+								}
+							:}
+							|
+							LeftAssociatedFactorList:expression
+							{:
+								if (expression != null) {
+									RESULT = expression;
+								} else {
+									parser.report_internal_error("NULL expression in production LeftAssociatedTermList ::= LeftAssociatedFactorList", expressionleft);
+									RESULT = SymbolTable.noObj;
+								}
+							:}
+							;
+
+LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorLeft:operator Factor:factor
 								{:
 									boolean error = false;
-									if (expression == null) {
-										parser.report_internal_error("NULL expression in production LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor", factorleft);
+									if (leftExpression == null) {
+										parser.report_internal_error("NULL right left expression in production LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor", factorleft);
 										error = true;
 									}
 
@@ -1690,8 +1687,8 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 										error = true;
 									}
 
-									if (expression != null && !expression.equals(SymbolTable.noObj) && !expression.getType().equals(SymbolTable.intType)) {
-										parser.report_semantic_error("Expression " + expression.getName() + " is not of type int", expressionleft);
+									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
+										parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
 										error = true;
 									}
 
@@ -1701,7 +1698,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 									}
 
 									if(!error) {
-										RESULT = new MyObj(MyObj.Var, expression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
+										RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
 									}
@@ -1712,7 +1709,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 									if (factor != null) {
 										RESULT = factor;
 									} else {
-										parser.report_internal_error("NULL factor in production LeftAssociatedFactorList ::= Factor", factorleft);
+										parser.report_internal_error("NULL factor in production LeftAssociatedFactorList ::= factor", factorleft);
 										RESULT = SymbolTable.noObj;
 									}
 								:}
@@ -1721,12 +1718,14 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:expression MultiplicationO
 Factor ::=	Designator:designator OptionalParameters:parameterList
 			{:
 				if (designator == null) {
-					parser.report_internal_error("Internal error, got null designator or parameter list", designatorleft);
+					parser.report_internal_error("NULL designator in production Factor ::= Designator OptionalParameters", designatorleft);
 					RESULT = SymbolTable.noObj;
 				} else if (designator.getKind() == MyObj.Global && designator.getKind() == MyObj.Meth && designator.getKind() == MyObj.Static && parameterList == null) {
-					parser.report_internal_error("Internal error, got null parameter list", designatorleft);
+					parser.report_internal_error("NULL parameter list in production Factor ::= Designator OptionalParameters", designatorleft);
+					RESULT = SymbolTable.noObj;
 				} else if (!designator.equals(SymbolTable.noObj)) {
 					//Check types and number of paramaters
+					String name = designator.getName();
 					if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Meth || designator.getKind() == MyObj.Static) {
 						if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
 							parser.report_semantic_error("Incorrect number of parameters in the invokation of " + designator.getName(), designatorleft);
@@ -1740,17 +1739,26 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 							}
 							Iterator<Obj> actualParameterIterator = parameterList.iterator();
 
+							name += "(";
+
 							while (formalParameterIterator.hasNext() && actualParameterIterator.hasNext()) {
 								Obj formalParameter = formalParameterIterator.next();
 								Obj actualParameter = actualParameterIterator.next();
 
 								if(!actualParameter.getType().assignableTo(formalParameter.getType())) {
 									parser.report_semantic_error("Actual parameter " + actualParameter.getName() + " of type " + SymbolTable.getTypeName(actualParameter.getType()) + " is not assignable to formal parameter " + formalParameter.getName() + " of type " + SymbolTable.getTypeName(formalParameter.getType()), designatorleft);
+								} else {
+									name += actualParameter.getName();
+									if (actualParameterIterator.hasNext()) {
+										name += ", ";
+									}
 								}
 							}
+
+							name += ")";
 						}
 					}
-					RESULT = designator;
+					RESULT = new MyObj(designator.getKind(), name, designator.getType());
 				} else {
 					RESULT = SymbolTable.noObj;
 				}
@@ -1776,7 +1784,15 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		}
 		   	:}
 		   	|
-		   	LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
+		   	LEFT_PARENTHESIS Expression:expression RIGHT_PARENTHESIS
+		   	{:
+		   		if (expression == null) {
+		   			parser.report_internal_error("NULL expression in production Factor ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS", expressionleft);
+		   			RESULT = SymbolTable.noObj;
+		   		} else {
+		   			RESULT = expression;
+		   		}
+		   	:}
 		   	;
 		   
 OptionalParameters ::= 	MethodCall:parameterList
@@ -1889,7 +1905,6 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 						}
 					} else {	
 						RESULT = object;
-
 					}
 				:}
 				;
