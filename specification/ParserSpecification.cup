@@ -1848,7 +1848,7 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 							RESULT = SymbolTable.noObj;
 						} else {
 							Obj member = designator.getType().getMembersTable().searchKey(name);
-							if (member == null && currentClass != null && (THIS.equals(designator.getName()) || (designator.getKind() == MyObj.Type && designator.getType().equals(currentClass.getType())))) {
+							if (member == null && currentClass != null && designator.getType().equals(currentClass.getType())) {
 								member = SymbolTable.currentScope.getOuter().findSymbol(name);
 							}
 
