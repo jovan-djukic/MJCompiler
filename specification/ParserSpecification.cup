@@ -54,6 +54,10 @@ parser code {:
     	report_error("Internal error on line: " + (lineNumber + 1) + ", " + message, null);
     	errorFound = true;	
     }
+
+    public boolean isErrorFound() {
+    	return errorFound;
+    }
 :}
 
 
