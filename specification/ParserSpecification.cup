@@ -289,7 +289,7 @@ nonterminal NonMethodDeclaration, ConstantDeclaration, GlobalVariableDeclaration
 
 nonterminal ClassVariableDeclarationList, ClassVariableDeclaration, ClassMethodList;
 
-nonterminal MethodDeclaration, MethodVariableDeclarationList, MethodVariableDeclaration;
+nonterminal MethodDeclaration, MethodVariableDeclarationList, MethodVariableDeclarationListWithAction, MethodVariableDeclaration;
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, PrintParameters;
 
@@ -746,7 +746,7 @@ MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
 						  /* epsilon */
 						  ;
 						  
-MethodDeclaration ::=	MethodSignature MethodVariableDeclarationList LEFT_BRACE StatementList RIGHT_BRACE:token
+MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LEFT_BRACE StatementList RIGHT_BRACE:token
 					  	{:
 							if (currentMethod != null && isMain(currentMethod.getName())) {
 								incrementMainVariableCount();
@@ -773,11 +773,22 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationList LEFT_BRACE S
 							returnFound = false;
 
 							if(!parser.isErrorFound()) {
+								Code.put(Code.exit);
 								Code.put(Code.return_);
 							}
 						:}
 						;
-					  
+					
+MethodVariableDeclarationListWithAction ::=	MethodVariableDeclarationList
+											{:
+												//Code generation
+												if (!parser.isErrorFound()) {
+													//Second parameter for enter instruction
+													Code.put(SymbolTable.currentScope.getnVars());
+												}
+											:}
+											;
+
 MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList:formalParameterList RIGHT_PARENTHESIS 
 						{:
 							//Semantic analysis
@@ -871,6 +882,8 @@ MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:ide
 							//Code generation
 							if(!parser.isErrorFound()) {
 								currentMethod.setAdr(Code.pc);
+								Code.put(Code.enter);
+								Code.put(formalParameterList.size());
 							}
 						:}
 						;
