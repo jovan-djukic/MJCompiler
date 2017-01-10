@@ -1,0 +1,36 @@
+program GlobalAndLocalDecl
+int gi;
+char gc;
+bool gb;
+{
+	void main() 
+		int li;
+		char lc;
+		bool lb;
+	{
+		gi = 1;
+		li = 2;
+		gc = 'a';
+		lc = 'b';
+		gb = true;
+		lb = false;
+		
+		print(gi);
+		print('\n');
+		
+		print(li);
+		print('\n');
+		
+		print(gc);
+		print('\n');
+		
+		print(lc);
+		print('\n');
+		
+		print(gb);
+		print('\n');
+		
+		print(lb);
+		print('\n');		
+	}
+}
