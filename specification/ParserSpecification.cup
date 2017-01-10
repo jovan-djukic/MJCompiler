@@ -501,6 +501,10 @@ GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables
 											}
 										}
 									}
+
+									if(!parser.isErrorFound()) {
+										Code.dataSize += globalVariables.size();
+									}
 								:}
 								|
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable list declaration"); :}
@@ -1302,6 +1306,7 @@ ForPostStatement ::= DesignatorStatement
 
 DesignatorStatement ::=	Designator:designator AssignOperation:expression
 						{:
+							//Semantic analysis
 							if (designator == null) {
 								parser.report_internal_error("NULL designator in production DesignatorStatement ::= Designator AssignOperation", designatorleft);
 							} else if (expression == null) {
@@ -1312,6 +1317,11 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 								} else if (!expression.getType().assignableTo(designator.getType())) {
 									parser.report_semantic_error("Expression " + expression.getName() + " of type " + SymbolTable.getTypeName(expression.getType()) + " is not assignable to designator " + designator.getName() + " of type " + SymbolTable.getTypeName(designator.getType()), expressionleft);
 								}
+							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								Code.store(designator);
 							}
 						:}
 						|
@@ -1352,6 +1362,7 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 						|
 						Designator:designator INCREMENT
 						{:
+							//Semantic analysis
 							if (designator == null) {
 								parser.report_internal_error("NULL designator in production DesignatorStatement ::= Designator INCREMENT", designatorleft); 
 							} else if (!designator.equals(SymbolTable.noObj)) {
@@ -1359,6 +1370,19 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 									parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", designatorleft);
 								} else if (!designator.getType().equals(SymbolTable.intType)) {
 									parser.report_semantic_error("Designator " + designator.getName() + " must be of type int", designatorleft);
+								}
+							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								if (designator.getKind() == MyObj.Var && designator.getLevel() == 1) {
+									Code.put(Code.inc);
+									Code.put(designator.getAdr());
+									Code.loadConst(1);
+								} else {
+									Code.load(designator);
+									Code.loadConst(1);
+									Code.store(designator);
 								}
 							}
 						:}
@@ -1769,6 +1793,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplicat
 
 Factor ::=	Designator:designator OptionalParameters:parameterList
 			{:
+				//Semantic analysis
 				if (designator == null) {
 					parser.report_internal_error("NULL designator in production Factor ::= Designator OptionalParameters", designatorleft);
 					RESULT = SymbolTable.noObj;
@@ -1813,6 +1838,11 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 					RESULT = new MyObj(designator.getKind(), name, designator.getType());
 				} else {
 					RESULT = SymbolTable.noObj;
+				}
+
+				//Code generation
+				if (!parser.isErrorFound()) {
+					Code.load(designator);
 				}
 			:}
 		   	|
