@@ -1378,10 +1378,11 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 								if (designator.getKind() == MyObj.Var && designator.getLevel() == 1) {
 									Code.put(Code.inc);
 									Code.put(designator.getAdr());
-									Code.loadConst(1);
+									Code.put(1);
 								} else {
 									Code.load(designator);
 									Code.loadConst(1);
+									Code.put(Code.add);
 									Code.store(designator);
 								}
 							}
@@ -1396,6 +1397,20 @@ DesignatorStatement ::=	Designator:designator AssignOperation:expression
 									parser.report_semantic_error("Designator " + designator.getName() + " must be a variable, array element or class field", designatorleft);
 								} else if (!designator.getType().equals(SymbolTable.intType)) {
 									parser.report_semantic_error("Designator " + designator.getName() + " must be of type int", designatorleft);
+								}
+							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								if (designator.getKind() == MyObj.Var && designator.getLevel() == 1) {
+									Code.put(Code.inc);
+									Code.put(designator.getAdr());
+									Code.put(-1);
+								} else {
+									Code.load(designator);
+									Code.loadConst(-1);
+									Code.put(Code.add);
+									Code.store(designator);
 								}
 							}
 						:}
