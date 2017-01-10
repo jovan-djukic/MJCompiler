@@ -369,6 +369,10 @@ Program ::= PROGRAM ProgramName:programObject
 				} 
 				SymbolTable.chainLocalSymbols(programObject);
 				SymbolTable.closeScope();
+
+				if (!parser.isErrorFound()) {
+					Code.mainPc = main.getAdr();
+				}
 			:};
 
 ProgramName ::= IDENTIFIER:name 
@@ -767,6 +771,10 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationList LEFT_BRACE S
 							currentMethod = null;
 							methodVariablePosition = 0;
 							returnFound = false;
+
+							if(!parser.isErrorFound()) {
+								Code.put(Code.return_);
+							}
 						:}
 						;
 					  
@@ -858,6 +866,11 @@ MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:ide
 								}
 							} else {
 								SymbolTable.openScope();
+							}
+						
+							//Code generation
+							if(!parser.isErrorFound()) {
+								currentMethod.setAdr(Code.pc);
 							}
 						:}
 						;
@@ -1210,11 +1223,22 @@ ReturnValue ::= Expression:expression
 				
 PrintParameters ::=	Expression:expression
 					{:
+						//Semantic analysis
 						if (expression == null) {
 							parser.report_internal_error("NULL expression in production PrintParameters ::= Expression", expressionleft);
 						} else if (!expression.equals(SymbolTable.noObj)) {
 							if (!expression.getType().equals(SymbolTable.intType) && !expression.getType().equals(SymbolTable.charType) && !expression.getType().equals(SymbolTable.boolType)) {
 								parser.report_semantic_error("Expression " + expression.getName() + " must be of int, char or bool type", expressionleft);
+							}
+						}
+
+						//Code generation
+						if (!parser.isErrorFound()) {
+							if (expression.getType().equals(SymbolTable.charType)) {
+
+							} else {
+								Code.loadConst(1);
+								Code.put(Code.print);
 							}
 						}
 					:}
@@ -1768,7 +1792,16 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 				}
 			:}
 		   	|
-		   	NUMERICAL_CONSTANT:value {: RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.intType, value.intValue(), SymbolTable.getCurrentLevel()); :}
+		   	NUMERICAL_CONSTANT:value 
+		   	{: 
+		   		//Semantic analysis
+		   		RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.intType, value.intValue(), SymbolTable.getCurrentLevel()); 
+
+		   		//Code generation
+		   		if (!parser.isErrorFound()) {
+		   			Code.load(RESULT);
+		   		}
+		   	:}
 		   	|
 		   	CHARACTER_CONSTANT:value {: RESULT = new MyObj(Obj.Con, value.toString(), SymbolTable.charType, (int)value.charAt(0), SymbolTable.getCurrentLevel()); :}
 		   	|
