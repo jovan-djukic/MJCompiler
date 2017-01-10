@@ -1,0 +1,6 @@
+program Print
+{
+	void main() {
+		print(5);
+	}
+}
