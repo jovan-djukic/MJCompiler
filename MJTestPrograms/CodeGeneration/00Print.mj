@@ -1,6 +1,16 @@
 program Print
 {
 	void main() {
+		//Print without parameters
 		print(5);
+		print(true);
+		print('a');
+		
+		print('\n');
+		
+		//Print with parameters
+		print(6, 5);
+		print(false, 5);
+		print('b', 5);
 	}
 }
