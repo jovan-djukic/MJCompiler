@@ -16,6 +16,7 @@ import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 import rs.ac.bg.etf.utilities.MyDumpSymbolTableVisitor;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.mj.runtime.Run;
+import rs.etf.pp1.mj.runtime.disasm;
 import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
 
 public class ParserCodeGenerationTest {
@@ -56,12 +57,30 @@ public class ParserCodeGenerationTest {
 				try {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
+					
 					logger.info("SYMBOL IS: " + symbol.sym);
+					SymbolTable.dump(new MyDumpSymbolTableVisitor());
+					
 					if (parser.isErrorFound()) {
 						logger.info("Error found, no code generated");
 					} else {
-						Code.write(new FileOutputStream(new File("output/MJProgram")));
+						File objectFile = new File("output/MJProgram");
+						if (objectFile.exists()) {
+							objectFile.delete();
+						}
+						Code.write(new FileOutputStream(objectFile));
+						disasm.main(new String[] { "output/MJProgram" });
+						
+						logger.info("======================================================================");
+						logger.info("RUNNING FILE: " + testFiles[i].getPath());
+						logger.info("======================================================================");
+						
 						Run.main(new String[] { "output/MJProgram" });
+						System.out.println();
+						
+						logger.info("======================================================================");
+						logger.info("END OF FILE: " + testFiles[i].getPath());
+						logger.info("======================================================================");
 					}
 				} catch (LexerException le) {
 					if (out != null) {
