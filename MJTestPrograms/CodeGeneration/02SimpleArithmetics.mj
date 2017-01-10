@@ -1,0 +1,29 @@
+program SimpleArithmetics
+int gi;
+
+{
+	void main() 
+		int li;
+	{
+		gi = 0;
+		li = 1;
+		
+		gi++;
+		li++;
+		
+		print(gi, 5);
+		print('\n');
+		
+		print(li, 5);
+		print('\n');
+		
+		gi--;
+		li--;
+		
+		print(gi, 5);
+		print('\n');
+		
+		print(li, 5);
+		print('\n');
+	}
+}
