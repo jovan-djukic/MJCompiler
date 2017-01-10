@@ -7,7 +7,7 @@ import java.util.*;
 import rs.etf.pp1.symboltable.concepts.*;
 import rs.etf.pp1.symboltable.structure.*;
 import rs.ac.bg.etf.utilities.*;
-
+import rs.etf.pp1.mj.runtime.*;
 
 parser code {:
 	
