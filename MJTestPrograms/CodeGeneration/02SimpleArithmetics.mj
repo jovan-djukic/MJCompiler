@@ -25,5 +25,23 @@ int gi;
 		
 		print(li, 5);
 		print('\n');
+		
+		gi = 5 + 5 + 5;
+		li = 5 * 5 * 5;
+		
+		print(gi, 5);
+		print('\n');
+		
+		print(li, 5);
+		print('\n');
+		
+		gi = gi + ((li - 5) + 5 + 0 / 5 + 6 % 5 - 7 / 7);
+		li = gi * li;
+		
+		print(gi, 5);
+		print('\n');
+		
+		print(li, 5);
+		print('\n');
 	}
 }

@@ -231,7 +231,6 @@ action code {:
 	}
 
 	void printSyntaxErrorDescription(String message) {
-		parser.getLogger().info("Description: " + message);
 	}
 
 	//Semantic analysis
@@ -1726,6 +1725,7 @@ RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression Multiplicati
 
 LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator LeftAssociatedFactorList:rightExpression
 							{:
+								//Semantic analysis
 								boolean error = false;
 								if (leftExpression == null) {
 									parser.report_internal_error("NULL left expression in production LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft LeftAssociatedFactorList", leftExpressionleft);
@@ -1752,6 +1752,20 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 								} else {
 									RESULT = SymbolTable.noObj;
 								}
+
+								//Code generation
+								if (!parser.isErrorFound()) {
+									switch (operator) {
+										case PLUS: {
+											Code.put(Code.add);
+											break;
+										}
+										case MINUS: {
+											Code.put(Code.sub);
+											break;
+										}
+									}
+								}
 							:}
 							|
 							LeftAssociatedFactorList:expression
@@ -1767,6 +1781,7 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 
 LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorLeft:operator Factor:factor
 								{:
+									//Semantic analysis
 									boolean error = false;
 									if (leftExpression == null) {
 										parser.report_internal_error("NULL right left expression in production LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor", factorleft);
@@ -1792,6 +1807,24 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplicat
 										RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + factor.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
+									}
+
+									//Code generation
+									if (!parser.isErrorFound()) {
+										switch (operator) {
+											case TIMES: {
+												Code.put(Code.mul);
+												break;
+											}
+											case SOLIDUS: {
+												Code.put(Code.div);
+												break;
+											}
+											case PERCENT: {
+												Code.put(Code.rem);
+												break;
+											}
+										}
 									}
 								:}
 								|
@@ -1884,7 +1917,6 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   				value = "\n";
 		   			}
 
-		   			parser.getLogger().info(value);
 		   			byte bytes[] = value.getBytes();
 		   			for (int i = 0; i < bytes.length; i++) {
 		   				Code.loadConst(Byte.toUnsignedInt(bytes[i]));
