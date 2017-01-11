@@ -39,7 +39,6 @@ program MJProgram
 				char a;
 				int e
 			{
-				a =;
 				for (i = 0; i < 3; i++) 
 					if ( x > y) {
 						for ( i = 2; i < 4; i++) {
@@ -49,7 +48,7 @@ program MJProgram
 						break;
 					}
 						
-							
+				a = return;				
 				print(c);
 				
 				fcall1(a, b, c, a + b);

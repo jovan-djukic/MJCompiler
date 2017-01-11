@@ -85,5 +85,7 @@ program MJProgram
 		parent.m(1, d);
 		parent.m(1, d);
 		{}
+		a = b;
+		a += b;
 	}
 }
