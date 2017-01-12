@@ -24,10 +24,13 @@ int g0, g1;
 		l0 += l0 * (l0 + l1) / (l0 += g0 - g1 *g0);
 		//after this l0 = - 60
 		
-		//l0 = -1;
-		
 		print(l0, 5);
 		print('\n');  
 		
+		l0 = - g1 + g0;
+		//l0 = -13
+		
+		print(l0, 5);
+		print('\n');  
 	}
 }
