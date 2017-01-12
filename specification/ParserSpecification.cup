@@ -1416,11 +1416,14 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 
 AssignStatement ::= 	Designator:designator AssignOperator:operator
 						{:
-							if (!EQUALS.equals(operator)) {
-								if (designator.getKind() != MyObj.Var) {
-									Code.put(Code.dup2);
+							//Code generation
+							if (!parser.isErrorFound()) {
+								if (!EQUALS.equals(operator)) {
+									if (designator.getKind() != MyObj.Var) {
+										Code.put(Code.dup2);
+									}
+									Code.load(designator);
 								}
-								Code.load(designator);
 							}
 						:}
 						Expression:expression
@@ -1642,6 +1645,14 @@ Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
 						parser.report_internal_error("NULL expression in production Expression ::= ExpressionPrefix RightAssociatedTermList", expressionleft);
 						RESULT = SymbolTable.noObj;
 					}
+
+					//Code generation
+					if (!parser.isErrorFound()) {
+						//Load array element or class field if it is not loaded
+						if (expression.getKind() == MyObj.Elem || expression.getKind() == MyObj.Fld) {
+							Code.load(expression);
+						}
+					}
 				:}
 				;
 
@@ -1656,7 +1667,19 @@ ExpressionPrefix ::=	MINUS
 					 	:}
 					 	;
 
-RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator RightAssociatedTermList:rightExpression
+RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator 
+							{:
+								//Code generation
+								//If there is no error
+								if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
+									if (!EQUALS.equals(operator) && leftExpression.getKind() != MyObj.Var) {
+										Code.put(Code.dup2);
+										Code.load(leftExpression);
+									}
+									//We do need to load variables because they are already loaded
+								}
+							:}
+							RightAssociatedTermList:rightExpression
 							{:
 								boolean error = false;
 								if (leftExpression == null) {
@@ -1689,6 +1712,33 @@ RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOpe
 								} else {
 									RESULT = SymbolTable.noObj;
 								}
+
+								//Code generation
+								if (!parser.isErrorFound()) {
+									//Load array element or class field beacuse it is not loaded
+									if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
+										Code.load(rightExpression);
+									}
+
+									switch (operator) {
+										case PLUS_EQUALS: {
+											Code.put(Code.add);
+											break;
+										}
+										case MINUS_EQUALS: {
+											Code.put(Code.sub);
+											break;
+										}
+									}
+
+									if (leftExpression.getKind() != MyObj.Var) {
+										Code.put(Code.dup_x2);
+									} else {
+										Code.put(Code.dup);
+									}
+
+									Code.store(leftExpression);
+								}
 							:}
 							|
 							RightAssociatedFactorList:expression
@@ -1702,8 +1752,21 @@ RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOpe
 							:}
 							;
 
-RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator RightAssociatedFactorList:rightExpression
+RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator 
 								{:
+									//Code generation
+									//If there is no error
+									if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
+										if (!EQUALS.equals(operator) && leftExpression.getKind() != MyObj.Var) {
+											Code.put(Code.dup2);
+											Code.load(leftExpression);
+										}
+										//We do need to load variables because they are already loaded
+									}
+								:}
+								RightAssociatedFactorList:rightExpression
+								{:
+									//Semantic analysis
 									boolean error = false;
 									if (leftExpression == null) {
 										parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList", rightExpressionleft);
@@ -1734,6 +1797,36 @@ RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression Multiplicati
 										RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
 									} else {
 										RESULT = SymbolTable.noObj;
+									}
+
+									//Code generation
+									if (!parser.isErrorFound()) {
+										//Load array element or class field beacuse it is not loaded
+										if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
+											Code.load(rightExpression);
+										}
+
+										switch (operator) {
+											case TIMES_EQUALS: {
+												Code.put(Code.mul);
+												break;
+											}
+											case SOLIDUS_EQUALS: {
+												Code.put(Code.div);
+												break;
+											}
+											case PERCENT_EQUALS: {
+												Code.put(Code.rem);
+												break;
+											}
+										}
+										if (leftExpression.getKind() != MyObj.Var) {
+											Code.put(Code.dup_x2);
+										} else {
+											Code.put(Code.dup);
+										}
+
+										Code.store(leftExpression);
 									}
 								:}
 								|
@@ -1780,6 +1873,11 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 
 								//Code generation
 								if (!parser.isErrorFound()) {
+									//Load array element or class field if it is not laoded
+									if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
+										Code.load(rightExpression);
+									}
+
 									switch (operator) {
 										case PLUS: {
 											Code.put(Code.add);
@@ -1836,6 +1934,11 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplicat
 
 									//Code generation
 									if (!parser.isErrorFound()) {
+										//We did not load array element or class field beacuse of the combined operators
+										if (factor.getKind() == MyObj.Elem || factor.getKind() == MyObj.Fld) {
+											Code.load(factor);
+										}
+
 										switch (operator) {
 											case TIMES: {
 												Code.put(Code.mul);
@@ -1908,14 +2011,16 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 							name += ")";
 						}
 					}
-					RESULT = new MyObj(designator.getKind(), name, designator.getType());
+					RESULT = new MyObj(designator.getKind(), name, designator.getType(), designator.getAdr(), designator.getLevel());
 				} else {
 					RESULT = SymbolTable.noObj;
 				}
 
 				//Code generation
 				if (!parser.isErrorFound()) {
-					Code.load(designator);
+					if (designator.getKind() == MyObj.Var) {
+						Code.load(designator);
+					}
 				}
 			:}
 		   	|
