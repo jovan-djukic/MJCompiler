@@ -1652,6 +1652,10 @@ Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
 						if (expression.getKind() == MyObj.Elem || expression.getKind() == MyObj.Fld) {
 							Code.load(expression);
 						}
+
+						if(isNegated.booleanValue()) {
+							Code.put(Code.neg);
+						}
 					}
 				:}
 				;
@@ -2033,8 +2037,6 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		if (!parser.isErrorFound()) {
 		   			Code.load(RESULT);
 		   		}
-		   	
-		   		parser.getLogger().info("VALUE IS: " + RESULT.getAdr());
 		   	:}
 		   	|
 		   	CHARACTER_CONSTANT:value 
