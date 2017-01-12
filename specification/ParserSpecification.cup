@@ -1196,8 +1196,10 @@ MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
 					 		}
 					 	:}
 					 	|
+					 	//MatchedStatement ::= READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON
 					 	READ LEFT_PARENTHESIS Designator:designator RIGHT_PARENTHESIS SEMICOLON
 					 	{:
+					 		//Semantic analysis
 					 		if (designator == null) {
 					 			parser.report_internal_error("NULL designator in production MatchedStatement ::= READ LEFT_PARENTHESIS Designator RIGHT_PARENTHESIS SEMICOLON", designatorleft);
 					 		} else if (!designator.equals(SymbolTable.noObj)) {
@@ -1207,10 +1209,23 @@ MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
 					 				parser.report_semantic_error("Designator " + designator.getName() +" must be of int, char of bool type", designatorleft);
 					 			}
 					 		}
+
+					 		//Code generation
+					 		if (!parser.isErrorFound()) {
+					 			if (designator.getType().equals(SymbolTable.charType)) {
+					 				Code.put(Code.bread);
+					 			} else {
+					 				Code.put(Code.read);
+					 			}
+
+					 			Code.store(designator);
+					 		}
 					 	:}
 					 	|
+					 	//MatchedStatement ::= LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
 					 	PRINT LEFT_PARENTHESIS PrintParameters RIGHT_PARENTHESIS SEMICOLON
 					 	|
+					 	//MatchedStatement ::= LEFT_BRACE StatementList RIGHT_BRACE
 					 	LEFT_BRACE
 					 		StatementList
 					 	RIGHT_BRACE
@@ -1219,7 +1234,8 @@ MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
 					 	:}			
 					 	;
 
-ReturnValue ::= Expression:expression
+ReturnValue ::= //ReturnValue ::= Expression
+				Expression:expression
 				{:
 					if (expression == null) {
 						parser.report_internal_error("NULL expression in production ReturnValue ::= Expression", expressionleft);
@@ -1229,13 +1245,15 @@ ReturnValue ::= Expression:expression
 					}
 				:}
 				|
+				//ReturnValue ::=
 				/* epsilon */
 				{:
 					RESULT = SymbolTable.voidObject;
 				:}
 				;
 				
-PrintParameters ::=	Expression:expression
+PrintParameters ::=	//PrintParameters ::= Expression
+					Expression:expression
 					{:
 						//Semantic analysis
 						if (expression == null) {
@@ -1257,6 +1275,7 @@ PrintParameters ::=	Expression:expression
 						}
 					:}
 					|
+					//PrintParameters ::= Expression COMA NUMERICAL_CONSTANT
 					Expression:expression COMA NUMERICAL_CONSTANT:value
 					{:
 						//Semantic analysis
@@ -1280,29 +1299,37 @@ PrintParameters ::=	Expression:expression
 					:}
 					;
 
-ForInitialStatement ::= DesignatorStatement
+ForInitialStatement ::=	//ForInitialStatement ::= DesignatorStatement
+						DesignatorStatement
 						|
+						//ForInitialStatement ::= error
 						error {: printSyntaxErrorDescription("Incorrect initial for loop statement"); :}
 						|
 						/* epsilon */
 						;
 						 
-ForCondition ::=	Condition
+ForCondition ::=	//ForCondition ::= Condition
+					Condition
 				 	|
+				 	//ForCondition ::= error
 				 	error {: printSyntaxErrorDescription("Incorrect for condition statement"); :}
 				 	|
 				 	/* epsilon */
 		  		 	;
 		  		 
-ForPostStatement ::= DesignatorStatement
-					 |
-					 error {: printSyntaxErrorDescription("Incorrect post for loop statement"); :}
-					 |
-					 /* epsilon */
-					 ;
+ForPostStatement ::=	//ForPostStatement ::= DesignatorStatement
+						DesignatorStatement
+					 	|
+					 	//ForPostStatement ::= error
+					 	error {: printSyntaxErrorDescription("Incorrect post for loop statement"); :}
+					 	|
+					 	/* epsilon */
+					 	;
 
-DesignatorStatement ::=	AssignStatement
+DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
+						AssignStatement
 						|
+						//DesignatorStatement ::= Designator MethodCall
 						Designator:designator MethodCall:parameterList
 						{:
 							if (designator == null) {
@@ -1338,6 +1365,7 @@ DesignatorStatement ::=	AssignStatement
 							}
 						:}
 						|
+						//DesignatorStatement ::= Designator INCREMENT
 						Designator:designator INCREMENT
 						{:
 							//Semantic analysis
@@ -1366,6 +1394,7 @@ DesignatorStatement ::=	AssignStatement
 							}
 						:}
 						|
+						//DesignatorStatement ::= Designator DECREMENT
 						Designator:designator DECREMENT
 						{:
 							if (designator == null) {
@@ -1394,7 +1423,8 @@ DesignatorStatement ::=	AssignStatement
 						:}
 						;
 
-MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
+MethodCall ::=	//MethodCall ::= LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS
+				LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	{:
 			 		incrementCurrentMethodCallCount();
 
@@ -1406,6 +1436,7 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 		}
 			 	:}
 			 	|
+			 	//MethodCall ::= LEFT_PARENTHESIS error RIGHT_PARENTHESIS
 			 	LEFT_PARENTHESIS error RIGHT_PARENTHESIS 
 			 	{: 
 			 		printSyntaxErrorDescription("Incorrect actual parameter list syntax"); 
@@ -1414,7 +1445,8 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	:}
 			 	;
 
-AssignStatement ::= 	Designator:designator AssignOperator:operator
+AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
+						Designator:designator AssignOperator:operator
 						{:
 							//Code generation
 							if (!parser.isErrorFound()) {
@@ -1476,6 +1508,7 @@ AssignStatement ::= 	Designator:designator AssignOperator:operator
 							}
 						:} 
 						|
+						//AssignStatement ::= Designator error
 						Designator error 
 						{: 
 							printSyntaxErrorDescription("Incorrect assign operation syntax"); 
