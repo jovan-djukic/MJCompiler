@@ -1,0 +1,80 @@
+program Array
+const int size = 5;
+int gia[];
+{
+	void main() 
+		int lia[];
+		char message[];
+	{
+		lia = new int[size];
+		lia[0] = 0;
+		lia[1] = 1;
+		lia[2] = 2;
+		lia[3] = 3;
+		lia[4] = 4;
+		
+		print(lia[0], 5);
+		print(lia[1], 5);
+		print(lia[2], 5);
+		print(lia[3], 5);
+		print(lia[4], 5);
+		
+		print('\n');
+		
+		gia = new int[size];
+		gia[0] = lia[0] += 1;
+		gia[1] = lia[1] += 1;
+		gia[2] = lia[2] += 1;
+		gia[3] = lia[3] += 1;
+		gia[4] = lia[4] += 1;
+		
+		print(gia[0], 5);
+		print(gia[1], 5);
+		print(gia[2], 5);
+		print(gia[3], 5);
+		print(gia[4], 5);
+		
+		print('\n');
+		
+		gia[0] += 1;
+		gia[1] += 2;
+		gia[2] += 3;
+		gia[3] += 4;
+		gia[4] += 5;
+		
+		print(gia[0], 5);
+		print(gia[1], 5);
+		print(gia[2], 5);
+		print(gia[3], 5);
+		print(gia[4], 5);
+		
+		gia[0] += gia[0] + lia[0] * gia[0] / lia[0];
+		gia[1] += gia[1] + lia[1] * gia[1] / lia[1];
+		gia[2] += gia[2] + lia[2] * gia[2] / lia[2];
+		gia[3] += gia[3] + lia[3] * gia[3] / lia[3];
+		gia[4] += gia[4] + lia[4] * gia[4] / lia[4];
+		
+		print('\n');
+		
+		print(gia[0], 5);
+		print(gia[1], 5);
+		print(gia[2], 5);
+		print(gia[3], 5);
+		print(gia[4], 5);
+	
+		message = new char[size];
+		message[0] = 'H';
+		message[1] = 'e';
+		message[2] = 'l';
+		message[3] = 'l';
+		message[4] = 'o';
+		
+		print('\n');
+	
+		print(message[0]);
+		print(message[1]);
+		print(message[2]);
+		print(message[3]);
+		print(message[4]);
+	}
+}
