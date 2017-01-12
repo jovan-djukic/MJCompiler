@@ -1632,7 +1632,8 @@ ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expressi
 					:}
 					;
 
-Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
+Expression ::=	//Expression ::= ExpressionPrefix RightAssociatedTermList
+				ExpressionPrefix:isNegated RightAssociatedTermList:expression
 				{:
 					if (expression != null) {
 						if (isNegated.booleanValue() && !expression.getType().equals(SymbolTable.intType)) {
@@ -1660,23 +1661,25 @@ Expression ::=	ExpressionPrefix:isNegated RightAssociatedTermList:expression
 				:}
 				;
 
-ExpressionPrefix ::=	MINUS
+ExpressionPrefix ::=	//ExpressionPrefix ::= MINUS
+						MINUS
 						{:
 							RESULT = true;
 						:}
 						|
+						//ExpressionPrefix ::=
 					 	/* epsilon */
 					 	{:
 					 		RESULT = false;
 					 	:}
 					 	;
 
-RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator 
+RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorList AdditionOperatorRight RightAssociatedAssociatedTermList	
+							RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator 
 							{:
 								//Code generation
-								//If there is no error
 								if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
-									if (!EQUALS.equals(operator) && leftExpression.getKind() != MyObj.Var) {
+									if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
 										Code.put(Code.dup2);
 										Code.load(leftExpression);
 									}
@@ -1745,6 +1748,7 @@ RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOpe
 								}
 							:}
 							|
+							//RightAssociatedTermList ::= RightAssociatedFactorList
 							RightAssociatedFactorList:expression
 							{:
 								if (expression != null) {
@@ -1756,12 +1760,12 @@ RightAssociatedTermList ::=	RightAssociatedFactorList:leftExpression AdditionOpe
 							:}
 							;
 
-RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator 
+RightAssociatedFactorList ::=	//RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList
+								LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator 
 								{:
 									//Code generation
-									//If there is no error
 									if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
-										if (!EQUALS.equals(operator) && leftExpression.getKind() != MyObj.Var) {
+										if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
 											Code.put(Code.dup2);
 											Code.load(leftExpression);
 										}
@@ -1834,6 +1838,7 @@ RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression Multiplicati
 									}
 								:}
 								|
+								//RightAssociatedFactorList ::= LeftAssociatedTermList
 								LeftAssociatedTermList:expression
 								{:
 									if (expression != null) {
@@ -1845,7 +1850,19 @@ RightAssociatedFactorList ::=	LeftAssociatedTermList:leftExpression Multiplicati
 								:}
 								;
 
-LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperatorLeft:operator LeftAssociatedFactorList:rightExpression
+LeftAssociatedTermList ::=	//LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft LeftAssociatedFactorList
+							LeftAssociatedTermList:leftExpression 
+							{:
+								//Code generation
+								if (!parser.isErrorFound()) {
+									//We did not load array element or class field beacuse of the combined operators
+									//This will be true only for the first element of expression if it is an array element or class field
+									if (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld) {
+										Code.load(leftExpression);
+									}
+								}
+							:}
+							AdditionOperatorLeft:operator LeftAssociatedFactorList:rightExpression
 							{:
 								//Semantic analysis
 								boolean error = false;
@@ -1877,7 +1894,7 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 
 								//Code generation
 								if (!parser.isErrorFound()) {
-									//Load array element or class field if it is not laoded
+									//We did not load array element or class field beacuse of the combined operators
 									if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
 										Code.load(rightExpression);
 									}
@@ -1895,6 +1912,7 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 								}
 							:}
 							|
+							//LeftAssociatedTermList ::= LeftAssociatedFactorList
 							LeftAssociatedFactorList:expression
 							{:
 								if (expression != null) {
@@ -1906,7 +1924,19 @@ LeftAssociatedTermList ::=	LeftAssociatedTermList:leftExpression AdditionOperato
 							:}
 							;
 
-LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression MultiplicationOperatorLeft:operator Factor:factor
+LeftAssociatedFactorList ::=	//LeftAssociatedFactorList ::= LeftAssociatedFactorList MultiplicationOperatorLeft Factor
+								LeftAssociatedFactorList:leftExpression 
+								{:
+									//Code generation
+									if (!parser.isErrorFound()) {
+										//We did not load array element or class field beacuse of the combined operators
+										//This will be true only for the first element of expression if it is an array element or class field
+										if (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld) {
+											Code.load(leftExpression);
+										}
+									}
+								:}
+								MultiplicationOperatorLeft:operator Factor:factor
 								{:
 									//Semantic analysis
 									boolean error = false;
@@ -1960,6 +1990,7 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplicat
 									}
 								:}
 								|
+								//LeftAssociatedFactorList ::= Factor
 								Factor:factor
 								{:
 									if (factor != null) {
@@ -1971,7 +2002,8 @@ LeftAssociatedFactorList ::=	LeftAssociatedFactorList:leftExpression Multiplicat
 								:}
 								;
 
-Factor ::=	Designator:designator OptionalParameters:parameterList
+Factor ::=	//Factor ::= Designator OptionalParameters
+			Designator:designator OptionalParameters:parameterList
 			{:
 				//Semantic analysis
 				if (designator == null) {
@@ -2022,12 +2054,13 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 
 				//Code generation
 				if (!parser.isErrorFound()) {
-					if (designator.getKind() == MyObj.Var) {
+					if (designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Con) {
 						Code.load(designator);
 					}
 				}
 			:}
 		   	|
+		   	//Factor ::= NUMERICAL_CONSTANT
 		   	NUMERICAL_CONSTANT:value 
 		   	{: 
 		   		//Semantic analysis
@@ -2039,6 +2072,7 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		}
 		   	:}
 		   	|
+		   	//Factor ::= CHARACTER_CONSTANT
 		   	CHARACTER_CONSTANT:value 
 		   	{: 
 		   		//Semantic analysis
@@ -2058,6 +2092,7 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		}
 		   	:}
 		   	|
+		   	//Factor ::= BOOLEAN_CONSTANT
 		   	BOOLEAN_CONSTANT:value 
 		   	{: 
 		   		//Semantic analysis
@@ -2069,8 +2104,10 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		}
 		   	:}
 		   	|
+		   	//Factor ::= NEW Type ArraySize
 		   	NEW Type:typeObject ArraySize:isArray
 		   	{:
+		   		//Semantic analysis
 		   		if (!isArray.booleanValue() && typeObject.getType().getKind() != MyStruct.Class) {
 		   			parser.report_semantic_error("Cannot instantiate a object of non class type " + typeObject.getName(), typeObjectleft);
 		   			RESULT = SymbolTable.noObj;
@@ -2081,8 +2118,27 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   				RESULT = typeObject;
 		   			}
 		   		}
+
+		   		//Code generation
+		   		if (!parser.isErrorFound()) {
+		   			if (isArray.booleanValue()) {
+		   				Code.put(Code.newarray);
+		   			} else {
+		   				Code.put(Code.new_);
+		   			}
+
+		   			//if char type allocate byte array
+		   			if (typeObject.getType().equals(SymbolTable.charType)) {
+		   				Code.put(0);
+		   			} else {
+		   				Code.put(1);
+		   			}
+
+		   			//Adjust size for array of classes
+		   		}
 		   	:}
 		   	|
+		   	//Factor ::= LEFT_PARENTHESIS Expression RIGHT_PARENTHESIS
 		   	LEFT_PARENTHESIS Expression:expression RIGHT_PARENTHESIS
 		   	{:
 		   		if (expression == null) {
@@ -2094,7 +2150,8 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   	:}
 		   	;
 		   
-OptionalParameters ::= 	MethodCall:parameterList
+OptionalParameters ::= 	//OptionalParameters ::= MethodCall
+						MethodCall:parameterList
 						{:
 							if(parameterList == null) { 
 								parser.report_internal_error("NULL parameter list for production OptionalParameters ::= MethodCall", parameterListleft);
@@ -2104,24 +2161,28 @@ OptionalParameters ::= 	MethodCall:parameterList
 							}
 						:}
 					   	|
+					   	//OptionalParameters ::=
 					   	/* epsilon */
 					   	{:
 					   		RESULT = null;
 					   	:}
 					   	;		   
 		   						  
-ArraySize ::=	ArrayIndexer
+ArraySize ::=	//ArraySize ::= ArrayIndexer
+				ArrayIndexer
 			  	{: 
 			  		RESULT = true;
 			  	:}
 			  	|
+			  	//ArraySize ::=
 			  	/* epsilon */
 			  	{:
 			  		RESULT = false;
 			  	:}
 			  	;
 	   
-ArrayIndexer ::=	LEFT_BRACKET Expression:expression RIGHT_BRACKET
+ArrayIndexer ::=	//ArrayIndexer ::= LEFT_BRACKET Expression RIGHT_BRACKET
+					LEFT_BRACKET Expression:expression RIGHT_BRACKET
 					{:
 						if (expression != null) {
 							if (!expression.getType().equals(SymbolTable.intType)) {
@@ -2132,10 +2193,12 @@ ArrayIndexer ::=	LEFT_BRACKET Expression:expression RIGHT_BRACKET
 						}
 					:}
 					|
+					//ArrayIndexer ::= LEFT_BRACKET error RIGHT_BRACKET
 					LEFT_BRACKET error RIGHT_BRACKET {: printSyntaxErrorDescription("Incorrect expression for array index"); :}
 					;
 					
-Designator ::=	Designator:designator DOT IDENTIFIER:name
+Designator ::=	//Designator ::= Designator DOT IDENTIFIER
+				Designator:designator DOT IDENTIFIER:name
 				{:
 					//Semantic analysis
 					if (designator == null) {
@@ -2166,7 +2229,15 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 					}
 				:}
 				|
-				Designator:designator ArrayIndexer
+				//Designator ::= Designator ArrayIndexer
+				Designator:designator 
+				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						Code.load(designator);
+					}
+				:}
+				ArrayIndexer
 				{:
 					//Semantic analysis
 					if (designator == null) {
@@ -2187,6 +2258,7 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 					}
 				:}
 				|
+				//Designator ::= IDENTIFIER
 				IDENTIFIER:name 
 				{:
 					//Semantic analysis
@@ -2208,56 +2280,75 @@ Designator ::=	Designator:designator DOT IDENTIFIER:name
 				:}
 				;
 			   
-AssignOperator ::= 	EQUALS
+AssignOperator ::= 	//AssignOperator ::= EQUALS
+					EQUALS
 					{:
 						RESULT = EQUALS;
 					:}
 					|
+					//AssignOperator ::= AdditionOperatorRight
 					AdditionOperatorRight:operator
 					{:
 						RESULT = operator;
 					:}
 					|
+					//AssignOperator ::= AdditionOperatorRight
 					MultiplicationOperatorRight:operator
 					{:
 						RESULT = operator;
 					:}
 					;
 
-RelationalOperator ::= EQUAL {: RESULT = EQUAL; :}
-					   |
-					   NOT_EQUAL {: RESULT = NOT_EQUAL; :}
-					   |
-					   GREATER_THAN {: RESULT = GREATER_THAN; :}
-					   |
-					   GREATER_OR_EQUAL_THAN {: RESULT = GREATER_OR_EQUAL_THAN; :}
-					   |
-					   LESS_THAN {: RESULT = LESS_THAN; :}
-					   |
-					   LESS_OR_EQUAL_THAN {: RESULT = LESS_OR_EQUAL_THAN; :}
-					   ;  
+RelationalOperator ::= 	//RelationalOperator ::= EQUAL
+						EQUAL {: RESULT = EQUAL; :}
+					   	|
+					   	//RelationalOperator ::= NOT_EQUAL
+					   	NOT_EQUAL {: RESULT = NOT_EQUAL; :}
+					   	|
+					   	//RelationalOperator ::= GREATER_THAN
+					   	GREATER_THAN {: RESULT = GREATER_THAN; :}
+					   	|
+					   	//RelationalOperator ::= GREATER_OR_EQUAL_THAN
+					   	GREATER_OR_EQUAL_THAN {: RESULT = GREATER_OR_EQUAL_THAN; :}
+					   	|
+					   	//RelationalOperator ::= LESS_THAN
+					   	LESS_THAN {: RESULT = LESS_THAN; :}
+					   	|
+					   	//RelationalOperator ::= LESS_OR_EQUAL_THAN
+					   	LESS_OR_EQUAL_THAN {: RESULT = LESS_OR_EQUAL_THAN; :}
+					   	;  
 					 
-AdditionOperatorLeft ::= PLUS {: RESULT = PLUS; :}
-						 |
-						 MINUS {: RESULT = MINUS; :}
-						 ;					  
+AdditionOperatorLeft ::=	//AdditionOperatorLeft ::= PLUS
+							PLUS {: RESULT = PLUS; :}
+						 	|
+						 	//AdditionOperatorLeft ::= MINUS
+						 	MINUS {: RESULT = MINUS; :}
+						 	;					  
 					   
-AdditionOperatorRight ::= PLUS_EQUALS {: RESULT = PLUS_EQUALS; :}
-						  |
-						  MINUS_EQUALS {: RESULT = MINUS_EQUALS; :}
-						  ;
+AdditionOperatorRight ::= 	//AdditionOperatorRight ::= PLUS_EQUALS
+							PLUS_EQUALS {: RESULT = PLUS_EQUALS; :}
+						  	|
+						  	//AdditionOperatorRight ::= MINUS_EQUALS
+						  	MINUS_EQUALS {: RESULT = MINUS_EQUALS; :}
+						  	;
 						
-MultiplicationOperatorLeft ::= TIMES {: RESULT = TIMES; :}
-							   |
-							   SOLIDUS {: RESULT = SOLIDUS; :}
-							   |													   
-							   PERCENT {: RESULT = PERCENT; :}
-							   ;
+MultiplicationOperatorLeft ::= 	//MultiplicationOperatorLeft ::= TIMES
+								TIMES {: RESULT = TIMES; :}
+							   	|
+							   	//MultiplicationOperatorLeft ::= SOLIDUS
+							   	SOLIDUS {: RESULT = SOLIDUS; :}
+							   	|
+							   	//MultiplicationOperatorRight ::= PERCENT													   
+							   	PERCENT {: RESULT = PERCENT; :}
+							   	;
 								
-MultiplicationOperatorRight ::= TIMES_EQUALS {: RESULT = TIMES_EQUALS; :}
+MultiplicationOperatorRight ::= //MultiplicationOperatorRight ::= TIMES_EQUALS
+								TIMES_EQUALS {: RESULT = TIMES_EQUALS; :}
 							    |
+							    //MultiplicationOperatorRight ::= SOLIDUS_EQUALS
 							    SOLIDUS_EQUALS {: RESULT = SOLIDUS_EQUALS; :}
 							    |
+							    //MultiplicationOperatorRight ::= PERCENT_EQUALS
 							    PERCENT_EQUALS {: RESULT = PERCENT_EQUALS; :}
 							    ;
 						   

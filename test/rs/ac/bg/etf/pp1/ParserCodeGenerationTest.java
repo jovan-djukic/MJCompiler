@@ -75,7 +75,7 @@ public class ParserCodeGenerationTest {
 						logger.info("RUNNING FILE: " + testFiles[i].getPath());
 						logger.info("======================================================================");
 						
-						Run.main(new String[] { "output/MJProgram"});
+						Run.main(new String[] { "output/MJProgram" });
 						System.out.println();
 						
 						logger.info("======================================================================");
