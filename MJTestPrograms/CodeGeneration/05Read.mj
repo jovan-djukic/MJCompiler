@@ -1,0 +1,22 @@
+program Read
+	int gi0, gi1, gia0[];
+	char gc0;
+	
+{
+	void main() {
+		read(gc0);
+		print(gc0);
+		print('\n');
+		
+		read(gi0);
+		read(gi1);
+		print(gi0 + gi1);
+		print('\n');
+		
+		gia0 = new int[2];
+		read(gia0[0]);
+		read(gia0[1]);
+		print(gia0[0] + gia0[1], 5);
+		print('\n');
+	}
+}
