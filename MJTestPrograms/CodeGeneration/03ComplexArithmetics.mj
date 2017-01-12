@@ -1,0 +1,33 @@
+program ComplexArithemtics
+
+int g0, g1;
+
+{
+	void main() 
+		int l0, l1;
+	{
+		g0 = 1;
+		g1 = 2;
+		l0 = 3;
+		l1 = 4;
+		
+		g0 += g1 += g1 *= 2;
+		//after this g0 = 7 and g1 = 6
+		
+		
+		print (g0, 5);
+		print('\n');
+		
+		print (g1, 5);
+		print('\n');
+		
+		l0 += l0 * (l0 + l1) / (l0 += g0 - g1 *g0);
+		//after this l0 = - 60
+		
+		//l0 = -1;
+		
+		print(l0, 5);
+		print('\n');  
+		
+	}
+}
