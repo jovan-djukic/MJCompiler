@@ -43,7 +43,7 @@ int gi;
 		
 		print(li, 5);
 		print('\n');
-		
+				
 		li /= gi;
 		
 		print(li, 5);
