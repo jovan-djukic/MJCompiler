@@ -1414,7 +1414,16 @@ MethodCall ::=	LEFT_PARENTHESIS ActualParameters RIGHT_PARENTHESIS:token
 			 	:}
 			 	;
 
-AssignStatement ::= 	Designator:designator AssignOperator:operator Expression:expression
+AssignStatement ::= 	Designator:designator AssignOperator:operator
+						{:
+							if (!EQUALS.equals(operator)) {
+								if (designator.getKind() != MyObj.Var) {
+									Code.put(Code.dup2);
+								}
+								Code.load(designator);
+							}
+						:}
+						Expression:expression
 						{:
 							//Semantic analysis
 							if (designator == null) {
@@ -1435,6 +1444,31 @@ AssignStatement ::= 	Designator:designator AssignOperator:operator Expression:ex
 
 							//Code generation
 							if (!parser.isErrorFound()) {
+								if (!EQUALS.equals(operator)) {
+									switch (operator) {
+										case PLUS_EQUALS: {
+											Code.put(Code.add);
+											break;
+										}
+										case MINUS_EQUALS: {
+											Code.put(Code.sub);
+											break;
+										}
+										case TIMES_EQUALS: {
+											Code.put(Code.mul);
+											break;
+										}
+										case SOLIDUS_EQUALS: {
+											Code.put(Code.div);
+											break;
+										}
+										case PERCENT_EQUALS: {
+											Code.put(Code.rem);
+											break;
+										}
+									}
+								}
+
 								Code.store(designator);
 							}
 						:} 
