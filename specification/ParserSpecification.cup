@@ -2033,6 +2033,8 @@ Factor ::=	Designator:designator OptionalParameters:parameterList
 		   		if (!parser.isErrorFound()) {
 		   			Code.load(RESULT);
 		   		}
+		   	
+		   		parser.getLogger().info("VALUE IS: " + RESULT.getAdr());
 		   	:}
 		   	|
 		   	CHARACTER_CONSTANT:value 
