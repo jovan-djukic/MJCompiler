@@ -265,12 +265,13 @@ action code {:
 	private int classVariablePosition = 0;
 
 	private Stack<List<Obj>> actualParametersStack = new Stack<>();
+
 	private Stack<List<Integer>>  forLoopBreakStack = new Stack<>(), forLoopContinueStack = new Stack<>();
 
 	private boolean returnFound = false;
 
 	//Stacks of integer lists for jumps and falseJumps, both for if and for loop statements
-	private Stack<List<Integer>> jumps = new Stack<>(), falseJumps = new Stack<>() , trueJumps = new Stack<>();
+	private Stack<List<Integer>> falseJumps = new Stack<>() , trueJumps = new Stack<>();
 :}
 
 
@@ -298,14 +299,14 @@ nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, Prin
 
 nonterminal IfHeader, ForHeader;
 
-nonterminal ForInitialStatement, ForCondition, ForPostStatement;
+nonterminal ForCondition, ForPostStatement;
 
 nonterminal DesignatorStatement, ActualParameters;
 
 nonterminal ArrayIndexer;
 
 //SR conflict for IF
-nonterminal Else;
+nonterminal Integer Else;
 
 //Semantic analysis non terminals
 //Basic non terminals
@@ -359,6 +360,9 @@ nonterminal Obj ReturnValue;
 
 //condition
 nonterminal Obj Condition, ConditionTerm, ConditionFact;
+
+//For loop
+nonterminal Integer ForInitialStatement;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -1111,7 +1115,6 @@ IfHeader ::=	//IfHeader ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				{:
 					//Code generation
 					if (!parser.isErrorFound()) {
-						jumps.push(new ArrayList<>());
 						trueJumps.push(new ArrayList<>());
 						falseJumps.push(new ArrayList<>());
 					}
@@ -1140,12 +1143,36 @@ IfHeader ::=	//IfHeader ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				IF LEFT_PARENTHESIS RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
 				;
 			  
-ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+ForHeader ::=	//ForHeader ::= FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS 
+				FOR LEFT_PARENTHESIS ForInitialStatement:conditionAddress 
 				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						trueJumps.push(new ArrayList<>());
+						falseJumps.push(new ArrayList<>());
+					}
+				:}
+				SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						//put jump to condition check
+						MyCode.putJump(conditionAddress.intValue());
+
+						//fix all true jumps
+						List<Integer> jumpsToFix = trueJumps.pop();
+						for (Integer address : jumpsToFix) {
+							MyCode.fixup(address.intValue());
+						}
+
+						//fix unconditional jump after condition, there should be only one
+											
+					}
 					forLoopBreakStack.push(new ArrayList<>());
 					forLoopContinueStack.push(new ArrayList<>());
 				:}
 				|
+				//ForHeader ::= FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS
 				FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS
 				{:
 					printSyntaxErrorDescription("Incorrect for loop inner statements");
@@ -1171,15 +1198,12 @@ UnmatchedStatement ::=	//UnmatchedStatement ::= IfHeader Statement
 						:}
 					  	|
 					  	//UnmatchedStatement ::= IfHeader MatchedStatement Else UnmatchedStatement
-					  	IfHeader MatchedStatement Else UnmatchedStatement
+					  	IfHeader MatchedStatement Else:elseJumpAdress UnmatchedStatement
 					  	{:
 					  		//Code generation
 					  		if (!parser.isErrorFound()) {
-					  			//Fix all false jumps
-								List<Integer> jumpsToFix = jumps.pop();
-								for (Integer address : jumpsToFix) {
-									MyCode.fixup(address);
-								}	
+					  			//Fix uncoditional jump at the end of then
+								MyCode.fixup(elseJumpAdress.intValue());	
 					  		}
 					  	:}
 					  	| /* umatched for */
@@ -1199,15 +1223,12 @@ UnmatchedStatement ::=	//UnmatchedStatement ::= IfHeader Statement
 					   	;
 					 
 MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else MatchedStatement
-						IfHeader MatchedStatement Else MatchedStatement
+						IfHeader MatchedStatement Else:elseJumpAdress MatchedStatement
 						{:
 					  		//Code generation
 					  		if (!parser.isErrorFound()) {
 					  			//Fix all false jumps
-								List<Integer> jumpsToFix = jumps.pop();
-								for (Integer address : jumpsToFix) {
-									MyCode.fixup(address);
-								}	
+					  			MyCode.fixup(elseJumpAdress.intValue());
 					  		}
 					  	:}
 						| 
@@ -1231,8 +1252,6 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 						{:
 							if (forLoopBreakStack.isEmpty()) {
 								parser.report_semantic_error("BREAK statement found outside of loop", tokenleft);
-							} else {
-								//Add the address of break statement
 							}
 						:}
 						|
@@ -1240,9 +1259,7 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 						{:
 							if (forLoopContinueStack.isEmpty()) {
 								parser.report_semantic_error("CONTINUE statement found outside of loop", tokenleft);
-							} else {
-								//Add the address of continue statement
-							}
+							} 
 						:}
 					 	|
 					 	RETURN ReturnValue:value SEMICOLON
@@ -1310,7 +1327,7 @@ Else ::=	//Else ::= ELSE
 				if (!parser.isErrorFound()) {
 					//Put unconditional jump for skiping else statement
 					MyCode.putJump(0);
-					jumps.peek().add(MyCode.pc - 2);
+					RESULT = new Integer(MyCode.pc - 2);
 
 					//Fix all false jumps
 					List<Integer> jumpsToFix = falseJumps.pop();
@@ -1388,20 +1405,43 @@ PrintParameters ::=	//PrintParameters ::= Expression
 
 ForInitialStatement ::=	//ForInitialStatement ::= DesignatorStatement
 						DesignatorStatement
+						{:
+							RESULT = new Integer(MyCode.pc);
+						:}
 						|
 						//ForInitialStatement ::= error
 						error {: printSyntaxErrorDescription("Incorrect initial for loop statement"); :}
 						|
 						/* epsilon */
+						{:
+							RESULT = new Integer(MyCode.pc);
+						:}
 						;
 						 
 ForCondition ::=	//ForCondition ::= Condition
-					Condition
+					Condition:condition
+					{:
+						//Code generation
+						if (!parser.isErrorFound()) {
+							MyCode.putFalseJump(condition.getAdr(), 0);
+							falseJumps.peek().add(MyCode.pc - 2);
+
+							//Put unconditional jump to body
+							MyCode.putJump(0);
+						}
+					:}
 				 	|
 				 	//ForCondition ::= error
 				 	error {: printSyntaxErrorDescription("Incorrect for condition statement"); :}
 				 	|
+				 	//ForCondition ::=
 				 	/* epsilon */
+				 	{:
+				 		if (!parser.isErrorFound()) {
+				 			//Put unconditional jump to body
+							MyCode.putJump(0);
+				 		}
+				 	:}
 		  		 	;
 		  		 
 ForPostStatement ::=	//ForPostStatement ::= DesignatorStatement
