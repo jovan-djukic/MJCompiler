@@ -268,6 +268,9 @@ action code {:
 	private Stack<List<Integer>>  forLoopBreakStack = new Stack<>(), forLoopContinueStack = new Stack<>();
 
 	private boolean returnFound = false;
+
+	//Stacks of integer lists for jumps and falseJumps, both for if and for loop statements
+	private Stack<List<Integer>> jumps = new Stack<>(), falseJumps = new Stack<>() , trueJumps = new Stack<>();
 :}
 
 
@@ -300,6 +303,9 @@ nonterminal ForInitialStatement, ForCondition, ForPostStatement;
 nonterminal DesignatorStatement, ActualParameters;
 
 nonterminal ArrayIndexer;
+
+//SR conflict for IF
+nonterminal Else;
 
 //Semantic analysis non terminals
 //Basic non terminals
@@ -368,7 +374,7 @@ Program ::= PROGRAM ProgramName:programObject
 				SymbolTable.closeScope();
 
 				if (!parser.isErrorFound()) {
-					Code.mainPc = main.getAdr();
+					MyCode.mainPc = main.getAdr();
 				}
 			:};
 
@@ -500,7 +506,7 @@ GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables
 									}
 
 									if(!parser.isErrorFound()) {
-										Code.dataSize += globalVariables.size();
+										MyCode.dataSize += globalVariables.size();
 									}
 								:}
 								|
@@ -774,8 +780,8 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LE
 							returnFound = false;
 
 							if(!parser.isErrorFound()) {
-								Code.put(Code.exit);
-								Code.put(Code.return_);
+								MyCode.put(MyCode.exit);
+								MyCode.put(MyCode.return_);
 							}
 						:}
 						;
@@ -785,7 +791,7 @@ MethodVariableDeclarationListWithAction ::=	MethodVariableDeclarationList
 												//Code generation
 												if (!parser.isErrorFound()) {
 													//Second parameter for enter instruction
-													Code.put(SymbolTable.currentScope.getnVars());
+													MyCode.put(SymbolTable.currentScope.getnVars());
 												}
 											:}
 											;
@@ -882,9 +888,9 @@ MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:ide
 						
 							//Code generation
 							if(!parser.isErrorFound()) {
-								currentMethod.setAdr(Code.pc);
-								Code.put(Code.enter);
-								Code.put(formalParameterList.size());
+								currentMethod.setAdr(MyCode.pc);
+								MyCode.put(MyCode.enter);
+								MyCode.put(formalParameterList.size());
 							}
 						:}
 						;
@@ -1100,10 +1106,37 @@ Statement ::= MatchedStatement
 			  UnmatchedStatement
 			  ;
 
-IfHeader ::=	IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+IfHeader ::=	//IfHeader ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
+				IF LEFT_PARENTHESIS
+				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						jumps.push(new ArrayList<>());
+						trueJumps.push(new ArrayList<>());
+						falseJumps.push(new ArrayList<>());
+					}
+				:} 
+				Condition:condition RIGHT_PARENTHESIS
+				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						//Generate statement for last relational operation
+						MyCode.putFalseJump(condition.getAdr(), 0);
+						//Add patch adress
+						falseJumps.peek().add(MyCode.pc - 2);
+
+						//Fix all true jumps
+						List<Integer> jumpsToFix = trueJumps.pop();
+						for (Integer address : jumpsToFix) {
+							MyCode.fixup(address.intValue());
+						}
+					}
+				:}
 				|
+				//IfHeader ::= IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS
 				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
 				|
+				//IfHeader ::= IF LEFT_PARENTHESIS RIGHT_PARENTHESIS
 				IF LEFT_PARENTHESIS RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
 				;
 			  
@@ -1122,10 +1155,35 @@ ForHeader ::=	FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SE
 				:}
 				;
 
-UnmatchedStatement ::=	IfHeader Statement
+UnmatchedStatement ::=	//UnmatchedStatement ::= IfHeader Statement
+						IfHeader Statement
+						{:
+							//Code generation
+							if (!parser.isErrorFound()) {
+								//Fix all false jumps
+								List<Integer> jumpsToFix = falseJumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address);
+								}
+							}
+
+							//No need for unconditional jumps because we do not have else statement
+						:}
 					  	|
-					  	IfHeader MatchedStatement ELSE UnmatchedStatement
+					  	//UnmatchedStatement ::= IfHeader MatchedStatement Else UnmatchedStatement
+					  	IfHeader MatchedStatement Else UnmatchedStatement
+					  	{:
+					  		//Code generation
+					  		if (!parser.isErrorFound()) {
+					  			//Fix all false jumps
+								List<Integer> jumpsToFix = jumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address);
+								}	
+					  		}
+					  	:}
 					  	| /* umatched for */
+					  	//UnmatchedStatement ::= ForHeader UnmatchedStatement
 					   	ForHeader:token UnmatchedStatement
 						{:
 							if (forLoopBreakStack.isEmpty()) {
@@ -1140,7 +1198,18 @@ UnmatchedStatement ::=	IfHeader Statement
 						:}
 					   	;
 					 
-MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
+MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else MatchedStatement
+						IfHeader MatchedStatement Else MatchedStatement
+						{:
+					  		//Code generation
+					  		if (!parser.isErrorFound()) {
+					  			//Fix all false jumps
+								List<Integer> jumpsToFix = jumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address);
+								}	
+					  		}
+					  	:}
 						| 
 						/* matched for */
 						ForHeader:token MatchedStatement
@@ -1213,12 +1282,12 @@ MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
 					 		//Code generation
 					 		if (!parser.isErrorFound()) {
 					 			if (designator.getType().equals(SymbolTable.charType)) {
-					 				Code.put(Code.bread);
+					 				MyCode.put(MyCode.bread);
 					 			} else {
-					 				Code.put(Code.read);
+					 				MyCode.put(MyCode.read);
 					 			}
 
-					 			Code.store(designator);
+					 			MyCode.store(designator);
 					 		}
 					 	:}
 					 	|
@@ -1233,6 +1302,24 @@ MatchedStatement ::= 	IfHeader MatchedStatement ELSE MatchedStatement
 					 		incrementCodeBlockCount();
 					 	:}			
 					 	;
+
+Else ::=	//Else ::= ELSE
+			ELSE
+			{:
+				//Code generation
+				if (!parser.isErrorFound()) {
+					//Put unconditional jump for skiping else statement
+					MyCode.putJump(0);
+					jumps.peek().add(MyCode.pc - 2);
+
+					//Fix all false jumps
+					List<Integer> jumpsToFix = falseJumps.pop();
+					for (Integer address : jumpsToFix) {
+						MyCode.fixup(address);
+					}
+				}
+			:}
+			;
 
 ReturnValue ::= //ReturnValue ::= Expression
 				Expression:expression
@@ -1266,11 +1353,11 @@ PrintParameters ::=	//PrintParameters ::= Expression
 
 						//Code generation
 						if (!parser.isErrorFound()) {
-							Code.loadConst(1);
+							MyCode.loadConst(1);
 							if (expression.getType().equals(SymbolTable.charType)) {
-								Code.put(Code.bprint);
+								MyCode.put(MyCode.bprint);
 							} else {
-								Code.put(Code.print);
+								MyCode.put(MyCode.print);
 							}
 						}
 					:}
@@ -1289,11 +1376,11 @@ PrintParameters ::=	//PrintParameters ::= Expression
 
 						//Code generation
 						if (!parser.isErrorFound()) {
-							Code.loadConst(value.intValue());
+							MyCode.loadConst(value.intValue());
 							if (expression.getType().equals(SymbolTable.charType)) {
-								Code.put(Code.bprint);
+								MyCode.put(MyCode.bprint);
 							} else {
-								Code.put(Code.print);
+								MyCode.put(MyCode.print);
 							}
 						}
 					:}
@@ -1382,14 +1469,14 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 							//Code generation
 							if (!parser.isErrorFound()) {
 								if (designator.getKind() == MyObj.Var && designator.getLevel() == 1) {
-									Code.put(Code.inc);
-									Code.put(designator.getAdr());
-									Code.put(1);
+									MyCode.put(MyCode.inc);
+									MyCode.put(designator.getAdr());
+									MyCode.put(1);
 								} else {
-									Code.load(designator);
-									Code.loadConst(1);
-									Code.put(Code.add);
-									Code.store(designator);
+									MyCode.load(designator);
+									MyCode.loadConst(1);
+									MyCode.put(MyCode.add);
+									MyCode.store(designator);
 								}
 							}
 						:}
@@ -1410,14 +1497,14 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 							//Code generation
 							if (!parser.isErrorFound()) {
 								if (designator.getKind() == MyObj.Var && designator.getLevel() == 1) {
-									Code.put(Code.inc);
-									Code.put(designator.getAdr());
-									Code.put(-1);
+									MyCode.put(MyCode.inc);
+									MyCode.put(designator.getAdr());
+									MyCode.put(-1);
 								} else {
-									Code.load(designator);
-									Code.loadConst(-1);
-									Code.put(Code.add);
-									Code.store(designator);
+									MyCode.load(designator);
+									MyCode.loadConst(-1);
+									MyCode.put(MyCode.add);
+									MyCode.store(designator);
 								}
 							}
 						:}
@@ -1452,9 +1539,9 @@ AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
 							if (!parser.isErrorFound()) {
 								if (!EQUALS.equals(operator)) {
 									if (designator.getKind() != MyObj.Var) {
-										Code.put(Code.dup2);
+										MyCode.put(MyCode.dup2);
 									}
-									Code.load(designator);
+									MyCode.load(designator);
 								}
 							}
 						:}
@@ -1482,29 +1569,29 @@ AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
 								if (!EQUALS.equals(operator)) {
 									switch (operator) {
 										case PLUS_EQUALS: {
-											Code.put(Code.add);
+											MyCode.put(MyCode.add);
 											break;
 										}
 										case MINUS_EQUALS: {
-											Code.put(Code.sub);
+											MyCode.put(MyCode.sub);
 											break;
 										}
 										case TIMES_EQUALS: {
-											Code.put(Code.mul);
+											MyCode.put(MyCode.mul);
 											break;
 										}
 										case SOLIDUS_EQUALS: {
-											Code.put(Code.div);
+											MyCode.put(MyCode.div);
 											break;
 										}
 										case PERCENT_EQUALS: {
-											Code.put(Code.rem);
+											MyCode.put(MyCode.rem);
 											break;
 										}
 									}
 								}
 
-								Code.store(designator);
+								MyCode.store(designator);
 							}
 						:} 
 						|
@@ -1546,7 +1633,18 @@ ActualParameters ::=	ActualParameters COMA Expression:expression
 						:}
 						;
 				 				
-Condition ::=	Condition:condition OR ConditionTerm:term
+Condition ::=	//Condition ::= Condition OR ConditionTerm
+				Condition:condition 
+				{:
+					//Code generation
+					if (!parser.isErrorFound()) {
+						//generate code for term, because it is a fact and an AND operator this is a false jump
+						MyCode.putTrueJump(condition.getAdr(), 0);
+						//Add patch adress
+						trueJumps.peek().add(MyCode.pc - 2);
+					}
+				:}
+				OR ConditionTerm:term
 				{:
 					if (condition == null) {
 						parser.report_internal_error("NULL condition in production Condition ::= Condition OR ConditionTerm", termleft);
@@ -1562,13 +1660,14 @@ Condition ::=	Condition:condition OR ConditionTerm:term
 							parser.report_semantic_error("Expression " + term.getName() + " is not of type bool", termleft);
 							RESULT = SymbolTable.noObj;
 						} else {
-							RESULT = new MyObj(MyObj.Var, condition.getName() + " || " + term.getName(), SymbolTable.boolType);
+							RESULT = new MyObj(MyObj.Con, condition.getName() + " || " + term.getName(), SymbolTable.boolType, term.getAdr(), term.getLevel());
 						}
 					} else {
 						RESULT = SymbolTable.noObj;
 					}
 				:}
 			 	|
+			 	//Condition ::= ConditionTerm
 			 	ConditionTerm:term
 			 	{:
 			 		if (term == null) {
@@ -1587,8 +1686,20 @@ Condition ::=	Condition:condition OR ConditionTerm:term
 			  	:}
 			  	;		
 				 				
-ConditionTerm ::=	ConditionTerm:term AND ConditionFact:fact
+ConditionTerm ::=	//ConditionTerm ::= ConditionTerm AND ConditionFact
+					ConditionTerm:term 
 					{:
+						//Code generation
+						if (!parser.isErrorFound()) {
+							//generate code for term, because it is a fact and an AND operator this is a false jump
+							MyCode.putFalseJump(term.getAdr(), 0);
+							//Add patch adress
+							falseJumps.peek().add(MyCode.pc - 2);
+						}
+					:}
+					AND ConditionFact:fact
+					{:
+						//Semantic analysis
 						if (term == null) {
 							parser.report_internal_error("NULL term in production ConditionTerm ::= ConditionTerm AND ConditionFact", factleft);
 							RESULT = SymbolTable.noObj;
@@ -1603,15 +1714,17 @@ ConditionTerm ::=	ConditionTerm:term AND ConditionFact:fact
 								parser.report_semantic_error("Expression " + fact.getName() + " is not of type bool", factleft);
 								RESULT = SymbolTable.noObj;
 							} else {
-								RESULT = new MyObj(MyObj.Var, term.getName() + " && " + fact.getName(), SymbolTable.boolType);
+								RESULT = new MyObj(MyObj.Con, term.getName() + " && " + fact.getName(), SymbolTable.boolType, fact.getAdr(), fact.getLevel());
 							}
 						} else {
 							RESULT = SymbolTable.noObj;
 						}
 					:}
 				 	|
+				 	//ConditionTerm ::= ConditionFact
 				 	ConditionFact:fact
 				 	{:
+				 		//Semantic analysis
 				 		if (fact == null) {
 				 			parser.report_internal_error("NULL rightExpression in production ConditionTerm ::= ConditionFact", factleft);
 				 			RESULT = SymbolTable.noObj;
@@ -1625,11 +1738,16 @@ ConditionTerm ::=	ConditionTerm:term AND ConditionFact:fact
 				 		} else {
 				 			RESULT = SymbolTable.noObj;
 				 		}
+
+				 		//Code generation
+				 		//No code for generating because this may be the last condition fact, we just return the Obj
 				 	:}
 				 	;
 
-ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expression:rightExpression
+ConditionFact ::=	//ConditionFact ::= Expression RelationalOperator Expression
+					Expression:leftExpression RelationalOperator:operator Expression:rightExpression
 					{:
+						//Semantic analysis
 						if (leftExpression == null) {
 							parser.report_internal_error("NULL left expression in production ConditionFact ::= Expression RelationalOperator Expression", leftExpressionleft);
 							RESULT = SymbolTable.noObj;
@@ -1644,15 +1762,50 @@ ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expressi
 								parser.report_semantic_error("Only " + EQUAL + " and " + NOT_EQUAL + " are aloved with referential types", operatorleft);
 								RESULT = SymbolTable.noObj;
 							} else {
-								RESULT = new MyObj(MyObj.Var, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.boolType);
+								RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.boolType);
 							}
 						} else {
 							RESULT = SymbolTable.noObj;
 						}
+
+						//Code generation
+						if (!parser.isErrorFound()) {
+							RESULT.setLevel(-1);
+
+							//Set relational operator code in adr field
+							switch (operator) {
+								case EQUAL: {
+									RESULT.setAdr(MyCode.eq);
+									break;
+								}
+								case NOT_EQUAL: {
+									RESULT.setAdr(MyCode.ne);
+									break;
+								}
+								case LESS_THAN: {
+									RESULT.setAdr(MyCode.lt);
+									break;
+								}
+								case LESS_OR_EQUAL_THAN: {
+									RESULT.setAdr(MyCode.le);
+									break;
+								}
+								case GREATER_THAN: {
+									RESULT.setAdr(MyCode.gt);
+									break;
+								}
+								case GREATER_OR_EQUAL_THAN: {
+									RESULT.setAdr(MyCode.ge);
+									break;
+								}
+							}
+						}
 					:}
 					|
+					//ConditionFact ::= Expression
 					Expression:expression
 					{:
+						//Semantic analysis
 						if (expression == null) {
 							parser.report_internal_error("NULL expression in production ConditionFact ::= Expression", expressionleft);
 							RESULT = SymbolTable.noObj;
@@ -1660,7 +1813,14 @@ ConditionFact ::=	Expression:leftExpression RelationalOperator:operator Expressi
 							parser.report_semantic_error("Expression " + expression.getName() + " is not of bool type", expressionleft);
 							RESULT = SymbolTable.noObj;
 						} else {
-							RESULT = expression;
+							//We are returning new Obj with relational operator code in adr field
+							RESULT = new MyObj(MyObj.Con, expression.getName(), expression.getType(), MyCode.eq, -1);
+						}
+
+						//Code generation
+						if (!parser.isErrorFound()) {
+							//Loading 1, or rather true so we can compare
+							MyCode.loadConst(1);
 						}
 					:}
 					;
@@ -1684,11 +1844,11 @@ Expression ::=	//Expression ::= ExpressionPrefix RightAssociatedTermList
 					if (!parser.isErrorFound()) {
 						//Load array element or class field if it is not loaded
 						if (expression.getKind() == MyObj.Elem || expression.getKind() == MyObj.Fld) {
-							Code.load(expression);
+							MyCode.load(expression);
 						}
 
 						if(isNegated.booleanValue()) {
-							Code.put(Code.neg);
+							MyCode.put(MyCode.neg);
 						}
 					}
 				:}
@@ -1713,8 +1873,8 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 								//Code generation
 								if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
 									if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
-										Code.put(Code.dup2);
-										Code.load(leftExpression);
+										MyCode.put(MyCode.dup2);
+										MyCode.load(leftExpression);
 									}
 									//We do need to load variables because they are already loaded
 								}
@@ -1757,27 +1917,27 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 								if (!parser.isErrorFound()) {
 									//Load array element or class field beacuse it is not loaded
 									if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
-										Code.load(rightExpression);
+										MyCode.load(rightExpression);
 									}
 
 									switch (operator) {
 										case PLUS_EQUALS: {
-											Code.put(Code.add);
+											MyCode.put(MyCode.add);
 											break;
 										}
 										case MINUS_EQUALS: {
-											Code.put(Code.sub);
+											MyCode.put(MyCode.sub);
 											break;
 										}
 									}
 
 									if (leftExpression.getKind() != MyObj.Var) {
-										Code.put(Code.dup_x2);
+										MyCode.put(MyCode.dup_x2);
 									} else {
-										Code.put(Code.dup);
+										MyCode.put(MyCode.dup);
 									}
 
-									Code.store(leftExpression);
+									MyCode.store(leftExpression);
 								}
 							:}
 							|
@@ -1799,8 +1959,8 @@ RightAssociatedFactorList ::=	//RightAssociatedFactorList ::= LeftAssociatedTerm
 									//Code generation
 									if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
 										if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
-											Code.put(Code.dup2);
-											Code.load(leftExpression);
+											MyCode.put(MyCode.dup2);
+											MyCode.load(leftExpression);
 										}
 										//We do need to load variables because they are already loaded
 									}
@@ -1844,30 +2004,30 @@ RightAssociatedFactorList ::=	//RightAssociatedFactorList ::= LeftAssociatedTerm
 									if (!parser.isErrorFound()) {
 										//Load array element or class field beacuse it is not loaded
 										if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
-											Code.load(rightExpression);
+											MyCode.load(rightExpression);
 										}
 
 										switch (operator) {
 											case TIMES_EQUALS: {
-												Code.put(Code.mul);
+												MyCode.put(MyCode.mul);
 												break;
 											}
 											case SOLIDUS_EQUALS: {
-												Code.put(Code.div);
+												MyCode.put(MyCode.div);
 												break;
 											}
 											case PERCENT_EQUALS: {
-												Code.put(Code.rem);
+												MyCode.put(MyCode.rem);
 												break;
 											}
 										}
 										if (leftExpression.getKind() != MyObj.Var) {
-											Code.put(Code.dup_x2);
+											MyCode.put(MyCode.dup_x2);
 										} else {
-											Code.put(Code.dup);
+											MyCode.put(MyCode.dup);
 										}
 
-										Code.store(leftExpression);
+										MyCode.store(leftExpression);
 									}
 								:}
 								|
@@ -1891,7 +2051,7 @@ LeftAssociatedTermList ::=	//LeftAssociatedTermList ::= LeftAssociatedTermList A
 									//We did not load array element or class field beacuse of the combined operators
 									//This will be true only for the first element of expression if it is an array element or class field
 									if (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld) {
-										Code.load(leftExpression);
+										MyCode.load(leftExpression);
 									}
 								}
 							:}
@@ -1929,16 +2089,16 @@ LeftAssociatedTermList ::=	//LeftAssociatedTermList ::= LeftAssociatedTermList A
 								if (!parser.isErrorFound()) {
 									//We did not load array element or class field beacuse of the combined operators
 									if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
-										Code.load(rightExpression);
+										MyCode.load(rightExpression);
 									}
 
 									switch (operator) {
 										case PLUS: {
-											Code.put(Code.add);
+											MyCode.put(MyCode.add);
 											break;
 										}
 										case MINUS: {
-											Code.put(Code.sub);
+											MyCode.put(MyCode.sub);
 											break;
 										}
 									}
@@ -1965,7 +2125,7 @@ LeftAssociatedFactorList ::=	//LeftAssociatedFactorList ::= LeftAssociatedFactor
 										//We did not load array element or class field beacuse of the combined operators
 										//This will be true only for the first element of expression if it is an array element or class field
 										if (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld) {
-											Code.load(leftExpression);
+											MyCode.load(leftExpression);
 										}
 									}
 								:}
@@ -2003,20 +2163,20 @@ LeftAssociatedFactorList ::=	//LeftAssociatedFactorList ::= LeftAssociatedFactor
 									if (!parser.isErrorFound()) {
 										//We did not load array element or class field beacuse of the combined operators
 										if (factor.getKind() == MyObj.Elem || factor.getKind() == MyObj.Fld) {
-											Code.load(factor);
+											MyCode.load(factor);
 										}
 
 										switch (operator) {
 											case TIMES: {
-												Code.put(Code.mul);
+												MyCode.put(MyCode.mul);
 												break;
 											}
 											case SOLIDUS: {
-												Code.put(Code.div);
+												MyCode.put(MyCode.div);
 												break;
 											}
 											case PERCENT: {
-												Code.put(Code.rem);
+												MyCode.put(MyCode.rem);
 												break;
 											}
 										}
@@ -2088,7 +2248,7 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 				//Code generation
 				if (!parser.isErrorFound()) {
 					if (designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Con) {
-						Code.load(designator);
+						MyCode.load(designator);
 					}
 				}
 			:}
@@ -2101,7 +2261,7 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 
 		   		//Code generation
 		   		if (!parser.isErrorFound()) {
-		   			Code.load(RESULT);
+		   			MyCode.load(RESULT);
 		   		}
 		   	:}
 		   	|
@@ -2120,7 +2280,7 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 
 		   			byte bytes[] = value.getBytes();
 		   			for (int i = 0; i < bytes.length; i++) {
-		   				Code.loadConst(Byte.toUnsignedInt(bytes[i]));
+		   				MyCode.loadConst(Byte.toUnsignedInt(bytes[i]));
 		   			}
 		   		}
 		   	:}
@@ -2133,7 +2293,7 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 
 		   		//Code generation
 		   		if (!parser.isErrorFound()) {
-		   			Code.load(RESULT);
+		   			MyCode.load(RESULT);
 		   		}
 		   	:}
 		   	|
@@ -2155,16 +2315,16 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 		   		//Code generation
 		   		if (!parser.isErrorFound()) {
 		   			if (isArray.booleanValue()) {
-		   				Code.put(Code.newarray);
+		   				MyCode.put(MyCode.newarray);
 		   			} else {
-		   				Code.put(Code.new_);
+		   				MyCode.put(MyCode.new_);
 		   			}
 
 		   			//if char type allocate byte array
 		   			if (typeObject.getType().equals(SymbolTable.charType)) {
-		   				Code.put(0);
+		   				MyCode.put(0);
 		   			} else {
-		   				Code.put(1);
+		   				MyCode.put(1);
 		   			}
 
 		   			//Adjust size for array of classes
@@ -2267,7 +2427,7 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 				{:
 					//Code generation
 					if (!parser.isErrorFound()) {
-						Code.load(designator);
+						MyCode.load(designator);
 					}
 				:}
 				ArrayIndexer
