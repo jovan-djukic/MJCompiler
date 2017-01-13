@@ -4,18 +4,23 @@ program Read
 	
 {
 	void main() {
-		read(gc0);
+		//read(gc0);
+		gc0 = 'a';
 		print(gc0);
 		print('\n');
 		
-		read(gi0);
-		read(gi1);
+		//read(gi0);
+		gi0 = 0;
+		//read(gi1);
+		gi1 = 1;
 		print(gi0 + gi1);
 		print('\n');
 		
 		gia0 = new int[2];
-		read(gia0[0]);
-		read(gia0[1]);
+		//read(gia0[0]);
+		//read(gia0[1]);
+		gia0[0] = 1;
+		gia0[1] = 2;
 		print(gia0[0] + gia0[1], 5);
 		print('\n');
 	}
