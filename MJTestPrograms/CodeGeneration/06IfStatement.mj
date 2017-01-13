@@ -1,0 +1,38 @@
+program IfStatement
+{
+	void main() 
+		int li0, li1;
+		char lc0, lc1;
+		bool lb0, lb1;
+	{
+		li0 = 1;
+		li1 = 2;
+		lc0 = 'a';
+		lc1 = 'b';
+		lb0 = true;
+		lb1 = false;
+		
+		if (li0 < li1 && lb0) {
+			print('a', 1);
+			if (false) {
+		
+			} else {
+				print('b', 1);
+			}
+		}
+		
+		if (lb1 || lb0 && lc0 == lc1) {
+			print('c', 1);
+		}
+		
+		if (lb1 == true || li0 <= li1 && lc0 != lc1) {
+			if (false || true) {
+				if (lb1) {
+				
+				} else {
+					print('c', 1);
+				}
+			}
+		}		
+	}
+}
