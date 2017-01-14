@@ -1,0 +1,60 @@
+program ClassFields
+
+
+class class1 {
+	int fld0, fld1;
+}
+
+class class2 extends class1 {
+	int fld2;
+}
+
+{
+	void main() 
+		class1 l0;
+		class2 l1;
+	{
+		l0 = new class1;
+		l0.fld0 = 5;
+		l0.fld1 += 5;
+		
+		print(l0.fld0);
+		print('\n');
+		
+		print(l0.fld1);
+		print('\n');
+		
+		l0.fld0 += l0.fld1 *= 2;
+		
+		print(l0.fld0);
+		print('\n');
+		
+		print(l0.fld1);
+		print('\n');
+		
+		l1 = new class2;
+		l1.fld0 = 5;
+		l1.fld1 += 5;
+		l1.fld2 -= 5;
+		
+		print(l1.fld0);
+		print('\n');
+		
+		print(l1.fld1);
+		print('\n');
+		
+		print(l1.fld2);
+		print('\n');
+		
+		l1.fld0 += l1.fld1 *= l1.fld2 += 10;
+		
+		print(l1.fld0);
+		print('\n');
+		
+		print(l1.fld1);
+		print('\n');
+		
+		print(l1.fld2);
+		print('\n');
+	}
+}
