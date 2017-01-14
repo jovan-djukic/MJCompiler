@@ -272,6 +272,9 @@ action code {:
 
 	//Stacks of integer lists for jumps and falseJumps, both for if and for loop statements
 	private Stack<List<Integer>> falseJumps = new Stack<>() , trueJumps = new Stack<>();
+
+	//Little optimization to avoid two return statements in void functions
+	private int lastReturnStatementAdress = 0;
 :}
 
 
@@ -776,10 +779,13 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LE
 								}
 							}
 
+							//Code generation
 							if(!parser.isErrorFound()) {
 								if (currentMethod.getType().equals(SymbolTable.voidType)) {
-									MyCode.put(MyCode.exit);
-									MyCode.put(MyCode.return_);
+									if (lastReturnStatementAdress != MyCode.pc) {
+										MyCode.put(MyCode.exit);
+										MyCode.put(MyCode.return_);
+									}
 								} else {
 									MyCode.put(MyCode.trap);
 									MyCode.put(1);
@@ -790,6 +796,7 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LE
 							currentMethod = null;
 							methodVariablePosition = 0;
 							returnFound = false;
+							lastReturnStatementAdress = 0;
 						:}
 						;
 					
@@ -1103,15 +1110,19 @@ Type ::=	IDENTIFIER:name
 			:}
 			;
 
-StatementList ::= StatementList Statement
-				  |
-				  /* epsilon */
-				  ;
+StatementList ::= 	//StatementList ::= StatementList Statement
+					StatementList Statement
+				  	|
+				  	//StatementList ::= 
+				  	/* epsilon */
+				  	;	
 
-Statement ::= MatchedStatement
-			  |
-			  UnmatchedStatement
-			  ;
+Statement ::= 	//Statement ::= MatchedStatement
+				MatchedStatement
+			  	|
+			  	//Statement ::= UnmatchedStatement
+			  	UnmatchedStatement
+			  	;
 
 IfHeader ::=	//IfHeader ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				IF LEFT_PARENTHESIS
@@ -1326,8 +1337,10 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 							}
 						:}
 					 	|
+					 	//MatchedStatement ::= RETURN ReturnValue SEMICOLON
 					 	RETURN ReturnValue:value SEMICOLON
 					 	{:
+					 		//Semantic analysis
 					 		if (value == null) {
 					 			parser.report_internal_error("NULL value in production MatchedStatement ::= RETURN ReturnValue SEMICOLON", valueleft);
 					 		} else if (currentMethod == null) {
@@ -1343,6 +1356,16 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 					 			returnFound = true;
 					 		} else {
 					 			returnFound = true;
+					 		}
+
+					 		//Code generation
+					 		if (!parser.isErrorFound()) {
+					 			//Expression is already on stack so we just generate return
+					 			MyCode.put(MyCode.exit);
+					 			MyCode.put(MyCode.return_);
+
+					 			//Save last adress for optimization
+					 			lastReturnStatementAdress = MyCode.pc;
 					 		}
 					 	:}
 					 	|
@@ -2382,6 +2405,11 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 				if (!parser.isErrorFound()) {
 					if (designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Con) {
 						MyCode.load(designator);
+					} else if (designator.getKind() == MyObj.Global) {
+						//put call instruction
+						MyCode.putCall(designator.getAdr());
+					
+						//no need for pop because factor ret value will be used in expression
 					}
 				}
 			:}
