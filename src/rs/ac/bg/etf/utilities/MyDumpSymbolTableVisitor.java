@@ -49,6 +49,11 @@ public class MyDumpSymbolTableVisitor extends DumpSymbolTableVisitor {
 		else
 			output.append(SymbolTable.getTypeName(objToVisit.getType()));
 		
+		if (objToVisit.getKind() == Obj.Type && objToVisit.getType().getKind() == Struct.Class) {
+			output.append(", ");
+			output.append(objToVisit.getType().getNumberOfFields());
+		}
+		
 		output.append(", ");
 		output.append(objToVisit.getAdr());
 		output.append(", ");
