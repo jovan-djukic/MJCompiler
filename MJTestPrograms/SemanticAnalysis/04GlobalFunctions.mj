@@ -33,9 +33,17 @@ program GlobalFunctions
 	
 	//Static modifier
 	static void global5() {
-	
-	}
 
+	}
+	
+	//Recursion
+	int global6() 
+		int l0;
+	{
+		global6();
+		l0 = global6();
+		return l0;
+	}
 	void main() 
 	{
 	}
