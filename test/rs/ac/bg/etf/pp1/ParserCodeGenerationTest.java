@@ -69,7 +69,7 @@ public class ParserCodeGenerationTest {
 							objectFile.delete();
 						}
 						Code.write(new FileOutputStream(objectFile));
-						disasm.main(new String[] { "output/MJProgram" });
+						disasm.main(new String[] { "output/MJProgram"});
 						
 						logger.info("======================================================================");
 						logger.info("RUNNING FILE: " + testFiles[i].getPath());
