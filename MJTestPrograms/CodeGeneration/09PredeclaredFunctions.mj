@@ -1,7 +1,18 @@
 program PredeclaredFunctions
 int gia[];
 {
-	void main() {
+	void printMessage(char message[]) 
+		int i;
+	{
+		for (i = 0; i < len(message); i++) {
+			print(chr(ord(message[i])));
+		}
+		print('\n');
+	}
+	
+	void main() 
+		char message[];
+	{
 		print(ord('a'));
 		print('\n');
 		
@@ -11,5 +22,14 @@ int gia[];
 		gia = new int[5];
 		print(len(gia));
 		print('\n');
+		
+		message = new char[5];
+		message[0] = 'H';
+		message[1] = 'e';
+		message[2] = 'l';
+		message[3] = 'l';
+		message[4] = 'o';
+		
+		printMessage(message);
 	}
 }
