@@ -11,14 +11,52 @@ import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Scope;
 import rs.etf.pp1.symboltable.concepts.Struct;
+import rs.etf.pp1.symboltable.structure.HashTableDataStructure;
+import rs.etf.pp1.symboltable.structure.SymbolDataStructure;
 
 public class SymbolTable extends Tab{
 	public static final Struct boolType = new MyStruct(Struct.Bool);
 	public static final Struct voidType = new MyStruct(Struct.None);
 	public static final Obj voidObject = new Obj(Obj.Var, "voidObject", voidType);
 	
+	public static String CHR = "chr";
+	public static String ORD = "ord";
+	public static String LEN = "len";
+	
 	public static void init() {
 		Tab.init();
+		//change the type of predefined functions
+		Obj chr = SymbolTable.find(CHR);
+		SymbolTable.currentScope().getLocals().deleteKey(chr.getName());
+		MyObj newChr = new MyObj(MyObj.Global, chr.getName(), chr.getType(), chr.getAdr(), chr.getLevel());
+		SymbolDataStructure chrDataStructure = new HashTableDataStructure();
+		for (Obj parameter : chr.getLocalSymbols()) {
+			chrDataStructure.insertKey(parameter);
+		}
+		newChr.setLocals(chrDataStructure);
+		currentScope.addToLocals(newChr);
+		
+		
+		Obj ord = SymbolTable.find(ORD);
+		SymbolTable.currentScope().getLocals().deleteKey(ord.getName());
+		MyObj newOrd = new MyObj(MyObj.Global, ord.getName(), ord.getType(), ord.getAdr(), ord.getLevel());
+		SymbolDataStructure ordDataStructure = new HashTableDataStructure();
+		for (Obj parameter : ord.getLocalSymbols()) {
+			ordDataStructure.insertKey(parameter);
+		}
+		newOrd.setLocals(ordDataStructure);
+		currentScope.addToLocals(newOrd);
+		
+		Obj len = SymbolTable.find(LEN);
+		SymbolTable.currentScope().getLocals().deleteKey(len.getName());
+		MyObj newLen= new MyObj(MyObj.Global, len.getName(), len.getType(), len.getAdr(), len.getLevel());
+		SymbolDataStructure lenDataStructure = new HashTableDataStructure();
+		for (Obj parameter : len.getLocalSymbols()) {
+			lenDataStructure.insertKey(parameter);
+		}
+		newLen.setLocals(lenDataStructure);
+		currentScope.addToLocals(newLen);
+		
 		currentScope.addToLocals(new Obj(Obj.Type, "bool", boolType));
 		currentScope.addToLocals(new Obj(Obj.Type, "void", voidType));
 	}
