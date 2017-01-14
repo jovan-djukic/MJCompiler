@@ -7,6 +7,7 @@ program ForLoop
 	{
 		a = 3;
 		b = 4;
+		//Print all numbers
 		for (i = 0; i < iboundary && true; i++) {
 			for (j = 0; j < jboundary && a <= b || false; j++) {
 				print( i * jboundary + j);
@@ -19,5 +20,66 @@ program ForLoop
 				print('\n');
 			}
 		}
+		print('\n');
+		
+		//Print only first jboundary numbers
+		for (i = 0; i < iboundary && true; i++) {
+			if (i != 0) {
+				break;
+			}
+			for (j = 0; j < jboundary && a <= b || false; j++) {
+				print( i * jboundary + j);
+				print(' ');
+				if ( (i * jboundary + j) % 2 == 0) {
+					print('e');
+				} else {
+					print('o');
+				}
+				print('\n');
+			}
+		}
+		print('\n');
+		
+		//Print only first number
+		for (i = 0; i < iboundary && true; i++) {
+			if (i != 0) {
+				break;
+			}
+			for (j = 0; j < jboundary && a <= b || false; j++) {
+				if ( j != 0) {
+					break;
+				}
+				print( i * jboundary + j);
+				print(' ');
+				if ( (i * jboundary + j) % 2 == 0) {
+					print('e');
+				} else {
+					print('o');
+				}
+				print('\n');
+			}
+		}
+		print('\n');
+		
+		//Print if  i < 5 && j < 6
+		for (i = 0; i < iboundary && true; i++) {
+			if (i >= 5) {
+				continue;
+			}
+			for (j = 0; j < jboundary && a <= b || false; j++) {
+				if (j >= 6) {
+					continue;
+				}
+				print( i * jboundary + j);
+				print(' ');
+				if ( (i * jboundary + j) % 2 == 0) {
+					print('e');
+				} else {
+					print('o');
+				}
+				print('\n');
+			}
+		}
+		print('\n');
 	}
 }
