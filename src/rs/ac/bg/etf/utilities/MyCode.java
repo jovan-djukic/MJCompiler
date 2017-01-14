@@ -6,4 +6,8 @@ public class MyCode extends Code {
 	public static void putTrueJump(int op, int adr) {
 		put(jcc + op); put2(adr - pc + 1);
 	}
+	
+	public static void putCall(int adr) {
+		put(call); put2(adr - pc + 1);
+	}
 }
