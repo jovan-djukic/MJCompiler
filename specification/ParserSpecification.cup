@@ -256,7 +256,7 @@ action code {:
 	private static final String SOLIDUS_EQUALS = "/=";
 	private static final String PERCENT_EQUALS = "%=";
 
-	private int variablePosition = 0;
+	//private int variablePosition = 0;
 	
 	private Obj currentMethod = null;
 	private int methodVariablePosition = 0;
@@ -275,6 +275,21 @@ action code {:
 
 	//Little optimization to avoid two return statements in void functions
 	private int lastReturnStatementAdress = 0;
+
+	//Class code generation
+	private static final String VFT = "**VFT_ADR**";
+	private List<Byte> classVirtualTables = new ArrayList<>();
+
+	private void addWordToStaticData(int value, int address) {
+		classVirtualTables.add(new Byte((byte)Code.const_));
+		classVirtualTables.add(new Byte((byte)(value >> 24)));
+		classVirtualTables.add(new Byte((byte)(value >> 16)));
+		classVirtualTables.add(new Byte((byte)(value >> 8)));
+		classVirtualTables.add(new Byte((byte)(value)));
+		classVirtualTables.add(new Byte((byte)MyCode.putstatic));
+		classVirtualTables.add(new Byte((byte)(address >> 8)));
+		classVirtualTables.add(new Byte((byte)(address)));
+	}
 :}
 
 
@@ -341,13 +356,14 @@ nonterminal Obj ParentClassDeclaration;
 nonterminal Obj Designator;
 
 //For left associated and right associated operators, this super rule to sub rule passing
-nonterminal Obj LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList, RightAssociatedFactorList; 
+nonterminal Obj LeftAssociatedTermList, RightAssociatedTermList, LeftAssociatedFactorList; 
 
 //Addition operators for better error reporting
 nonterminal String AdditionOperatorLeft, AdditionOperatorRight;
 nonterminal String MultiplicationOperatorLeft, MultiplicationOperatorRight;
 nonterminal String RelationalOperator;
 nonterminal String AssignOperator;
+nonterminal String OperatorRight;
 
 //Factor
 nonterminal Obj Factor, Expression;
@@ -384,7 +400,8 @@ Program ::= //Program ::= PROGRAM ProgramName NonMethodDeclarationList LEFT_BRAC
 				}
 			:};
 
-ProgramName ::= IDENTIFIER:name 
+ProgramName ::= //ProgramName ::= IDENTIFIER
+				IDENTIFIER:name 
 				{:
 					//Semantic analysis
 					RESULT  = SymbolTable.insert(Obj.Prog, name, SymbolTable.noType);
@@ -421,19 +438,25 @@ ProgramName ::= IDENTIFIER:name
 				:}
 				;
 
-NonMethodDeclarationList ::= NonMethodDeclarationList NonMethodDeclaration
-							 |
-							 /* epsilon */
-							 ;
+NonMethodDeclarationList ::= 	//NonMethodDeclarationList ::= NonMethodDeclarationList NonMethodDeclaration
+								NonMethodDeclarationList NonMethodDeclaration
+							 	|
+							 	//NonMethodDeclarationList ::= 
+							 	/* epsilon */
+							 	;
 
-NonMethodDeclaration ::= 	ConstantDeclaration
+NonMethodDeclaration ::= 	//NonMethodDeclaration ::= ConstantDeclaration
+							ConstantDeclaration
 						 	|
+						 	//NonMethodDeclaration ::= GlobalVariableDeclaration
 						 	GlobalVariableDeclaration {: incrementGlobalArrayCount(); :}
 						 	|
+						 	//NonMethodDeclaration ::= ClassDeclaration
 						 	ClassDeclaration
 						 	;
 			
-ConstantDeclaration ::=	CONST Type:typeObject ConstantList:constants SEMICOLON
+ConstantDeclaration ::=	//ConstantDeclaration ::= CONST Type ConstantList SEMICOLON
+						CONST Type:typeObject ConstantList:constants SEMICOLON
 						{:
 							//Semantic analysis
 							if (typeObject == null) {
@@ -459,7 +482,8 @@ ConstantDeclaration ::=	CONST Type:typeObject ConstantList:constants SEMICOLON
 						:}
 						;
 
-ConstantList ::=	ConstantList:constants COMA Constant:constant 
+ConstantList ::=	//ConstantList ::= ConstantList COMA Constant
+					ConstantList:constants COMA Constant:constant 
 					{: 
 						incrementConstantCount(); 
 
@@ -476,6 +500,7 @@ ConstantList ::=	ConstantList:constants COMA Constant:constant
 						}
 					:}
 				 	|
+				 	//ConstantList ::= Constant
 				 	Constant:constant 
 				 	{: 
 				 		incrementConstantCount();
@@ -491,28 +516,33 @@ ConstantList ::=	ConstantList:constants COMA Constant:constant
 				 	:}
 				 	;	
 
-Constant ::=	IDENTIFIER:name EQUALS Value:value
+Constant ::=	//Constant ::= IDENTIFIER EQUALS Value
+				IDENTIFIER:name EQUALS Value:value
 				{:
 					RESULT = new Constant(name, value);
 				:};
 
-Value ::=	NUMERICAL_CONSTANT:value
+Value ::=	//Value ::= NUMERICAL_CONSTANT
+			NUMERICAL_CONSTANT:value
 		  	{:
 		  		RESULT = new Value(SymbolTable.intType, value.intValue());
 		  	:}
 		  	|
+		  	//Value ::= CHARACTER_CONSTANT
 		  	CHARACTER_CONSTANT:value
 		  	{:
 		  		RESULT = new Value(SymbolTable.charType, (int)value.charAt(0));
 		  	:}
 		  	|
+		  	//Value ::= BOOLEAN_CONSTANT
 		  	BOOLEAN_CONSTANT:value
 		  	{:
 		  		RESULT = new Value(SymbolTable.boolType, value.booleanValue() ? 1 : 0);
 		  	:}
 		  	;
 
-GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables SEMICOLON
+GlobalVariableDeclaration ::=	//GlobalVariableDeclaration ::= Type GlobalVariableList SEMICOLON
+								Type:typeObject GlobalVariableList:globalVariables SEMICOLON
 								{:
 									//Semantic analysis
 									if (typeObject == null) {
@@ -531,9 +561,9 @@ GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables
 													newObject = SymbolTable.insert(Obj.Var, variable.getName(), typeObject.getType());
 												}
 												if (newObject != null && newObject != SymbolTable.noObj) {
-													newObject.setAdr(variablePosition);
+													//newObject.setAdr(variablePosition);
 													newObject.setLevel(SymbolTable.getCurrentLevel());
-													variablePosition++;
+													//variablePosition++;
 												} else {
 													parser.report_internal_error("Could not insert symbol: " + variable.getName() + " into symbol table", typeObjectleft);
 												}
@@ -542,16 +572,30 @@ GlobalVariableDeclaration ::=	Type:typeObject GlobalVariableList:globalVariables
 									}
 
 									if(!parser.isErrorFound()) {
-										MyCode.dataSize += globalVariables.size();
+										//allocate space
+										for (Variable variable : globalVariables) {
+											Obj object = SymbolTable.find(variable.getName());
+											if (object == null || object.equals(SymbolTable.noObj)) {
+												parser.report_internal_error("Symbol " + variable.getName() + " not found", typeObjectleft);
+											} else {
+												object.setAdr(MyCode.dataSize);
+												MyCode.dataSize++;
+											}
+										}
+
+										//MyCode.dataSize += globalVariables.size();
 									}
 								:}
 								|
+								//GlobalVariableDeclaration ::= error SEMICOLON
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable list declaration"); :}
 								|
+								//GlobalVariableDeclaration ::= error COMA GlobalVariableList SEMICOLON
 								error COMA GlobalVariableList SEMICOLON {: printSyntaxErrorDescription("Incorrect global variable declaration"); :}
 								;
 								
-GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
+GlobalVariableList ::=	//GlobalVariableList ::= GlobalVariableList COMA Variable
+						GlobalVariableList:globalVariables COMA Variable:variable
 						{: 
 							incrementGlobalVariableCount(); 
 
@@ -568,6 +612,7 @@ GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
 							}
 						:}
 				 		|
+				 		//GlobalVariableList ::= Variable
 				 		Variable:variable
 				 		{: 
 				 			incrementGlobalVariableCount(); 
@@ -581,6 +626,7 @@ GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
  							}
 				 		:}
 				 		|
+				 		//GlobalVariableList ::= GlobalVariableList COMA error
 				 		GlobalVariableList:globalVariables COMA error 
 				 		{: 
 				 			printSyntaxErrorDescription("Incorrect global variable declaration"); 
@@ -593,6 +639,7 @@ GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
 				 			}
 				 		:}
 				 		|
+				 		////GlobalVariableList ::= error
 				 		error 
 				 		{: 
 				 			printSyntaxErrorDescription("Incorrect global variable declaration"); 
@@ -601,24 +648,28 @@ GlobalVariableList ::=	GlobalVariableList:globalVariables COMA Variable:variable
 				 		:}
 				 		;
 				 
-Variable ::=	IDENTIFIER:name Brackets:isArray
+Variable ::=	//Variable ::= IDENTIFIER Brackets
+				IDENTIFIER:name Brackets:isArray
 				{:
 					RESULT = new Variable(name, isArray);
 				:};
 
-Brackets ::=	LEFT_BRACKET RIGHT_BRACKET
+Brackets ::=	//Brackets ::= LEFT_BRACKET RIGHT_BRACKET
+				LEFT_BRACKET RIGHT_BRACKET
 			 	{:
 					incrementCurrentArrayCount();
 					RESULT = true;
 				:}
 			 	|
+			 	//Brackets ::= 
 			 	/* epsilon */
 			 	{:
 			 		RESULT = false;
 			 	:}
 			 	;
 			 
-ClassDeclaration ::=	ClassHeader
+ClassDeclaration ::=	//ClassDeclaration :: ClassHeader LEFT_BRACE ClassVariableDeclarationList ClassMethodList RIGHT_BRACE
+						ClassHeader
 						LEFT_BRACE
 							ClassVariableDeclarationList
 							ClassMethodList
@@ -632,13 +683,43 @@ ClassDeclaration ::=	ClassHeader
 						 		SymbolTable.chainLocalSymbols(currentClass.getType());
 						 	}
 
+						 	//Code generation
+						 	if (!parser.isErrorFound()) {
+						 		//Generate virtual function table
+						 		//save adress int class Obj node
+						 		currentClass.setAdr(MyCode.dataSize);
+
+						 		for (Obj object : currentClass.getType().getMembers()) {
+						 			if (object.getKind() == MyObj.Meth) {
+						 				//add name
+						 				for (int i = 0; i < object.getName().length(); i++) {
+						 					addWordToStaticData((int)object.getName().charAt(i), MyCode.dataSize);
+						 					MyCode.dataSize++;
+						 				}
+						 				//add name terminator
+						 				addWordToStaticData(-1, MyCode.dataSize);
+						 				MyCode.dataSize++;
+
+						 				//add function adress
+						 				addWordToStaticData(object.getAdr(), MyCode.dataSize);
+						 				MyCode.dataSize++;
+						 			}
+						 		}
+
+						 		//add table terminator
+						 		addWordToStaticData(-2, MyCode.dataSize);
+						 		MyCode.dataSize++;
+						 	}
+
 						 	classVariablePosition = 0;
 						 	currentClass = null;
 						 	SymbolTable.closeScope();
 						 :};
 				
-ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
+ClassHeader ::=	//ClassHeader ::= CLASS IDENTIFIER ParentClassDeclaration
+				CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
 				{:
+					//Semantic analysis
 					if (typeObject == null) {
 						parser.report_internal_error("NULL type object in production ClassHeader ::= CLASS IDENTIFIER ParentClassDeclaration", typeObjectleft);
 					} else if (SymbolTable.currentScope.findSymbol(name) != null) {
@@ -661,9 +742,22 @@ ClassHeader ::= CLASS IDENTIFIER:name ParentClassDeclaration:typeObject
 						}
 					}
 					SymbolTable.openScope();
+
+					//Insert virtaul table pointer as class field if we do not have inherited
+					if (currentClass.getType().getMembersTable().searchKey(VFT) == null) {
+						Obj virtaulTablePointer = SymbolTable.insert(MyObj.Fld, VFT, SymbolTable.intType);
+						if (virtaulTablePointer != null && virtaulTablePointer != SymbolTable.noObj) {
+							virtaulTablePointer.setAdr(classVariablePosition);
+							virtaulTablePointer.setLevel(SymbolTable.getCurrentLevel());
+							classVariablePosition++;
+						} else {
+							parser.report_internal_error("Could not insert symbol: " + virtaulTablePointer.getName() + " into symbol table", nameleft);
+						}
+					}
 				:};
 
-ParentClassDeclaration ::=	EXTENDS Type:typeObject
+ParentClassDeclaration ::=	//ParentClassDeclaration ::= EXTENDS Type
+							EXTENDS Type:typeObject
 						   	{:
 						   		//Semantic analysis
 						   		if (typeObject == null) {
@@ -681,11 +775,13 @@ ParentClassDeclaration ::=	EXTENDS Type:typeObject
 						   		}
 						   	:}
 						   	|
+						   	//ParentClassDeclaration ::= 
 						   	/* epsilon */
 						   	{:
 						   		RESULT = SymbolTable.noObj;
 						   	:}
 						   	|
+						   	//ParentClassDeclaration ::= error
 						   	error 
 						   	{: 
 						   		printSyntaxErrorDescription("Incorrect declaration of parent class"); 
@@ -694,12 +790,15 @@ ParentClassDeclaration ::=	EXTENDS Type:typeObject
 						   	:}
 						   	;
 					 
-ClassVariableDeclarationList ::=	ClassVariableDeclarationList ClassVariableDeclaration
+ClassVariableDeclarationList ::=	//ClassVariableDeclarationList ::= ClassVariableDeclarationList ClassVariableDeclaration
+									ClassVariableDeclarationList ClassVariableDeclaration
 					  				|
+					  				//ClassVariableDeclarationList ::=
 					  				/* epsilon */
 					  				;
 
-ClassVariableDeclaration ::=	Type:typeObject ClassVariableList:variables SEMICOLON 
+ClassVariableDeclaration ::=	//ClassVariableDeclaration ::= Type ClassVariableList SEMICOLON
+								Type:typeObject ClassVariableList:variables SEMICOLON 
 								{:
 									//Semantic analysis
 									if (typeObject == null) {
@@ -743,12 +842,15 @@ ClassVariableDeclaration ::=	Type:typeObject ClassVariableList:variables SEMICOL
 									}
 								:}
 								|
+								//ClassVariableDeclaration ::= error SEMICOLON
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration b"); :}
 								|
+								//ClassVariableDeclaration ::= error
 								error {: printSyntaxErrorDescription("Incorrect class variable declaration a"); :}
 				  				;
 
-ClassVariableList ::= 	ClassVariableList:variables COMA Variable:variable 
+ClassVariableList ::= 	//ClassVariableList ::= ClassVariableList COMA Variable
+						ClassVariableList:variables COMA Variable:variable 
 						{: 
 							incrementClassVariableCount(); 
 
@@ -765,6 +867,7 @@ ClassVariableList ::= 	ClassVariableList:variables COMA Variable:variable
 							}
 						:}
 						|
+						//ClassVariableList ::= Variable
 						Variable:variable 
 						{: 
 							incrementClassVariableCount(); 
@@ -779,17 +882,22 @@ ClassVariableList ::= 	ClassVariableList:variables COMA Variable:variable
 						:}
 						;
 
-ClassMethodList ::= LEFT_BRACE MethodDeclarationList RIGHT_BRACE
+ClassMethodList ::= //ClassMethodList ::= LEFT_BRACE MethodDeclarationList RIGHT_BRACE
+					LEFT_BRACE MethodDeclarationList RIGHT_BRACE
 					|
+					//ClassMethodList ::=
 					/* epsilon */
 					;
 
-MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
-						  |
-						  /* epsilon */
-						  ;
+MethodDeclarationList ::= 	//MethodDeclarationList ::= MethodDeclarationList MethodDeclaration
+							MethodDeclarationList MethodDeclaration
+						  	|
+						  	//MethodDeclarationList ::=
+						  	/* epsilon */
+						  	;
 						  
-MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LEFT_BRACE StatementList RIGHT_BRACE:token
+MethodDeclaration ::=	//MethodDeclaration ::= MethodSignature MethodVariableDeclarationListWithAction LEFT_BRACE StatementList RIGHT_BRACE
+						MethodSignature MethodVariableDeclarationListWithAction LEFT_BRACE StatementList RIGHT_BRACE:token
 					  	{:
 							if (currentMethod != null && isMain(currentMethod.getName())) {
 								incrementMainVariableCount();
@@ -831,7 +939,8 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LE
 						:}
 						;
 					
-MethodVariableDeclarationListWithAction ::=	MethodVariableDeclarationList
+MethodVariableDeclarationListWithAction ::=	//MethodVariableDeclarationListWithAction ::= MethodVariableDeclarationList 
+											MethodVariableDeclarationList
 											{:
 												//Code generation
 												if (!parser.isErrorFound()) {
@@ -841,106 +950,115 @@ MethodVariableDeclarationListWithAction ::=	MethodVariableDeclarationList
 											:}
 											;
 
-MethodSignature ::=	StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList:formalParameterList RIGHT_PARENTHESIS 
-						{:
-							//Semantic analysis
-							if (typeObject == null) {
-								parser.report_internal_error("NULL type object in production MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterleft RIGHT_PARENTHESIS", typeObjectleft);
-							} else if (formalParameterList == null) {
-								parser.report_internal_error("NULL formal parameter list in production MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterleft RIGHT_PARENTHESIS", typeObjectleft);
-							} else if (!typeObject.equals(SymbolTable.noObj)) {
-								currentMethod = null;
-								methodVariablePosition = 0;
+MethodSignature ::=	//MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterList RIGHT_PARENTHESIS 
+					StaticModifier:isStatic ReturnType:typeObject IDENTIFIER:identifier LEFT_PARENTHESIS FormalParameterList:formalParameterList RIGHT_PARENTHESIS 
+					{:
+						//Semantic analysis
+						if (typeObject == null) {
+							parser.report_internal_error("NULL type object in production MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterleft RIGHT_PARENTHESIS", typeObjectleft);
+						} else if (formalParameterList == null) {
+							parser.report_internal_error("NULL formal parameter list in production MethodSignature ::= StaticModifier ReturnType IDENTIFIER LEFT_PARENTHESIS FormalParameterleft RIGHT_PARENTHESIS", typeObjectleft);
+						} else if (!typeObject.equals(SymbolTable.noObj)) {
+							currentMethod = null;
+							methodVariablePosition = 0;
 
-								if (SymbolTable.currentScope.findSymbol(identifier) != null) {
-									parser.report_semantic_error("Redefinition of symbol " + identifier, identifierleft);
+							if (SymbolTable.currentScope.findSymbol(identifier) != null) {
+								parser.report_semantic_error("Redefinition of symbol " + identifier, identifierleft);
+							} else {
+
+								if (currentClass == null && isStatic.booleanValue() == false) {
+									currentMethod = SymbolTable.insert(MyObj.Global, identifier, typeObject.getType());
 								} else {
-
-									if (currentClass == null && isStatic.booleanValue() == false) {
-										currentMethod = SymbolTable.insert(MyObj.Global, identifier, typeObject.getType());
-									} else {
-										Obj inheritedMember = null;
-										if (currentClass != null) {
-											inheritedMember = currentClass.getType().getMembersTable().searchKey(identifier);
-										}
-
-										if (inheritedMember != null) {
-											Obj method = new MyObj(MyObj.Meth, identifier, typeObject.getType());
-
-											SymbolDataStructure locals = new HashTableDataStructure();
-											//Insert this
-											locals.insertKey(new MyObj(MyObj.Var, THIS, currentClass.getType()));
-											
-											for (Obj formalParameter : formalParameterList) {
-												if (!formalParameter.equals(SymbolTable.noObj)) {
-													locals.insertKey(formalParameter);
-												}
-											}
-
-											method.setLocals(locals);
-											method.setLevel(locals.numSymbols());										
-
-											if (!method.equals(inheritedMember)) {
-												parser.report_semantic_error("Cannot redefine inherited member " + identifier, identifierleft);
-											} else {//It is redefined method remove its node from current class
-												currentClass.getType().getMembersTable().deleteKey(identifier);
-												currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
-											}
-										} else if (isStatic != null && isStatic.booleanValue()) { 
-											currentMethod = SymbolTable.insert(MyObj.Static, identifier, typeObject.getType());
-										} else {
-											currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
-										}
+									Obj inheritedMember = null;
+									if (currentClass != null) {
+										inheritedMember = currentClass.getType().getMembersTable().searchKey(identifier);
 									}
 
+									if (inheritedMember != null) {
+										Obj method = new MyObj(MyObj.Meth, identifier, typeObject.getType());
 
-								}
-
-								SymbolTable.openScope();
-									
-								if (currentMethod != null) {
-									if (currentMethod.equals(SymbolTable.noObj)) {
-										currentMethod = null;
-										parser.report_semantic_error("Could not insert symbol " + identifier + "into symbol talbe", identifierleft);
-									} else {
-										//If non-static method add this formal parameter
-										if (currentClass != null && !isStatic.booleanValue()) {
-											formalParameterList.add(0, new MyObj(MyObj.Var, THIS, currentClass.getType()));
-										}
-
-										//Add the rest of the local parameters
+										SymbolDataStructure locals = new HashTableDataStructure();
+										//Insert this
+										locals.insertKey(new MyObj(MyObj.Var, THIS, currentClass.getType()));
+										
 										for (Obj formalParameter : formalParameterList) {
 											if (!formalParameter.equals(SymbolTable.noObj)) {
-												Obj newObject = SymbolTable.insert(MyObj.Var, formalParameter.getName(), formalParameter.getType());
-
-												if (newObject == SymbolTable.noObj) {
-													parser.report_internal_error("Could not insert symbol " + formalParameter.getName() + " into symbol table", identifierleft);
-												} else {
-													newObject.setLevel(SymbolTable.getCurrentLevel());
-													newObject.setFpPos(methodVariablePosition);
-													newObject.setAdr(methodVariablePosition);
-													methodVariablePosition++;
-												}
+												locals.insertKey(formalParameter);
 											}
 										}
 
-										currentMethod.setLevel(methodVariablePosition);
+										method.setLocals(locals);
+										method.setLevel(locals.numSymbols());										
+
+										if (!method.equals(inheritedMember)) {
+											parser.report_semantic_error("Cannot redefine inherited member " + identifier, identifierleft);
+										} else {//It is redefined method remove its node from current class
+											currentClass.getType().getMembersTable().deleteKey(identifier);
+											currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
+										}
+									} else if (isStatic != null && isStatic.booleanValue()) { 
+										currentMethod = SymbolTable.insert(MyObj.Static, identifier, typeObject.getType());
+									} else {
+										currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
 									}
 								}
-							} else {
-								SymbolTable.openScope();
-							}
-						
-							//Code generation
-							if(!parser.isErrorFound()) {
-								currentMethod.setAdr(MyCode.pc);
-								MyCode.put(MyCode.enter);
-								MyCode.put(formalParameterList.size());
-							}
-						:}
-						;
 
-StaticModifier ::= 	STATIC:attribute
+
+							}
+
+							SymbolTable.openScope();
+								
+							if (currentMethod != null) {
+								if (currentMethod.equals(SymbolTable.noObj)) {
+									currentMethod = null;
+									parser.report_semantic_error("Could not insert symbol " + identifier + "into symbol talbe", identifierleft);
+								} else {
+									//If non-static method add this formal parameter
+									if (currentClass != null && !isStatic.booleanValue()) {
+										formalParameterList.add(0, new MyObj(MyObj.Var, THIS, currentClass.getType()));
+									}
+
+									//Add the rest of the local parameters
+									for (Obj formalParameter : formalParameterList) {
+										if (!formalParameter.equals(SymbolTable.noObj)) {
+											Obj newObject = SymbolTable.insert(MyObj.Var, formalParameter.getName(), formalParameter.getType());
+
+											if (newObject == SymbolTable.noObj) {
+												parser.report_internal_error("Could not insert symbol " + formalParameter.getName() + " into symbol table", identifierleft);
+											} else {
+												newObject.setLevel(SymbolTable.getCurrentLevel());
+												newObject.setFpPos(methodVariablePosition);
+												newObject.setAdr(methodVariablePosition);
+												methodVariablePosition++;
+											}
+										}
+									}
+
+									currentMethod.setLevel(methodVariablePosition);
+								}
+							}
+						} else {
+							SymbolTable.openScope();
+						}
+					
+						//Code generation
+						if(!parser.isErrorFound()) {
+							currentMethod.setAdr(MyCode.pc);
+
+							//if it is main put virtaul table pointer init
+							for (Byte b : classVirtualTables) {
+								MyCode.buf[MyCode.pc] = b.byteValue();
+								MyCode.pc++;
+							}
+
+							MyCode.put(MyCode.enter);
+							MyCode.put(formalParameterList.size());
+						}
+					:}
+					;
+
+StaticModifier ::= 	//StaticModifier ::= STATIC
+					STATIC:attribute
 					{:
 						incrementStaticMethodCount();
 
@@ -954,6 +1072,7 @@ StaticModifier ::= 	STATIC:attribute
 						
 					:} 
 				   	|
+				   	//StaticModifier ::=
 				   	/* epsilon */
 				   	{:
 				   		incrementCurrentNonStaticMethodCount();
@@ -963,18 +1082,21 @@ StaticModifier ::= 	STATIC:attribute
 				   	:}
 				   	;
 				   	
-ReturnType ::=	Type:typeObject
+ReturnType ::=	//ReturnType ::= Type
+				Type:typeObject
 			   	{:
 			   		RESULT = typeObject;
 			   	:}
 			   	|
+			   	//ReturnType ::= VOID
 			   	VOID
 			   	{:
 			   		RESULT = SymbolTable.find("void");
 			   	:}
 			   	;
 
-FormalParameterList ::= FormalParameterList:formalParameterList COMA FormalParameter:formalParameter
+FormalParameterList ::= //FormalParameterList ::= FormalParameterList COMA FormalParameter
+						FormalParameterList:formalParameterList COMA FormalParameter:formalParameter
 						{:
 							if (formalParameterList == null) {
 								parser.report_internal_error("NULL formal parameter list in production FormalParameterList ::= FormalParameterList COM FormalParameter", formalParameterleft);
@@ -991,6 +1113,7 @@ FormalParameterList ::= FormalParameterList:formalParameterList COMA FormalParam
 							}
 						:}
 						|
+						//FormalParameterList ::= FormalParameter
 						FormalParameter:formalParameter
 						{:
 							if (formalParameter == null) {
@@ -1003,11 +1126,13 @@ FormalParameterList ::= FormalParameterList:formalParameterList COMA FormalParam
 							}
 						:}
 						|
+						//FormalParameterList ::= error
 						/* epsilon */
 						{:
 							RESULT = new ArrayList<>();
 						:}
 						|
+						//FormalParameterList ::= FormalParameterList COMA error
 						FormalParameterList:formalParameterList COMA error 
 						{: 
 							printSyntaxErrorDescription("Incorrect formal parameter declaration"); 
@@ -1022,6 +1147,7 @@ FormalParameterList ::= FormalParameterList:formalParameterList COMA FormalParam
 							}
 						:}
 						|
+						//FormalParameterList ::= error
 						error 
 						{: 
 							printSyntaxErrorDescription("Incorrect formal parameter declaration"); 
@@ -1030,7 +1156,8 @@ FormalParameterList ::= FormalParameterList:formalParameterList COMA FormalParam
 						:}
 						;	
 						
-FormalParameter ::= Type:typeObject IDENTIFIER:name Brackets:isArray
+FormalParameter ::=	//FormalParameter ::= Type IDENTIFIER Brackets
+					Type:typeObject IDENTIFIER:name Brackets:isArray
 					{:
 						incrementFormalArgumentsCount();
 						
@@ -1056,12 +1183,15 @@ FormalParameter ::= Type:typeObject IDENTIFIER:name Brackets:isArray
 					:}
 					;
 
-MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDeclaration
-								  |
-								  /* epsilon */
-								  ;
+MethodVariableDeclarationList ::= 	//MethodVariableDeclarationList ::= MethodVariableDeclarationList MethodVariableDeclaration
+									MethodVariableDeclarationList MethodVariableDeclaration
+									|
+								  	//MethodVariableDeclarationList ::=
+								  	/* epsilon */
+								  	;
 
-MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLON
+MethodVariableDeclaration ::=	// MethodVariableDeclaration ::= Type MethodVariableList SEMICOLON
+								Type:typeObject MethodVariableList:locals SEMICOLON
 								{:
 									//Semantic analysis 
 									if (typeObject == null) {
@@ -1093,12 +1223,15 @@ MethodVariableDeclaration ::=	Type:typeObject MethodVariableList:locals SEMICOLO
 									}
 								:}
 								|
+								//MethodVariableDeclaration ::= error SEMICOLON
 								error SEMICOLON {: printSyntaxErrorDescription("Incorrect local variable declaration"); :}
 								|
+								//MethodVariableDeclaration ::= error
 								error {: printSyntaxErrorDescription("Incorrect local variable declaration"); :} 
 								;
 
-MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable 
+MethodVariableList ::=	//MethodVariableList ::= MethodVariableList COMA Variable
+						MethodVariableList:locals COMA Variable:variable 
 						{: 
 							incrementCurrentMethodVariableCount(); 
 
@@ -1112,6 +1245,7 @@ MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable
 							}
 						:}
 						|
+						//MethodVariableList ::= Variable;
 						Variable:variable
 						{: 
 							incrementCurrentMethodVariableCount(); 
@@ -1126,7 +1260,8 @@ MethodVariableList ::=	MethodVariableList:locals COMA Variable:variable
 						:}
 						;
 
-Type ::=	IDENTIFIER:name
+Type ::=	//Type ::= IDENTIFIER
+			IDENTIFIER:name
 			{:
 				Obj typeObject = SymbolTable.find(name);
 				if (SymbolTable.noObj.equals(typeObject)) {
@@ -1722,8 +1857,10 @@ AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
 							//Code generation
 							if (!parser.isErrorFound()) {
 								if (!EQUALS.equals(operator)) {
-									if (designator.getKind() != MyObj.Var) {
+									if (designator.getKind() == MyObj.Elem) {
 										MyCode.put(MyCode.dup2);
+									} else if (designator.getKind() == MyObj.Fld) {
+										MyCode.put(MyCode.dup);
 									}
 									MyCode.load(designator);
 								}
@@ -2054,13 +2191,17 @@ ExpressionPrefix ::=	//ExpressionPrefix ::= MINUS
 					 	:}
 					 	;
 
-RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorList AdditionOperatorRight RightAssociatedAssociatedTermList	
-							RightAssociatedFactorList:leftExpression AdditionOperatorRight:operator 
+RightAssociatedTermList ::=	//RightAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorRight RightAssociatedAssociatedTermList	
+							LeftAssociatedTermList:leftExpression OperatorRight:operator 
 							{:
 								//Code generation
 								if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
 									if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
-										MyCode.put(MyCode.dup2);
+										if (leftExpression.getKind() == MyObj.Elem) {
+											MyCode.put(MyCode.dup2);
+										} else {
+											MyCode.put(MyCode.dup);
+										}
 										MyCode.load(leftExpression);
 									}
 									//We do need to load variables because they are already loaded
@@ -2090,7 +2231,7 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 								}
 
 								if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
-									parser.report_semantic_error("Left side " + leftExpression.getName() + " is not a varaible, array element or class field a", leftExpressionleft);
+									parser.report_semantic_error(leftExpression.getName() + " is not a varaible, array element or class field", leftExpressionleft);
 									error = true;
 								}
 
@@ -2116,6 +2257,18 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 											MyCode.put(MyCode.sub);
 											break;
 										}
+										case TIMES_EQUALS: {
+											MyCode.put(MyCode.mul);
+											break;
+										}
+										case SOLIDUS_EQUALS: {
+											MyCode.put(MyCode.div);
+											break;
+										}
+										case PERCENT_EQUALS: {
+											MyCode.put(MyCode.rem);
+											break;
+										}
 									}
 
 									if (leftExpression.getKind() != MyObj.Var) {
@@ -2128,8 +2281,8 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 								}
 							:}
 							|
-							//RightAssociatedTermList ::= RightAssociatedFactorList
-							RightAssociatedFactorList:expression
+							//RightAssociatedTermList ::= LeftAssociatedTermList
+							LeftAssociatedTermList:expression
 							{:
 								if (expression != null) {
 									RESULT = expression;
@@ -2139,96 +2292,6 @@ RightAssociatedTermList ::=	//RightAssociatedTermList ::= RightAssociatedFactorL
 								}
 							:}
 							;
-
-RightAssociatedFactorList ::=	//RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList
-								LeftAssociatedTermList:leftExpression MultiplicationOperatorRight:operator 
-								{:
-									//Code generation
-									if (!parser.isErrorFound() && leftExpression != null && !leftExpression.equals(SymbolTable.noObj)) {
-										if (!EQUALS.equals(operator) && (leftExpression.getKind() == MyObj.Elem || leftExpression.getKind() == MyObj.Fld)) {
-											MyCode.put(MyCode.dup2);
-											MyCode.load(leftExpression);
-										}
-										//We do need to load variables because they are already loaded
-									}
-								:}
-								RightAssociatedFactorList:rightExpression
-								{:
-									//Semantic analysis
-									boolean error = false;
-									if (leftExpression == null) {
-										parser.report_internal_error("NULL left expression in production RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList", rightExpressionleft);
-										error = true;
-									}
-
-									if (rightExpression == null) {
-										parser.report_internal_error("NULL right expression in production RightAssociatedFactorList ::= LeftAssociatedTermList MultiplicationOperatorRight RightAssociatedFactorList", rightExpressionleft);
-										error = true;
-									}
-
-									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && !leftExpression.getType().equals(SymbolTable.intType)) {
-										parser.report_semantic_error("Expression " + leftExpression.getName() + " is not of type int", leftExpressionleft);
-										error = true;
-									}
-
-									if (rightExpression != null && !rightExpression.equals(SymbolTable.noObj) && !rightExpression.getType().equals(SymbolTable.intType)) {
-										parser.report_semantic_error("Expression " + rightExpression.getName() + " is not of type int", rightExpressionleft);
-										error = true;
-									}
-
-									if (leftExpression != null && !leftExpression.equals(SymbolTable.noObj) && leftExpression.getKind() != MyObj.Var && leftExpression.getKind() != MyObj.Fld && leftExpression.getKind() != MyObj.Elem) {
-										parser.report_semantic_error(leftExpression.getName() + " is not a variable, array element or class field", leftExpressionleft);
-										error = true;
-									}
-
-									if(!error) {
-										RESULT = new MyObj(MyObj.Con, leftExpression.getName() + " " + operator + " " + rightExpression.getName(), SymbolTable.intType);
-									} else {
-										RESULT = SymbolTable.noObj;
-									}
-
-									//Code generation
-									if (!parser.isErrorFound()) {
-										//Load array element or class field beacuse it is not loaded
-										if (rightExpression.getKind() == MyObj.Elem || rightExpression.getKind() == MyObj.Fld) {
-											MyCode.load(rightExpression);
-										}
-
-										switch (operator) {
-											case TIMES_EQUALS: {
-												MyCode.put(MyCode.mul);
-												break;
-											}
-											case SOLIDUS_EQUALS: {
-												MyCode.put(MyCode.div);
-												break;
-											}
-											case PERCENT_EQUALS: {
-												MyCode.put(MyCode.rem);
-												break;
-											}
-										}
-										if (leftExpression.getKind() != MyObj.Var) {
-											MyCode.put(MyCode.dup_x2);
-										} else {
-											MyCode.put(MyCode.dup);
-										}
-
-										MyCode.store(leftExpression);
-									}
-								:}
-								|
-								//RightAssociatedFactorList ::= LeftAssociatedTermList
-								LeftAssociatedTermList:expression
-								{:
-									if (expression != null) {
-										RESULT = expression;
-									} else {
-										parser.report_internal_error("NULL expression in production RightAssociatedFactorList ::= LeftAssociatedTermList", expressionleft);
-										RESULT = SymbolTable.noObj;
-									}
-								:}
-								;
 
 LeftAssociatedTermList ::=	//LeftAssociatedTermList ::= LeftAssociatedTermList AdditionOperatorLeft LeftAssociatedFactorList
 							LeftAssociatedTermList:leftExpression 
@@ -2439,9 +2502,8 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 					} else if (designator.getKind() == MyObj.Global) {
 						//put call instruction
 						MyCode.putCall(designator.getAdr());
-					
 						//no need for pop because factor ret value will be used in expression
-					}
+					} 
 				}
 			:}
 		   	|
@@ -2508,18 +2570,24 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 		   		if (!parser.isErrorFound()) {
 		   			if (isArray.booleanValue()) {
 		   				MyCode.put(MyCode.newarray);
+		   				//if char type allocate byte array
+			   			if (typeObject.getType().equals(SymbolTable.charType)) {
+			   				MyCode.put(0);
+			   			} else {
+			   				MyCode.put(1);
+			   				
+			   				//adjust size if class
+			   				if (typeObject.getType().getKind() == MyStruct.Class) {
+			   					Code.loadConst(4);
+			   					Code.put(Code.mul);
+			   				}
+			   			}
 		   			} else {
 		   				MyCode.put(MyCode.new_);
+		   				
+		   				//put the size of class
+		   				MyCode.put2(typeObject.getType().getNumberOfFields() * 4);
 		   			}
-
-		   			//if char type allocate byte array
-		   			if (typeObject.getType().equals(SymbolTable.charType)) {
-		   				MyCode.put(0);
-		   			} else {
-		   				MyCode.put(1);
-		   			}
-
-		   			//Adjust size for array of classes
 		   		}
 		   	:}
 		   	|
@@ -2612,6 +2680,11 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 					} else {
 						RESULT = SymbolTable.noObj;
 					}
+
+					//Code generation
+					if (!parser.isErrorFound()) {
+						MyCode.load(designator);
+					}
 				:}
 				|
 				//Designator ::= Designator ArrayIndexer
@@ -2682,6 +2755,13 @@ AssignOperator ::= 	//AssignOperator ::= EQUALS
 					{:
 						RESULT = operator;
 					:}
+					;
+
+OperatorRight ::=	//OperatorRight ::= AdditionOperatorRight
+					AdditionOperatorRight:operator {: RESULT = operator; :}
+					|
+					//OperatorRight ::= MultiplicationOperatorRight
+					MultiplicationOperatorRight:operator {: RESULT = operator; :}
 					;
 
 RelationalOperator ::= 	//RelationalOperator ::= EQUAL
