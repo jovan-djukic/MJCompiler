@@ -297,9 +297,7 @@ nonterminal MethodDeclaration, MethodVariableDeclarationList, MethodVariableDecl
 
 nonterminal StatementList, Statement, MatchedStatement, UnmatchedStatement, PrintParameters, AssignStatement;
 
-nonterminal IfHeader, ForHeader;
-
-nonterminal ForCondition, ForPostStatement;
+nonterminal IfHeader;
 
 nonterminal DesignatorStatement, ActualParameters;
 
@@ -362,7 +360,7 @@ nonterminal Obj ReturnValue;
 nonterminal Obj Condition, ConditionTerm, ConditionFact;
 
 //For loop
-nonterminal Integer ForInitialStatement;
+nonterminal Integer ForInitialStatement, ForCondition, ForPostStatement, ForHeader;
 
 Program ::= PROGRAM ProgramName:programObject 
 			NonMethodDeclarationList 
@@ -1152,8 +1150,12 @@ ForHeader ::=	//ForHeader ::= FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON
 						falseJumps.push(new ArrayList<>());
 					}
 				:}
-				SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS
+				SEMICOLON ForCondition:fixupAddress SEMICOLON ForPostStatement:postAddress RIGHT_PARENTHESIS
 				{:
+					//Semantic analysis
+					forLoopBreakStack.push(new ArrayList<>());
+					forLoopContinueStack.push(new ArrayList<>());
+				
 					//Code generation
 					if (!parser.isErrorFound()) {
 						//put jump to condition check
@@ -1165,11 +1167,13 @@ ForHeader ::=	//ForHeader ::= FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON
 							MyCode.fixup(address.intValue());
 						}
 
-						//fix unconditional jump after condition, there should be only one
-											
+						//fix unconditional jump after condition, there should be only one						
+						MyCode.fixup(fixupAddress.intValue());
+
+						RESULT = postAddress;	
+					} else {
+						RESULT = new Integer(0);
 					}
-					forLoopBreakStack.push(new ArrayList<>());
-					forLoopContinueStack.push(new ArrayList<>());
 				:}
 				|
 				//ForHeader ::= FOR LEFT_PARENTHESIS error RIGHT_PARENTHESIS
@@ -1208,16 +1212,28 @@ UnmatchedStatement ::=	//UnmatchedStatement ::= IfHeader Statement
 					  	:}
 					  	| /* umatched for */
 					  	//UnmatchedStatement ::= ForHeader UnmatchedStatement
-					   	ForHeader:token UnmatchedStatement
+					   	ForHeader:postAddress UnmatchedStatement
 						{:
+							//Semantic analysis
 							if (forLoopBreakStack.isEmpty()) {
-								parser.report_internal_error("For loop break stack is empty", tokenleft);
+								parser.report_internal_error("For loop break stack is empty", postAddressleft);
 							} else if (forLoopContinueStack.isEmpty()) {
-								parser.report_internal_error("For loop continue stack is empty", tokenleft);
+								parser.report_internal_error("For loop continue stack is empty", postAddressleft);
 							} else {
 								//Iterate trough both lists and fix break and continue adressess
 								forLoopBreakStack.pop();
 								forLoopContinueStack.pop();
+							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								MyCode.putJump(postAddress.intValue());
+
+								//Fix all false jumps
+								List<Integer> jumpsToFix = falseJumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
 							}
 						:}
 					   	;
@@ -1233,19 +1249,32 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 					  	:}
 						| 
 						/* matched for */
-						ForHeader:token MatchedStatement
+						//MatchedStatement ::= ForHeader MatchedStatement
+						ForHeader:postAddress MatchedStatement
 						{:
 							if (forLoopBreakStack.isEmpty()) {
-								parser.report_internal_error("For loop break stack is empty", tokenleft);
+								parser.report_internal_error("For loop break stack is empty", postAddress);
 							} else if (forLoopContinueStack.isEmpty()) {
-								parser.report_internal_error("For loop continue stack is empty", tokenleft);
+								parser.report_internal_error("For loop continue stack is empty", postAddress);
 							} else {
 								//Iterate trough both lists and fix break and continue adressess
 								forLoopBreakStack.pop();
 								forLoopContinueStack.pop();
 							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								MyCode.putJump(postAddress.intValue());
+
+								//Fix all false jumps
+								List<Integer> jumpsToFix = falseJumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
+							}
 						:}
 						|
+						//MatchedStatement ::= DesignatorStatement
 						DesignatorStatement SEMICOLON
 						|
 						BREAK SEMICOLON:token
@@ -1412,6 +1441,7 @@ ForInitialStatement ::=	//ForInitialStatement ::= DesignatorStatement
 						//ForInitialStatement ::= error
 						error {: printSyntaxErrorDescription("Incorrect initial for loop statement"); :}
 						|
+						//ForInitialStatement ::= 
 						/* epsilon */
 						{:
 							RESULT = new Integer(MyCode.pc);
@@ -1428,7 +1458,10 @@ ForCondition ::=	//ForCondition ::= Condition
 
 							//Put unconditional jump to body
 							MyCode.putJump(0);
-						}
+							RESULT = new Integer(MyCode.pc - 2);
+						} else {
+				 			RESULT = new Integer(0);
+				 		}
 					:}
 				 	|
 				 	//ForCondition ::= error
@@ -1440,17 +1473,29 @@ ForCondition ::=	//ForCondition ::= Condition
 				 		if (!parser.isErrorFound()) {
 				 			//Put unconditional jump to body
 							MyCode.putJump(0);
+							RESULT = new Integer(MyCode.pc - 2);
+				 		} else {
+				 			RESULT = new Integer(0);
 				 		}
 				 	:}
 		  		 	;
 		  		 
 ForPostStatement ::=	//ForPostStatement ::= DesignatorStatement
+						{:
+							//Code generation
+							if (!parser.isErrorFound()) {
+								RESULT = new Integer(MyCode.pc);
+							}
+						:}
 						DesignatorStatement
 					 	|
 					 	//ForPostStatement ::= error
 					 	error {: printSyntaxErrorDescription("Incorrect post for loop statement"); :}
 					 	|
 					 	/* epsilon */
+					 	{:
+					 		RESULT = new Integer(MyCode.pc);
+					 	:}
 					 	;
 
 DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
