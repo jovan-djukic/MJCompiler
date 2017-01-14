@@ -1,0 +1,15 @@
+program PredeclaredFunctions
+int gia[];
+{
+	void main() {
+		print(ord('a'));
+		print('\n');
+		
+		print(chr(ord('a')));
+		print('\n');
+		
+		gia = new int[5];
+		print(len(gia));
+		print('\n');
+	}
+}
