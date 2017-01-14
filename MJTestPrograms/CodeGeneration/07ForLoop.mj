@@ -1,0 +1,23 @@
+program ForLoop
+	const int iboundary = 10, jboundary = 10;
+{
+	void main() 
+		int i, j;
+		int a, b;
+	{
+		a = 3;
+		b = 4;
+		for (i = 0; i < iboundary && true; i++) {
+			for (j = 0; j < jboundary && a <= b || false; j++) {
+				print( i * jboundary + j);
+				print(' ');
+				if ( (i * jboundary + j) % 2 == 0) {
+					print('e');
+				} else {
+					print('o');
+				}
+				print('\n');
+			}
+		}
+	}
+}
