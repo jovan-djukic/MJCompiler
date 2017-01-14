@@ -1,0 +1,44 @@
+program GlobalFunctions
+{
+	void gf0() {
+		print('a');
+		print('\n');
+		return;
+	}
+	
+	void gf1(int fp1, int fp2) {
+		print(fp1 + fp2);
+		print('\n');
+	}
+	
+	void gf2(int fp1, int fp2, int fp3) 
+		int l1;
+	{
+		l1 = fp3;
+		print(fp1 + fp2 + l1);
+		print('\n');
+	}
+	
+	int gf3() {
+		return 1;
+		print('x');
+		print('\n');
+	}
+	
+	void gf4() {
+		gf0();
+		gf1(1, 2);
+		return;
+		gf2(1, 2, 3);
+	}
+	
+	void main() {
+		gf0();
+		gf1(1, 2);
+		gf2(1, 2, 3);
+		gf3();
+		print(gf3() + 4);
+		print('\n');
+		gf4();
+	}
+}
