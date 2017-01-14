@@ -776,15 +776,20 @@ MethodDeclaration ::=	MethodSignature MethodVariableDeclarationListWithAction LE
 								}
 							}
 
+							if(!parser.isErrorFound()) {
+								if (currentMethod.getType().equals(SymbolTable.voidType)) {
+									MyCode.put(MyCode.exit);
+									MyCode.put(MyCode.return_);
+								} else {
+									MyCode.put(MyCode.trap);
+									MyCode.put(1);
+								}
+							}
+
 							SymbolTable.closeScope();
 							currentMethod = null;
 							methodVariablePosition = 0;
 							returnFound = false;
-
-							if(!parser.isErrorFound()) {
-								MyCode.put(MyCode.exit);
-								MyCode.put(MyCode.return_);
-							}
 						:}
 						;
 					
@@ -1219,18 +1224,25 @@ UnmatchedStatement ::=	//UnmatchedStatement ::= IfHeader Statement
 								parser.report_internal_error("For loop break stack is empty", postAddressleft);
 							} else if (forLoopContinueStack.isEmpty()) {
 								parser.report_internal_error("For loop continue stack is empty", postAddressleft);
-							} else {
-								//Iterate trough both lists and fix break and continue adressess
-								forLoopBreakStack.pop();
-								forLoopContinueStack.pop();
-							}
+							} 
 
 							//Code generation
 							if (!parser.isErrorFound()) {
+								//Fix continue statements
+								List<Integer> jumpsToFix = forLoopContinueStack.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
+
 								MyCode.putJump(postAddress.intValue());
 
-								//Fix all false jumps
-								List<Integer> jumpsToFix = falseJumps.pop();
+								//Fix all false jumps nad break statements
+								jumpsToFix = falseJumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
+
+								jumpsToFix = forLoopBreakStack.pop();
 								for (Integer address : jumpsToFix) {
 									MyCode.fixup(address.intValue());
 								}
@@ -1256,18 +1268,25 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 								parser.report_internal_error("For loop break stack is empty", postAddress);
 							} else if (forLoopContinueStack.isEmpty()) {
 								parser.report_internal_error("For loop continue stack is empty", postAddress);
-							} else {
-								//Iterate trough both lists and fix break and continue adressess
-								forLoopBreakStack.pop();
-								forLoopContinueStack.pop();
 							}
 
 							//Code generation
 							if (!parser.isErrorFound()) {
+								//Fix continue statements
+								List<Integer> jumpsToFix = forLoopContinueStack.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
+
 								MyCode.putJump(postAddress.intValue());
 
-								//Fix all false jumps
-								List<Integer> jumpsToFix = falseJumps.pop();
+								//Fix all false jumps nad break statements
+								jumpsToFix = falseJumps.pop();
+								for (Integer address : jumpsToFix) {
+									MyCode.fixup(address.intValue());
+								}
+
+								jumpsToFix = forLoopBreakStack.pop();
 								for (Integer address : jumpsToFix) {
 									MyCode.fixup(address.intValue());
 								}
@@ -1277,18 +1296,34 @@ MatchedStatement ::= 	//MatchedStatement ::= IfHeader MatchedStatement Else Matc
 						//MatchedStatement ::= DesignatorStatement
 						DesignatorStatement SEMICOLON
 						|
+						//MatchedStatement ::= BREAK SEMICOLON
 						BREAK SEMICOLON:token
 						{:
+							//Semantic analysis
 							if (forLoopBreakStack.isEmpty()) {
 								parser.report_semantic_error("BREAK statement found outside of loop", tokenleft);
 							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								MyCode.putJump(0);
+								forLoopBreakStack.peek().add(MyCode.pc - 2);
+							}
 						:}
 						|
+						//MatchedStatement ::= CONTINUE SEMICOLON
 						CONTINUE SEMICOLON:token
 						{:
+							//Semantic analysis
 							if (forLoopContinueStack.isEmpty()) {
 								parser.report_semantic_error("CONTINUE statement found outside of loop", tokenleft);
 							} 
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								MyCode.putJump(0);
+								forLoopContinueStack.peek().add(MyCode.pc - 2);
+							}
 						:}
 					 	|
 					 	RETURN ReturnValue:value SEMICOLON
@@ -1535,6 +1570,16 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 									}
 								}
 							}
+
+							if (!parser.isErrorFound()) {
+								//put call instruction
+								MyCode.putCall(designator.getAdr());
+
+								//if it has a return value take it of the expression stack because this is not a factor
+								if (!designator.getType().equals(SymbolTable.voidType)) {
+									MyCode.put(MyCode.pop);
+								}
+							}
 						:}
 						|
 						//DesignatorStatement ::= Designator INCREMENT
@@ -1688,7 +1733,8 @@ AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
 						:}
 						;
 								 
-ActualParameters ::=	ActualParameters COMA Expression:expression
+ActualParameters ::=	//ActualParameters ::= ActualParameters COMA Expression
+						ActualParameters COMA Expression:expression
 						{:
 							if (actualParametersStack.empty()) {
 								parser.report_internal_error("Internal error, got empty parameter list", expressionleft);
@@ -1700,6 +1746,7 @@ ActualParameters ::=	ActualParameters COMA Expression:expression
 							}
 						:}
 						|
+						//ActualParameters ::= Expression
 						Expression:expression
 						{:
 							List<Obj> parameters = new ArrayList<>();
@@ -1712,6 +1759,7 @@ ActualParameters ::=	ActualParameters COMA Expression:expression
 							actualParametersStack.push(parameters);
 						:}
 						|
+						//ActualParameters ::= 
 						/* epsilon */
 						{:
 							actualParametersStack.push(new ArrayList<>());
