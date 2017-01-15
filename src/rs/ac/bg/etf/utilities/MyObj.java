@@ -28,7 +28,7 @@ public class MyObj extends Obj {
 			return true;
 		} else if(o instanceof Obj) {
 			Obj other = (Obj) o;
-			if (other.getName().equals(this.getName()) && other.getKind() == MyObj.Meth && this.getKind() == MyObj.Meth && other.getLevel() == this.getLevel()) {
+			if (other.getName().equals(this.getName()) && other.getKind() == MyObj.Meth && this.getKind() == MyObj.Meth && other.getLevel() == this.getLevel() && this.getType().equals(other.getType())) {
 				Iterator<Obj> otherIterator = other.getLocalSymbols().iterator();
 				Iterator<Obj> thisIterator = other.getLocalSymbols().iterator();
 

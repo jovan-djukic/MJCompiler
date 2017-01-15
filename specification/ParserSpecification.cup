@@ -256,7 +256,6 @@ action code {:
 	private static final String SOLIDUS_EQUALS = "/=";
 	private static final String PERCENT_EQUALS = "%=";
 
-	//private int variablePosition = 0;
 	
 	private Obj currentMethod = null;
 	private int methodVariablePosition = 0;
@@ -264,12 +263,14 @@ action code {:
 	private Obj currentClass = null;
 	private int classVariablePosition = 0;
 
+	//This is also for code generation
 	private Stack<List<Obj>> actualParametersStack = new Stack<>();
 
 	private Stack<List<Integer>>  forLoopBreakStack = new Stack<>(), forLoopContinueStack = new Stack<>();
 
 	private boolean returnFound = false;
 
+	//Code generation
 	//Stacks of integer lists for jumps and falseJumps, both for if and for loop statements
 	private Stack<List<Integer>> falseJumps = new Stack<>() , trueJumps = new Stack<>();
 
@@ -290,6 +291,8 @@ action code {:
 		classVirtualTables.add(new Byte((byte)(address >> 8)));
 		classVirtualTables.add(new Byte((byte)(address)));
 	}
+
+	//Designator path for virtaul method invocation
 :}
 
 
@@ -991,7 +994,7 @@ MethodSignature ::=	//MethodSignature ::= StaticModifier ReturnType IDENTIFIER L
 										method.setLevel(locals.numSymbols());										
 
 										if (!method.equals(inheritedMember)) {
-											parser.report_semantic_error("Cannot redefine inherited member " + identifier, identifierleft);
+											parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", signatures are different", identifierleft);
 										} else {//It is redefined method remove its node from current class
 											currentClass.getType().getMembersTable().deleteKey(identifier);
 											currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
@@ -1737,7 +1740,7 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 									parser.report_semantic_error("Symbol " + designator.getName() + " is not callable", designatorleft);
 								} else {
 									if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
-										parser.report_semantic_error("Incorrect number of parameters in the invokation of " + designator.getName(), designatorleft);
+										parser.report_semantic_error("Incorrect number of parameters in the invocation of " + designator.getName(), designatorleft);
 									} else {
 										Collection<Obj> functionLocals = designator.getLocalSymbols();
 										Iterator<Obj> formalParameterIterator = functionLocals.iterator();
@@ -2460,7 +2463,7 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 					String name = designator.getName();
 					if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Meth || designator.getKind() == MyObj.Static) {
 						if ((designator.getKind() != MyObj.Meth && parameterList.size() != designator.getLevel()) || (designator.getKind() == MyObj.Meth && parameterList.size() != (designator.getLevel() - 1))) {
-							parser.report_semantic_error("Incorrect number of parameters in the invokation of " + designator.getName(), designatorleft);
+							parser.report_semantic_error("Incorrect number of parameters in the invocation of " + designator.getName(), designatorleft);
 						} else {
 							Collection<Obj> functionLocals = designator.getLocalSymbols();
 							Iterator<Obj> formalParameterIterator = functionLocals.iterator();
@@ -2587,6 +2590,11 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 		   				
 		   				//put the size of class
 		   				MyCode.put2(typeObject.getType().getNumberOfFields() * 4);
+
+		   				//initialize virtaul table pointer
+		   				MyCode.put(MyCode.dup);
+		   				MyCode.loadConst(typeObject.getAdr());
+		   				MyCode.store(typeObject.getType().getMembersTable().searchKey(VFT));
 		   			}
 		   		}
 		   	:}
