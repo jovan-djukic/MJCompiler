@@ -292,7 +292,8 @@ action code {:
 		classVirtualTables.add(new Byte((byte)(address)));
 	}
 
-	//Designator path for virtaul method invocation
+	//stack of booleans which indicates if we are currently calling method or something else
+	private Stack<Boolean> isMethod = new Stack<>();
 :}
 
 
@@ -1048,10 +1049,12 @@ MethodSignature ::=	//MethodSignature ::= StaticModifier ReturnType IDENTIFIER L
 						if(!parser.isErrorFound()) {
 							currentMethod.setAdr(MyCode.pc);
 
-							//if it is main put virtaul table pointer init
-							for (Byte b : classVirtualTables) {
-								MyCode.buf[MyCode.pc] = b.byteValue();
-								MyCode.pc++;
+							if(currentMethod.getName().equals(MAIN)) {
+								//if it is main put virtaul table pointer init
+								for (Byte b : classVirtualTables) {
+									MyCode.buf[MyCode.pc] = b.byteValue();
+									MyCode.pc++;
+								}
 							}
 
 							MyCode.put(MyCode.enter);
@@ -1729,7 +1732,22 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 						AssignStatement
 						|
 						//DesignatorStatement ::= Designator MethodCall
-						Designator:designator MethodCall:parameterList
+						Designator:designator 
+						{:
+							//Code generation
+							if (designator.getKind() == MyObj.Meth) {
+								isMethod.push(new Boolean(true));
+
+								//load virtual table adress
+								MyCode.put(MyCode.dup);
+								MyCode.put(MyCode.getfield);
+								MyCode.put2(0);
+
+							} else {
+								isMethod.push(new Boolean(false));
+							}
+						:}
+						MethodCall:parameterList
 						{:
 							if (designator == null) {
 								parser.report_internal_error("NULL designator in production DesignatorStatement ::= Designator MethodCall", designatorleft);
@@ -1764,8 +1782,19 @@ DesignatorStatement ::=	//DesignatorStatement ::= AssignStatement
 							}
 
 							if (!parser.isErrorFound()) {
+								//take method indicator of the stack
+								isMethod.pop();
+						
 								//put call instruction
-								MyCode.putCall(designator.getAdr());
+								if (designator.getKind() == MyObj.Meth) {
+									MyCode.put(MyCode.invokevirtual);
+									for(int i = 0; i < designator.getName().length(); i++) {
+										MyCode.put4((int)designator.getName().charAt(i));
+									}
+									MyCode.put4(-1);
+								} else {
+									MyCode.putCall(designator.getAdr());
+								}
 
 								//if it has a return value take it of the expression stack because this is not a factor
 								if (!designator.getType().equals(SymbolTable.voidType)) {
@@ -1930,6 +1959,7 @@ AssignStatement ::= 	//AssignStatement ::= Designator AssignOperator Expression
 ActualParameters ::=	//ActualParameters ::= ActualParameters COMA Expression
 						ActualParameters COMA Expression:expression
 						{:
+							//Semantic analysis
 							if (actualParametersStack.empty()) {
 								parser.report_internal_error("Internal error, got empty parameter list", expressionleft);
 							} else if (expression == null) {
@@ -1938,11 +1968,20 @@ ActualParameters ::=	//ActualParameters ::= ActualParameters COMA Expression
 							} else {
 								actualParametersStack.peek().add(expression);
 							}
+
+							//Code generation
+							if (!parser.isErrorFound()) {
+								if (isMethod.peek().booleanValue()) {
+									MyCode.put(MyCode.dup_x1);
+									MyCode.put(MyCode.pop);
+								}
+							}
 						:}
 						|
 						//ActualParameters ::= Expression
 						Expression:expression
 						{:
+							//Semantic analysis
 							List<Obj> parameters = new ArrayList<>();
 							if (expression == null) {
 								parser.report_internal_error("NULL expression in production ActualParameters ::= expression", expressionleft);
@@ -1951,6 +1990,14 @@ ActualParameters ::=	//ActualParameters ::= ActualParameters COMA Expression
 								parameters.add(expression);
 							}
 							actualParametersStack.push(parameters);
+							
+							//Code generation
+							if (!parser.isErrorFound()) {
+								if (isMethod.peek().booleanValue()) {
+									MyCode.put(MyCode.dup_x1);
+									MyCode.put(MyCode.pop);
+								}
+							}
 						:}
 						|
 						//ActualParameters ::= 
@@ -2449,7 +2496,22 @@ LeftAssociatedFactorList ::=	//LeftAssociatedFactorList ::= LeftAssociatedFactor
 								;
 
 Factor ::=	//Factor ::= Designator OptionalParameters
-			Designator:designator OptionalParameters:parameterList
+			Designator:designator 
+			{:
+				//Code generation
+				if (designator.getKind() == MyObj.Meth) {
+					isMethod.push(new Boolean(true));
+
+					//load virtual table adress
+					MyCode.put(MyCode.dup);
+					MyCode.put(MyCode.getfield);
+					MyCode.put2(0);
+
+				} else if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Static){
+					isMethod.push(new Boolean(false));
+				}
+			:}
+			OptionalParameters:parameterList
 			{:
 				//Semantic analysis
 				if (designator == null) {
@@ -2502,11 +2564,23 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 				if (!parser.isErrorFound()) {
 					if (designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Con) {
 						MyCode.load(designator);
-					} else if (designator.getKind() == MyObj.Global) {
+					} else if (designator.getKind() == MyObj.Global || designator.getKind() == MyObj.Static) {
+						//pop method indicator
+						isMethod.pop();
 						//put call instruction
 						MyCode.putCall(designator.getAdr());
 						//no need for pop because factor ret value will be used in expression
-					} 
+					} else if (designator.getKind() == MyObj.Meth) {
+						//pop indicator
+						isMethod.pop();
+
+						//put invoke virtual
+						MyCode.put(MyCode.invokevirtual);
+						for(int i = 0; i < designator.getName().length(); i++) {
+							MyCode.put4((int)designator.getName().charAt(i));
+						}
+						MyCode.put4(-1);
+					}
 				}
 			:}
 		   	|
@@ -2578,12 +2652,6 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 			   				MyCode.put(0);
 			   			} else {
 			   				MyCode.put(1);
-			   				
-			   				//adjust size if class
-			   				if (typeObject.getType().getKind() == MyStruct.Class) {
-			   					Code.loadConst(4);
-			   					Code.put(Code.mul);
-			   				}
 			   			}
 		   			} else {
 		   				MyCode.put(MyCode.new_);
@@ -2691,7 +2759,12 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 
 					//Code generation
 					if (!parser.isErrorFound()) {
-						MyCode.load(designator);
+						if ((designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Elem || designator.getKind() == MyObj.Fld)) {
+							MyCode.load(designator);
+						}
+						if (RESULT.getKind() == MyObj.Static && designator.getKind() != MyObj.Type) {
+							MyCode.put(MyCode.pop);
+						}
 					}
 				:}
 				|
@@ -2700,7 +2773,9 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 				{:
 					//Code generation
 					if (!parser.isErrorFound()) {
-						MyCode.load(designator);
+						if (designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Elem || designator.getKind() == MyObj.Fld) {
+							MyCode.load(designator);
+						}
 					}
 				:}
 				ArrayIndexer
