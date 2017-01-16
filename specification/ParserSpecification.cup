@@ -2818,6 +2818,14 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 					} else {	
 						RESULT = object;
 					}
+
+					//Code generation
+					if (!parser.isErrorFound()) {
+						if (object.getKind() == MyObj.Fld) {
+							Obj thisPointer = SymbolTable.find(THIS);
+							MyCode.load(thisPointer);
+						}
+					}
 				:}
 				;
 			   
