@@ -1,0 +1,72 @@
+program CompleteClass
+	
+	class Oblik {
+		char vrsta;
+		Oblik o;
+		{
+			int povrsina() { return 0; }
+			int obim() {return 0;}
+			void printMe() { return; }
+		}
+	}
+	class Kvadrat extends Oblik{
+		int a;
+		{
+			int povrsina() { return a*a; }
+			int obim() { return 4*a; }
+			void printMe() { print(a); print('-',5); }
+		}
+	}
+	class Pravougaonik extends Oblik{
+		int a,b;
+		{
+			int povrsina() { return a*b; }
+			int obim() { return 2*(a+b); }
+			void printMe() { print(a); print(b); }
+		}
+	}
+	class Zbirka {
+		Oblik niz[];
+	}
+
+{
+	void main()
+		Zbirka z;
+		int i;
+		Kvadrat k;
+		Pravougaonik p;
+	{
+		z = new Zbirka;
+		z.niz = new Oblik[10];
+		for(i=0; i<10; i++){
+			if(i%2==0){
+				k = new Kvadrat;
+				k.a = i+1;
+				k.vrsta = 'k';
+			}else{
+				p = new Pravougaonik;
+				p.a = i+1;
+				p.b = i+2;
+				p.vrsta = 'p';
+				p.o = k;
+				z.niz[i] = p;
+			}
+		}
+		for(i=0;i<10;i++){
+			if(i%2==0) continue;
+			
+			print(z.niz[i].o.vrsta);
+			z.niz[i].o.printMe();
+			print(z.niz[i].o.povrsina());
+			print(z.niz[i].o.obim());
+			print(eol);
+			
+			print(z.niz[i].vrsta);
+			z.niz[i].printMe();
+			print(z.niz[i].povrsina());
+			print(z.niz[i].obim());
+			print(eol);
+			
+		}
+	}
+}
