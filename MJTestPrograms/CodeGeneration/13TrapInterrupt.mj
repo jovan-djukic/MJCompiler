@@ -1,0 +1,13 @@
+program TrapInterrupt
+
+{
+	int gf0() {
+		if (false) {
+			return 1;
+		}
+	}
+	
+	void main() {
+		gf0();
+	}
+}
