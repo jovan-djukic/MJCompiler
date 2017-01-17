@@ -1025,15 +1025,19 @@ MethodSignature ::=	//MethodSignature ::= StaticModifier ReturnType IDENTIFIER L
 									//Add the rest of the local parameters
 									for (Obj formalParameter : formalParameterList) {
 										if (!formalParameter.equals(SymbolTable.noObj)) {
-											Obj newObject = SymbolTable.insert(MyObj.Var, formalParameter.getName(), formalParameter.getType());
-
-											if (newObject == SymbolTable.noObj) {
-												parser.report_internal_error("Could not insert symbol " + formalParameter.getName() + " into symbol table", identifierleft);
+											if (SymbolTable.currentScope.findSymbol(formalParameter.getName()) != null) {
+												parser.report_semantic_error("Redefinition of " + formalParameter.getName(), identifierleft);
 											} else {
-												newObject.setLevel(SymbolTable.getCurrentLevel());
-												newObject.setFpPos(methodVariablePosition);
-												newObject.setAdr(methodVariablePosition);
-												methodVariablePosition++;
+												Obj newObject = SymbolTable.insert(MyObj.Var, formalParameter.getName(), formalParameter.getType());
+
+												if (newObject == SymbolTable.noObj) {
+													parser.report_internal_error("Could not insert symbol " + formalParameter.getName() + " into symbol table", identifierleft);
+												} else {
+													newObject.setLevel(SymbolTable.getCurrentLevel());
+													newObject.setFpPos(methodVariablePosition);
+													newObject.setAdr(methodVariablePosition);
+													methodVariablePosition++;
+												}
 											}
 										}
 									}
@@ -1171,18 +1175,14 @@ FormalParameter ::=	//FormalParameter ::= Type IDENTIFIER Brackets
 						if (typeObject == null) {
 							parser.report_internal_error("NULL type object in production FormalParameter ::= Type IDENTIFIER BRACKETS", typeObjectleft);
 						} if (!typeObject.equals(SymbolTable.noObj)) {
-							if (SymbolTable.currentScope.findSymbol(name) != null) {
-								parser.report_semantic_error("Redefinition of " + name, nameleft);
+							Obj newObject = null;
+							if (isArray) {
+								newObject = new MyObj(MyObj.Var, name, new MyStruct(Struct.Array, typeObject.getType()));
 							} else {
-								Obj newObject = null;
-								if (isArray) {
-									newObject = new MyObj(MyObj.Var, name, new MyStruct(Struct.Array, typeObject.getType()));
-								} else {
-									newObject = new MyObj(MyObj.Var, name, typeObject.getType());
-								}
-							
-								RESULT = newObject;
+								newObject = new MyObj(MyObj.Var, name, typeObject.getType());
 							}
+						
+							RESULT = newObject;
 						} else {
 							RESULT = SymbolTable.noObj;
 						}
@@ -2825,7 +2825,7 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 
 					//Code generation
 					if (!parser.isErrorFound()) {
-						if (object.getKind() == MyObj.Fld) {
+						if (object.getKind() == MyObj.Fld || object.getKind() == MyObj.Meth) {
 							Obj thisPointer = SymbolTable.find(THIS);
 							MyCode.load(thisPointer);
 						}
