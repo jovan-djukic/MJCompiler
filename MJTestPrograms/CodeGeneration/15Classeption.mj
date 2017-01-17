@@ -1,0 +1,41 @@
+program Classesption
+
+class Level1 {
+	int a;
+	{
+		void printMe() {
+			print(this.a, 2);
+		}
+		static void printMeStatic(Level1 instance) {
+			print(instance.a, 2);
+		}
+	}
+}
+
+class Level2 {
+	Level1 instance;
+}
+
+
+class Level3 {
+	Level2 instance;
+}
+
+class Level4 {
+	Level3 instance;
+}
+
+{ 
+	void main() 
+		Level4 instance;
+	{
+		instance = new Level4;
+		instance.instance = new Level3;
+		instance.instance.instance = new Level2;
+		instance.instance.instance.instance = new Level1;
+		instance.instance.instance.instance.a = 1;
+		instance.instance.instance.instance.printMe();
+		instance.instance.instance.instance.printMeStatic(instance.instance.instance.instance);
+	}
+}
+
