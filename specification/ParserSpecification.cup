@@ -2619,6 +2619,8 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 		   			//I am puting byte values because of special characters that can be two bytes like \r\n
 		   			if ("\\n".equals(value)) {
 		   				value = "\n";
+		   			} else if ("\\t".equals(value)) {
+		   				value = "\t";
 		   			}
 
 		   			byte bytes[] = value.getBytes();
