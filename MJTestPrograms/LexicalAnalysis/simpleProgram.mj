@@ -30,7 +30,7 @@ program MJProgram
 		int a[], b, c, d;
 	
 		{
-			static void m(int p1, char p2) 
+			static void sm(int p1, char p2) 
 				char a;
 			{
 				a = '=';
@@ -57,7 +57,7 @@ program MJProgram
 				return;
 			}
 			
-			void g(int p1)
+			void gm(int p1)
 				char c1, c2;
 			{
 				a = a + m(c1, c2);
@@ -88,7 +88,7 @@ program MJProgram
 	{
 		instance = new MyClass;
 		parent = new MyClass;
-		instance.g();
+		instance.gm();
 		intsance.t = 'a';
 		instance.a[5] = 2;
 		parent.m(c, d);

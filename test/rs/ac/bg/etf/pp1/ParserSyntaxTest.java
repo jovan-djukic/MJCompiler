@@ -16,12 +16,13 @@ import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 public class ParserSyntaxTest {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/SyntaxAnalysis";
+	private static String outputDirectoryPath = "output/SyntaxAnalysis/";
 	private static Logger logger = MyLoggerFactory.getLogger(ParserSyntaxTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
 		if (args.length == 2 && "-f".equals(args[0])) {
-			File outputFile = new File("output/" + args[1]);
+			File outputFile = new File(outputDirectoryPath + args[1]);
 			try {
 				if (outputFile.exists() || outputFile.createNewFile()) {
 					out = new PrintWriter(new FileOutputStream(outputFile));
@@ -65,6 +66,22 @@ public class ParserSyntaxTest {
 					logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
 					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
 					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
+					
+					if (out != null) {
+						out.println("SYMBOL IS: " + symbol.sym);
+						out.println("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
+						out.println("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
+						out.println("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
+						out.println("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
+						out.println("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
+						out.println("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
+						out.println("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
+						out.println("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
+						out.println("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
+						out.println("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
+						out.println("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
+						out.println("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
+					}
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);
@@ -80,6 +97,8 @@ public class ParserSyntaxTest {
 			} 
 		}
 		
-		out.close();
+		if (out != null) {
+			out.close();
+		}
 	}
 }

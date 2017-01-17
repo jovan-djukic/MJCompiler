@@ -30,7 +30,7 @@ program MJProgram
 		int a, b, c, d;
 	
 		{
-			void m(int p1, char p2) 
+			void sm(int p1, char p2) 
 				char l;
 				int i;
 			{
@@ -54,7 +54,7 @@ program MJProgram
 				}
 			}
 			
-			void g(int p1)
+			void gm(int p1)
 				char c1, c2;
 			{
 				if (a > b) if ( a > b ) {
@@ -80,7 +80,7 @@ program MJProgram
 	{
 		instance = new MyClass;
 		parent = new MyClass;
-		instance.g(1);
+		instance.gm(1);
 		instance.t = 'a';
 		parent.m(1, d);
 		parent.m(1, d);
