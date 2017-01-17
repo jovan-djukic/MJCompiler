@@ -20,12 +20,13 @@ import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 public class LexerTest {
 	
 	private static String testProgramsDirectoryPath = "MJTestPrograms/LexicalAnalysis";
+	private static String outputDirectoryPath = "output/LexicalAnalysis/";
 	private static Logger logger = MyLoggerFactory.getLogger(LexerTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
 		if (args.length == 2 && "-f".equals(args[0])) {
-			File outputFile = new File("output/" + args[1]);
+			File outputFile = new File(outputDirectoryPath + args[1]);
 			try {
 				if (outputFile.exists() || outputFile.createNewFile()) {
 					out = new PrintWriter(new FileOutputStream(outputFile));
@@ -44,11 +45,11 @@ public class LexerTest {
 				out.println("======================================================================");
 				out.println("FILE: " + testFiles[i].getPath());
 				out.println("======================================================================");
+			} else {			
+				logger.info("======================================================================");
+				logger.info("FILE: " + testFiles[i].getPath());
+				logger.info("======================================================================");
 			}
-			
-			logger.info("======================================================================");
-			logger.info("FILE: " + testFiles[i].getPath());
-			logger.info("======================================================================");
 			
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
@@ -62,14 +63,16 @@ public class LexerTest {
 						} else {
 							if (out != null) {
 								out.println("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
+							} else {
+								logger.info("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
 							}
-							logger.info("TYPE: " + symbol.sym + ", SIMBOL: " + symbol.value);
 						}
 					} catch (LexerException le) {
 						if (out != null) {
 							out.println(le);
+						} else {
+							logger.info(le);
 						}
-						logger.info(le);
 					}
 				}
 			} catch (FileNotFoundException fnfe) {
