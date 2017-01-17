@@ -847,10 +847,10 @@ ClassVariableDeclaration ::=	//ClassVariableDeclaration ::= Type ClassVariableLi
 								:}
 								|
 								//ClassVariableDeclaration ::= error SEMICOLON
-								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration b"); :}
+								error SEMICOLON {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 								|
 								//ClassVariableDeclaration ::= error
-								error {: printSyntaxErrorDescription("Incorrect class variable declaration a"); :}
+								error {: printSyntaxErrorDescription("Incorrect class variable declaration"); :}
 				  				;
 
 ClassVariableList ::= 	//ClassVariableList ::= ClassVariableList COMA Variable
@@ -2183,12 +2183,16 @@ ConditionFact ::=	//ConditionFact ::= Expression RelationalOperator Expression
 						if (expression == null) {
 							parser.report_internal_error("NULL expression in production ConditionFact ::= Expression", expressionleft);
 							RESULT = SymbolTable.noObj;
-						} else if (!expression.getType().equals(SymbolTable.boolType)) {
-							parser.report_semantic_error("Expression " + expression.getName() + " is not of bool type", expressionleft);
-							RESULT = SymbolTable.noObj;
+						} else if (!expression.equals(SymbolTable.noObj)) {
+							if (!expression.getType().equals(SymbolTable.boolType)) {
+								parser.report_semantic_error("Expression " + expression.getName() + " is not of bool type", expressionleft);
+								RESULT = SymbolTable.noObj;
+							} else {
+								//We are returning new Obj with relational operator code in adr field
+								RESULT = new MyObj(MyObj.Con, expression.getName(), expression.getType(), MyCode.eq, -1);
+							}
 						} else {
-							//We are returning new Obj with relational operator code in adr field
-							RESULT = new MyObj(MyObj.Con, expression.getName(), expression.getType(), MyCode.eq, -1);
+							RESULT = SymbolTable.noObj;
 						}
 
 						//Code generation
