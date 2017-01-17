@@ -748,7 +748,7 @@ ClassHeader ::=	//ClassHeader ::= CLASS IDENTIFIER ParentClassDeclaration
 					SymbolTable.openScope();
 
 					//Insert virtaul table pointer as class field if we do not have inherited
-					if (currentClass.getType().getMembersTable().searchKey(VFT) == null) {
+					if (currentClass != null && currentClass.getType().getMembersTable().searchKey(VFT) == null) {
 						Obj virtaulTablePointer = SymbolTable.insert(MyObj.Fld, VFT, SymbolTable.intType);
 						if (virtaulTablePointer != null && virtaulTablePointer != SymbolTable.noObj) {
 							virtaulTablePointer.setAdr(classVariablePosition);
@@ -995,7 +995,15 @@ MethodSignature ::=	//MethodSignature ::= StaticModifier ReturnType IDENTIFIER L
 										method.setLevel(locals.numSymbols());										
 
 										if (!method.equals(inheritedMember)) {
-											parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", signatures are different", identifierleft);
+											if (inheritedMember.getKind() == MyObj.Fld) {
+												parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", it is a field", identifierleft);		
+											} else if (method.getKind() != inheritedMember.getKind()) {
+												parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", one is static, other is non-static", identifierleft);
+											} else if (!method.getType().equals(inheritedMember.getType())) {
+												parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", return types are different", identifierleft);
+											} else {
+												parser.report_semantic_error("Cannot redefine inherited method " + identifier + ", parameter lists are different", identifierleft);
+											}
 										} else {//It is redefined method remove its node from current class
 											currentClass.getType().getMembersTable().deleteKey(identifier);
 											currentMethod = SymbolTable.insert(MyObj.Meth, identifier, typeObject.getType());
