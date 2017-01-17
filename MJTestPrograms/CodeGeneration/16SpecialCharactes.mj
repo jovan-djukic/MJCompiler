@@ -1,0 +1,11 @@
+program SpecialCharacters
+
+{
+	void main() {
+		print(1, 1);
+		print('\t');
+		print(1, 1);
+		print('\n');
+		print(1, 1);
+	}
+}
