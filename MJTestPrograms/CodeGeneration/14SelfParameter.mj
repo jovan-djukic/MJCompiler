@@ -1,0 +1,71 @@
+program SelfParameter
+const int count = 10;
+class Comparable {
+	{
+		bool isGreaterThan(Comparable other) {
+			return false;
+		}
+	}
+}
+
+class Number extends Comparable {
+	int number;
+	{
+		bool isGreaterThan(Number other) 
+		{
+			if (number > other.number) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+}
+
+{
+	void printMessage(char message[]) 
+		int i;
+	{
+		for (i = 0; i < len(message); i++) {
+			print(message[i]);
+		}
+	}
+
+	void main()
+		int i, j;
+		Number c1, c2;
+		char first[], second[];
+	{
+		first = new char[6];
+		first[0] = 'f';
+		first[1] = 'i';
+		first[2] = 'r';
+		first[3] = 's';
+		first[4] = 't';
+		first[5] = '\n';
+	
+		second = new char[7];
+		second[0] = 's';
+		second[1] = 'e';
+		second[2] = 'c';
+		second[3] = 'o';
+		second[4] = 'n';
+		second[5] = 'd';
+		second[6] = '\n';
+	
+		for (i = 0; i < count; i++) {
+			for (j = 0; j < count; j++) {
+				c1 = new Number;
+				c1.number = i;
+				c2 = new Number;
+				c2.number = j;
+			
+				if (c1.isGreaterThan(c2)) {
+					printMessage(first);
+				} else {
+					printMessage(second);
+				}
+			}
+		}
+	}
+}
