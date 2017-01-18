@@ -94,8 +94,8 @@ public class PublicTest {
 					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
 					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
 					
-					SymbolTable.dump(new MyDumpSymbolTableVisitor());
-				
+					//SymbolTable.dump(new MyDumpSymbolTableVisitor());
+					parser.dump();
 					
 					if (parser.isErrorFound()) {
 						logger.info("Error found, no code generated");

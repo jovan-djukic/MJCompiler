@@ -9,6 +9,14 @@ import rs.etf.pp1.symboltable.structure.*;
 import rs.ac.bg.etf.utilities.*;
 import rs.etf.pp1.mj.runtime.*;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.FileOutputStream;
+
 parser code {:
 	
 	private Logger logger = MyLoggerFactory.getLogger(getClass());
@@ -57,6 +65,74 @@ parser code {:
 
     public boolean isErrorFound() {
     	return errorFound;
+    }
+
+    public void dump() {
+    	SymbolTable.dump(new MyDumpSymbolTableVisitor());
+    }
+
+    public static void main(String[] args) {
+    	if (args.length < 2) {
+    		System.out.println("Insufficient arguments");
+    	} else {
+    		File file = new File(args[1]);
+    		if (file.exists()) {
+    			System.out.println("File already exists");
+    		} else
+				try {
+					if (!file.createNewFile()) {
+						System.out.println("Cannot create file");
+					} else {
+						try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));) {
+							Symbol symbol = null;
+							
+							try {
+								Parser parser = new Parser(new Lexer(in));
+								System.out.println("=============================SEMANTIC ANALYSIS===========================");
+								symbol = parser.parse();
+								
+								System.out.println("SYMBOL IS: " + symbol.sym);
+								System.out.println("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
+								System.out.println("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
+								System.out.println("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
+								System.out.println("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
+								System.out.println("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
+								System.out.println("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
+								System.out.println("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
+								System.out.println("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
+								System.out.println("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
+								System.out.println("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
+								System.out.println("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
+								System.out.println("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
+								
+								parser.dump();
+							
+								
+								if (parser.isErrorFound()) {
+									System.out.println("Error found, no code generated");
+								} else {
+									File objectFile = new File(args[1]);
+									if (objectFile.exists()) {
+										objectFile.delete();
+									}
+									Code.write(new FileOutputStream(objectFile));
+								}
+							} catch (LexerException le) {
+								System.out.println(le);
+							} catch (Exception e) {
+								System.out.println(e);
+							}
+						} catch (FileNotFoundException fnfe) {
+							// TODO: handle exception
+						} catch (IOException ioe) {
+							// TODO: handle exception
+						} 
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    	}
     }
 :}
 

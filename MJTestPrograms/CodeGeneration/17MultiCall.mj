@@ -1,0 +1,12 @@
+program MultiCall
+
+{
+	int f(int p) {
+		p++;
+		return p;
+	}
+	
+	void main() {
+		print(f(f(f(f(1)))));
+	}
+}

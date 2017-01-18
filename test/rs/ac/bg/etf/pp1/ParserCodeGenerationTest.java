@@ -46,11 +46,11 @@ public class ParserCodeGenerationTest {
 				out.println("======================================================================");
 				out.println("FILE: " + testFiles[i].getPath());
 				out.println("======================================================================");
-			}
-			
+			} 
+
 			logger.info("======================================================================");
 			logger.info("FILE: " + testFiles[i].getPath());
-			logger.info("======================================================================");
+			logger.info("======================================================================");						
 			
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
@@ -60,8 +60,8 @@ public class ParserCodeGenerationTest {
 					symbol = parser.parse();
 					
 					logger.info("SYMBOL IS: " + symbol.sym);
-					SymbolTable.dump(new MyDumpSymbolTableVisitor());
-					
+					//SymbolTable.dump(new MyDumpSymbolTableVisitor());
+					parser.dump();
 					if (parser.isErrorFound()) {
 						logger.info("Error found, no code generated");
 					} else {
@@ -76,7 +76,7 @@ public class ParserCodeGenerationTest {
 							objectFile.delete();
 						}
 						Code.write(new FileOutputStream(objectFile));
-						disasm.main(new String[] { objectFile.getPath() });
+						//disasm.main(new String[] { objectFile.getPath() });
 						
 						logger.info("======================================================================");
 						logger.info("RUNNING FILE: " + testFiles[i].getPath());
@@ -105,6 +105,8 @@ public class ParserCodeGenerationTest {
 			} 
 		}
 		
-		out.close();
+		if (out != null) {
+			out.close();
+		}
 	}
 }

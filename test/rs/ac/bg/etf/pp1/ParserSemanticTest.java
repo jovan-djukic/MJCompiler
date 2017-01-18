@@ -56,7 +56,8 @@ public class ParserSemanticTest {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
 					logger.info("SYMBOL IS: " + symbol.sym);
-					SymbolTable.dump(new MyDumpSymbolTableVisitor());
+					//SymbolTable.dump(new MyDumpSymbolTableVisitor());
+					parser.dump();
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);

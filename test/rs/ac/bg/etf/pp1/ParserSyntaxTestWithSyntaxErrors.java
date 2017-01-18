@@ -54,7 +54,7 @@ public class ParserSyntaxTestWithSyntaxErrors {
 				try {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
-					logger.info("SYMBOL IS: " + symbol.sym);
+					/*logger.info("SYMBOL IS: " + symbol.sym);
 					logger.info("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
 					logger.info("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
 					logger.info("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
@@ -66,7 +66,7 @@ public class ParserSyntaxTestWithSyntaxErrors {
 					logger.info("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
 					logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
 					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
-					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
+					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());*/
 				} catch (LexerException le) {
 					if (out != null) {
 						out.println(le);

@@ -82,7 +82,9 @@ public class LexerTest {
 			} 
 		}
 		
-		out.close();
+		if (out != null) {
+			out.close();
+		}
 	}
 
 }
