@@ -16,12 +16,13 @@ import rs.ac.bg.etf.pp1.utilities.MyLoggerFactory;
 
 public class ParserSyntaxTestWithSyntaxErrors {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/SyntaxAnalysisWithErrors";
+	private static String outputDirectoryPath = "output/SyntaxAnalysisWithErrors/";
 	private static Logger logger = MyLoggerFactory.getLogger(ParserSyntaxTestWithSyntaxErrors.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
 		if (args.length == 2 && "-f".equals(args[0])) {
-			File outputFile = new File("output/" + args[1]);
+			File outputFile = new File(outputDirectoryPath + args[1]);
 			try {
 				if (outputFile.exists() || outputFile.createNewFile()) {
 					out = new PrintWriter(new FileOutputStream(outputFile));

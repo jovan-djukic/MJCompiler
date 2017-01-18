@@ -60,6 +60,4 @@ class class2 {
 	void main() {
 		return;
 	}
-	
-	return;
 }

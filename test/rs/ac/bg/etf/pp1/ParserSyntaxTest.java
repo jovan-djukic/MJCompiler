@@ -41,11 +41,12 @@ public class ParserSyntaxTest {
 				out.println("======================================================================");
 				out.println("FILE: " + testFiles[i].getPath());
 				out.println("======================================================================");
+			} else {
+				logger.info("======================================================================");
+				logger.info("FILE: " + testFiles[i].getPath());
+				logger.info("======================================================================");
 			}
 			
-			logger.info("======================================================================");
-			logger.info("FILE: " + testFiles[i].getPath());
-			logger.info("======================================================================");
 			
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(testFiles[i])));) {
 				Symbol symbol = null;
@@ -53,19 +54,6 @@ public class ParserSyntaxTest {
 				try {
 					Parser parser = new Parser(new Lexer(in));
 					symbol = parser.parse();
-					logger.info("SYMBOL IS: " + symbol.sym);
-					logger.info("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
-					logger.info("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
-					logger.info("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
-					logger.info("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
-					logger.info("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
-					logger.info("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
-					logger.info("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
-					logger.info("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
-					logger.info("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
-					logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
-					logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
-					logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
 					
 					if (out != null) {
 						out.println("SYMBOL IS: " + symbol.sym);
@@ -81,6 +69,20 @@ public class ParserSyntaxTest {
 						out.println("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
 						out.println("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
 						out.println("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
+					} else {
+						logger.info("SYMBOL IS: " + symbol.sym);
+						logger.info("GLOBAL VARIABLE COUNT: " + parser.action_obj.getGlobalVariableCount());
+						logger.info("MAIN VARIABLE COUNT: " + parser.action_obj.getMainVariableCount());
+						logger.info("CONSTANT COUNT: " + parser.action_obj.getConstantCount());
+						logger.info("GLOBAL ARRAY DECLARTION: " + parser.action_obj.getGlobalArrayCount());
+						logger.info("CLASS STATIC METHOD COUNT: " + parser.action_obj.getStaticMethodCount());
+						logger.info("GLOBAL METHOD COUNT: " + parser.action_obj.getGlobalMethodCount());
+						logger.info("CODE BLOCK COUNT: " + parser.action_obj.getCodeBlockCount());
+						logger.info("MAIN METHOD CALL COUNT: " + parser.action_obj.getMainMethodCalls());
+						logger.info("FORMAL ARGUMENTS COUNT: " + parser.action_obj.getFormalArgumentsCount());
+						logger.info("CLASS DEFINITION COUNT: " + parser.action_obj.getClassDefinitionCount());
+						logger.info("CLASS NON STATIC METHOD COUNT: " + parser.action_obj.getNonStaticMethodCount());
+						logger.info("CLASS VARIABLE COUNT: " + parser.action_obj.getClassVariableCount());
 					}
 				} catch (LexerException le) {
 					if (out != null) {

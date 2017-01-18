@@ -36,9 +36,9 @@ parser code {:
         if (info != null && info instanceof Symbol) {
 			Symbol currentSymbol = (Symbol) info;
 			message += "at line: " + (currentSymbol.left + 1) + ", at column: " + (currentSymbol.right + 1);
-			logger.info(message + ", current symbol: " + info.toString());
+			System.err.println(message + ", current symbol: " + currentSymbol.value.toString());
 		} else {
-			logger.info(message);
+			System.err.println(message);
 		}
 		errorFound = true;
     }
@@ -232,6 +232,10 @@ action code {:
 
 	void printSyntaxErrorDescription(String message) {
 		parser.report_error("Syntax error: " + message, null);
+	}
+
+	void detectUse(Obj object, int line) {
+		parser.getLogger().info("Search for " + object.getName() + " on line " + line + ", symbol found " + UseVisitor.visitObjNode(object));
 	}
 
 	//Semantic analysis
@@ -1331,10 +1335,10 @@ IfHeader ::=	//IfHeader ::= IF LEFT_PARENTHESIS Condition RIGHT_PARENTHESIS
 				:}
 				|
 				//IfHeader ::= IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS
-				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
+				IF LEFT_PARENTHESIS error RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition in if statement"); :}
 				|
 				//IfHeader ::= IF LEFT_PARENTHESIS RIGHT_PARENTHESIS
-				IF LEFT_PARENTHESIS RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition declaration"); :}
+				IF LEFT_PARENTHESIS RIGHT_PARENTHESIS {: printSyntaxErrorDescription("Incorrect condition in if statement"); :}
 				;
 			  
 ForHeader ::=	//ForHeader ::= FOR LEFT_PARENTHESIS ForInitialStatement SEMICOLON ForCondition SEMICOLON ForPostStatement RIGHT_PARENTHESIS 
@@ -2657,6 +2661,11 @@ Factor ::=	//Factor ::= Designator OptionalParameters
 		   			}
 		   		}
 
+		   		//Detect use
+				if (RESULT != null && !RESULT.equals(SymbolTable.noObj) && RESULT.getType().getKind() == MyStruct.Class) {
+					detectUse(RESULT, typeObjectleft);
+				}
+
 		   		//Code generation
 		   		if (!parser.isErrorFound()) {
 		   			if (isArray.booleanValue()) {
@@ -2771,6 +2780,11 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 						RESULT = SymbolTable.noObj;
 					}
 
+					//Detect use
+					if (RESULT != null && !RESULT.equals(SymbolTable.noObj)) {
+						detectUse(RESULT, nameleft);
+					}
+
 					//Code generation
 					if (!parser.isErrorFound()) {
 						if ((designator.getKind() == MyObj.Var || designator.getKind() == MyObj.Elem || designator.getKind() == MyObj.Fld)) {
@@ -2811,6 +2825,11 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 					} else {
 						RESULT = SymbolTable.noObj;
 					}
+
+					//Detect use
+					if (RESULT != null && !RESULT.equals(SymbolTable.noObj)) {
+						detectUse(RESULT, designatorleft);
+					}
 				:}
 				|
 				//Designator ::= IDENTIFIER
@@ -2831,6 +2850,11 @@ Designator ::=	//Designator ::= Designator DOT IDENTIFIER
 						}
 					} else {	
 						RESULT = object;
+					}
+
+					//Detect use
+					if (RESULT != null && !RESULT.equals(SymbolTable.noObj)) {
+						detectUse(RESULT, nameleft);
 					}
 
 					//Code generation

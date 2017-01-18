@@ -21,12 +21,13 @@ import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
 
 public class ParserCodeGenerationTest {
 	private static String testProgramsDirectoryPath = "MJTestPrograms/CodeGeneration";
+	private static String outputProgramsDirectoryPath = "output/CodeGeneration/";
 	private static Logger logger = MyLoggerFactory.getLogger(ParserCodeGenerationTest.class);
 	
 	public static void main(String[] args) {
 		PrintWriter out = null;
 		if (args.length == 2 && "-f".equals(args[0])) {
-			File outputFile = new File("output/" + args[1]);
+			File outputFile = new File(outputProgramsDirectoryPath + args[1]);
 			try {
 				if (outputFile.exists() || outputFile.createNewFile()) {
 					out = new PrintWriter(new FileOutputStream(outputFile));
@@ -64,18 +65,24 @@ public class ParserCodeGenerationTest {
 					if (parser.isErrorFound()) {
 						logger.info("Error found, no code generated");
 					} else {
-						File objectFile = new File("output/MJProgram");
+						String objectFileName = testFiles[i].getName();
+						if (objectFileName.contains(".mj")) {
+							objectFileName = objectFileName.substring(0, objectFileName.lastIndexOf(".")) + ".obj";
+						} else {
+							objectFileName += ".obj";
+						}
+						File objectFile = new File(outputProgramsDirectoryPath + objectFileName);
 						if (objectFile.exists()) {
 							objectFile.delete();
 						}
 						Code.write(new FileOutputStream(objectFile));
-						disasm.main(new String[] { "output/MJProgram"});
+						disasm.main(new String[] { objectFile.getPath() });
 						
 						logger.info("======================================================================");
 						logger.info("RUNNING FILE: " + testFiles[i].getPath());
 						logger.info("======================================================================");
 						
-						Run.main(new String[] { "output/MJProgram"/*, "-debug"*/});
+						Run.main(new String[] { objectFile.getPath()/*, "-debug"*/});
 						System.out.println();
 						
 						logger.info("======================================================================");
