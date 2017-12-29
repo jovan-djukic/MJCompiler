@@ -1,12 +1,22 @@
-program MultiCall
+program vezba
 
-{
-	int f(int p) {
-		p++;
-		return p;
-	}
-	
-	void main() {
-		print(f(f(f(f(1)))));
+{ 
+	void main() 
+		int a;
+	{
+		a = 2;
+		a += a *= 5;
+		print(a);
+		print('\n');
+		
+		a = 2;
+		a += a += 2 * 5;
+		print(a);
+		print('\n');
+		
+		a = 2;
+		a += a *= 2 + 5;
+		print(a);
+		print('\n'); 
 	}
 }
