@@ -6,25 +6,18 @@ If you choose to use maven you also need to download the dependencies (also usin
 
 Usage: 
 	mje [command] [command options]
-	Commands:
-	help      Help command, prints all options supplied by this program
-	  Usage: help
-	
-	compile      Compilation command, if specified both input and output files 
-	        need to be specified as well
-	  Usage: compile [options]
-	    Options:
-	    * -i, --input
-	        Path to input file containing a valid micro java program
-	    * -o, --output
-	        Path to output file
-	
-	run      Run options, executes a valid micro java program
-	  Usage: run [options]
-	    Options:
-	      -d, --debug
-	        If specified debugging is turned on
-	        Default: false
-	    * -f, --file
-	        File containing a valid micro java program
+	Commands: 
+		help      Help command, prints all options supplied by this program 
+			Usage: help 
 
+		compile      Compilation command, if specified both input and output files need to be specified as well 
+			Usage: compile [options] 
+			Options: 
+				* -i, --input Path to input file containing a valid micro java program 
+				* -o, --output Path to output file 
+		run      Run options, executes a valid micro java program 
+			Usage: run [options] 
+			Options: 
+				-d, --debug If specified debugging is turned on 
+					Default: false 
+				* -f, --file File containing a valid micro java program 
