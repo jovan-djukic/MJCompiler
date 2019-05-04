@@ -51,6 +51,8 @@ public class Compile extends CommandDriver {
 			} else {
 				if ( this.outputFile.exists ( ) ) {
 					this.outputFile.delete ( );
+				} else {
+					this.outputFile.createNewFile ( );
 				}
 				Code.write ( new FileOutputStream ( this.outputFile ) );
 			}

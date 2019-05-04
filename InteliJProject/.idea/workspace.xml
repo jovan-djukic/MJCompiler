@@ -2,84 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="afa8bab2-2fa1-4c0b-b2a8-d877e38756ae" name="Default Changelist" comment="a">
-      <change beforePath="$PROJECT_DIR$/../.classpath" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.project" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/00Print.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/01GlobalAndLocalDecl.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/02SimpleArithmetics.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/03ComplexArithmetics.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/04Array.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/05Read.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/06IfStatement.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/07ForLoop.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/08GlobalFunctions.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/09PredeclaredFunctions.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/10ClassFIelds.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/11ClassMethods.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/12CompleteClass.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/13TrapInterrupt.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/14SelfParameter.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/15Classeption.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/16SpecialCharactes.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/CodeGeneration/17MultiCall.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/LexicalAnalysis/simpleProgram.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/LexicalAnalysis/specificatioTestProgram.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/PublicTest/test301.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/PublicTest/test302.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/PublicTest/test303.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/00VaraiblesConstants.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/01ClassDeclaration.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/02ClassFields.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/03ClassMethods.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/04GlobalFunctions.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/05Uses.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/06DesignatorStatement.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/07ForLoopBreakAndContinue.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/08ReadAndPrint.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/09Return.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/10ConditionTypeTest.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/11Parameters.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/12Expression.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/13New.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SemanticAnalysis/14PredeclaredNames.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysis/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysis/simpleProgram.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysis/specificatioTestProgram.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysisWithErrors/simpleProgramWithALevelSyntaxErrors.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysisWithErrors/simpleProgramWithBLeveSyntaxlErrors.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MJTestPrograms/SyntaxAnalysisWithErrors/simpleProgramWithCLevelSyntaxErrors.mj" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../configuration/log4j2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/java-cup-11a.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/jflex-1.6.1.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/log4j-api-2.7.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/log4j-core-2.7.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/mj-runtime-1.1.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../lib/symboltable.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../specification/LexerSpecification.flex" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../specification/ParserSpecification.cup" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/Lexer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/LexerException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/Parser.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/SymbolTable.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/sym.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/pp1/sym_lexer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/Constant.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/MyCode.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/MyDumpSymbolTableVisitor.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/MyObj.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/MyStruct.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/UseVisitor.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/Value.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/rs/ac/bg/etf/utilities/Variable.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/LexerTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/LoggerTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/ParserCodeGenerationTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/ParserSemanticTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/ParserSyntaxTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/ParserSyntaxTestWithSyntaxErrors.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/PublicTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test/rs/ac/bg/etf/pp1/utilities/MyLoggerFactory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/optionDriver/Compile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/optionDriver/Compile.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -108,11 +32,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/CommandDriver.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
+            <state relative-caret-position="136">
               <caret line="11" column="47" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
               <folding>
                 <element signature="e#126#127#0" expanded="true" />
-                <element signature="e#148#149#0" expanded="true" />
+                <element signature="e#149#150#0" expanded="true" />
                 <element signature="e#211#212#0" expanded="true" />
                 <element signature="e#257#258#0" expanded="true" />
               </folding>
@@ -123,7 +47,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Help.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="289">
+            <state relative-caret-position="357">
               <caret line="24" selection-start-line="24" selection-end-line="24" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -135,7 +59,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="69">
+            <state relative-caret-position="459">
               <caret line="32" column="52" selection-start-line="32" selection-start-column="52" selection-end-line="32" selection-end-column="52" />
               <folding>
                 <element signature="imports" expanded="true" />
@@ -147,12 +71,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Compile.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="369">
-              <caret line="54" selection-start-line="54" selection-end-line="54" />
+            <state relative-caret-position="335">
+              <caret line="54" column="53" selection-start-line="54" selection-start-column="53" selection-end-line="54" selection-end-column="53" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#1084#1085#0" expanded="true" />
-                <element signature="e#1099#1100#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -161,12 +83,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Run.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
+            <state relative-caret-position="425">
               <caret line="29" column="23" selection-start-line="29" selection-start-column="23" selection-end-line="29" selection-end-column="23" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#671#672#0" expanded="true" />
-                <element signature="e#682#683#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -272,7 +192,7 @@
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-10" />
-    <option name="width" value="979" />
+    <option name="width" value="980" />
     <option name="height" value="1040" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -281,7 +201,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -353,47 +272,6 @@
             </path>
             <path>
               <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="generated-sources" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="generated-sources" type="462c0819:PsiDirectoryNode" />
-              <item name="cup" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="generated-sources" type="462c0819:PsiDirectoryNode" />
-              <item name="cup" type="462c0819:PsiDirectoryNode" />
-              <item name="parser" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="generated-sources" type="462c0819:PsiDirectoryNode" />
-              <item name="jflex" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
-              <item name="InteliJProject" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="generated-sources" type="462c0819:PsiDirectoryNode" />
-              <item name="jflex" type="462c0819:PsiDirectoryNode" />
-              <item name="lexer" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="InteliJProject" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
           </expand>
@@ -401,6 +279,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -435,7 +314,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.RunCommand">
+  <component name="RunManager" selected="Application.HelpCommand">
     <configuration name="CompileCommand" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="Main" />
       <module name="InteliJProject" />
@@ -513,11 +392,12 @@
       <workItem from="1551009853280" duration="17272000" />
       <workItem from="1551436179522" duration="21000" />
       <workItem from="1551436282047" duration="7266000" />
+      <workItem from="1556982362286" duration="233000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="42783000" />
+    <option name="totallyTimeSpent" value="43016000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -531,7 +411,7 @@
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.27919462" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.28322148" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="UI Designer" order="3" />
@@ -838,11 +718,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/CommandDriver.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
+        <state relative-caret-position="136">
           <caret line="11" column="47" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
           <folding>
             <element signature="e#126#127#0" expanded="true" />
-            <element signature="e#148#149#0" expanded="true" />
+            <element signature="e#149#150#0" expanded="true" />
             <element signature="e#211#212#0" expanded="true" />
             <element signature="e#257#258#0" expanded="true" />
           </folding>
@@ -851,8 +731,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Help.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
+        <state relative-caret-position="357">
           <caret line="24" selection-start-line="24" selection-end-line="24" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="32" column="52" selection-start-line="32" selection-start-column="52" selection-end-line="32" selection-end-column="52" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -861,20 +751,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Run.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
+        <state relative-caret-position="425">
           <caret line="29" column="23" selection-start-line="29" selection-start-column="23" selection-end-line="29" selection-end-column="23" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#671#672#0" expanded="true" />
-            <element signature="e#682#683#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="69">
-          <caret line="32" column="52" selection-start-line="32" selection-start-column="52" selection-end-line="32" selection-end-column="52" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -883,12 +761,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/optionDriver/Compile.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="369">
-          <caret line="54" selection-start-line="54" selection-end-line="54" />
+        <state relative-caret-position="335">
+          <caret line="54" column="53" selection-start-line="54" selection-start-column="53" selection-end-line="54" selection-end-column="53" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1084#1085#0" expanded="true" />
-            <element signature="e#1099#1100#0" expanded="true" />
           </folding>
         </state>
       </provider>
