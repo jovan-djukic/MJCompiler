@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="mj-runtime-1.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/mj-runtime-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/symboltable.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/libs/mj-runtime-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/symboltable.jar!/" />
+    </SOURCES>
+  </library>
+</component>
